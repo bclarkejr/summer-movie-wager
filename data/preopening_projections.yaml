@@ -8,7 +8,16 @@
 #     source: "<analyst source + date>"
 #     as_of: YYYY-MM-DD
 #     notes: "<freeform>"
-# Movies missing from this file get projected_in_window_gross=0 and a "no projection" badge.
+# Movies missing from this file get projected_in_window_gross=0 and a
+# "no projection" badge per the design's explicit fallback rule.
+#
+# To activate a placeholder below: uncomment the block, replace the TODO
+# numbers with analyst estimates, set confidence (high|med|low), and
+# update source / as_of. Re-run: uv run python -m summer_movie_wager.render.build --local
+
+# ---------------------------------------------------------------------------
+# Active entries
+# ---------------------------------------------------------------------------
 
 "Mortal Kombat II":
   release_date: 2026-05-08
@@ -27,3 +36,233 @@
   source: "Box Office Pro long-range forecast ($90-100M opening, recently raised); domestic total benchmarked to Solo ($213.7M)"
   as_of: 2026-05-04
   notes: "Solo: A Star Wars Story finaled at $213.7M domestic with a $103M 4-day opening; M&G opening tracking similar but with stronger marketing climb"
+
+# ---------------------------------------------------------------------------
+# Placeholders — uncomment and fill as analyst data arrives
+# ---------------------------------------------------------------------------
+
+# May 2026 releases
+
+# "The Sheep Detectives":
+#   release_date: 2026-05-08
+#   opening_weekend_estimate: 12000000  # TODO: BOP tracked $10-15M opening — confirm
+#   total_domestic_estimate: 0  # TODO: no analyst total surfaced; needs lookup
+#   confidence: low
+#   source: "Box Office Pro long-range forecast (via koimoi citation), 2026-05"
+#   as_of: 2026-05-04
+#   notes: "Hugh Jackman family-skewing whodunit; opening from BOP tracking, total TBD"
+
+# "I Love Boosters":
+#   release_date: 2026-05-22
+#   opening_weekend_estimate: 3000000  # TODO: BOP tracked $2-4M opening — confirm
+#   total_domestic_estimate: 0  # TODO: no analyst total surfaced
+#   confidence: low
+#   source: "Box Office Pro long-range forecast, 2026-04"
+#   as_of: 2026-05-04
+#   notes: "NEON indie counter-programmer opposite Star Wars; BOP comp was Sorry to Bother You ($17.4M total)"
+
+# "Passenger":
+#   release_date: 2026-05-22
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Paramount supernatural horror, dir. André Øvredal; moved up from May 29 to avoid Backrooms/Scary Movie"
+
+# "Backrooms":
+#   release_date: 2026-05-29  # TODO confirm — Paramount; mentioned alongside Passenger and Scary Movie
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: ""
+
+# "Scary Movie":
+#   release_date: 2026-05-29  # TODO confirm — Paramount
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: ""
+
+# June 2026 releases
+
+# "Masters of the Universe":
+#   release_date: 2026-06-05
+#   opening_weekend_estimate: 11000000  # TODO: independent forecasts $10-12M / $10-15M
+#   total_domestic_estimate: 0  # TODO: no analyst total surfaced
+#   confidence: low
+#   source: "Independent forecasts, 2026-04 (no specific BOP article surfaced)"
+#   as_of: 2026-05-04
+#   notes: "Amazon MGM live-action He-Man; Nicholas Galitzine starring"
+
+# "Toy Story 5":
+#   release_date: 2026-06-19
+#   opening_weekend_estimate: 0  # TODO: no specific opening forecast surfaced
+#   total_domestic_estimate: 440000000  # TODO: $440M consensus per multiple sources — confirm
+#   confidence: med
+#   source: "Multiple industry sources cite ~$440M domestic consensus, 2026-04"
+#   as_of: 2026-05-04
+#   notes: "Pixar; would set franchise nominal record above Toy Story 4's $434M domestic"
+
+# "Supergirl":
+#   release_date: 2026-06-26
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "DCU; Milly Alcock; solo wide release that weekend, minimal blockbuster competition"
+
+# July 2026 releases
+
+# "Moana":
+#   release_date: 2026-07-10  # TODO confirm exact July date — live action remake
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Live-action Disney remake; one analyst speculation reaches $1B WW but no opening tracking found"
+
+# "The Odyssey":
+#   release_date: 2026-07-17
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Christopher Nolan, Universal; sold-out 70mm IMAX previews; comp Dark Knight Rises ($160M opening); no tracking range yet"
+
+# "Spider-Man: Brand New Day":
+#   release_date: 2026-07-31
+#   opening_weekend_estimate: 0  # TODO: industry consensus "$200M+" but no precise BOP range
+#   total_domestic_estimate: 0  # TODO
+#   confidence: med
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Sony; trailer crossed 1B views in <1 week; consensus opening above $200M, comp No Way Home ($260M opening)"
+
+# August 2026 releases
+
+# "PAW Patrol: The Dino Movie":
+#   release_date: 2026-08-14
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Paramount; comp PAW Patrol: The Mighty Movie 2023 ($23M opening / $67M domestic)"
+
+# "Insidious: Out of the Further":
+#   release_date: 2026-08-21
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Sony/Blumhouse; Amelia Eve as Gemma; comp Insidious: The Red Door 2023 ($32M opening / $84M domestic)"
+
+# "Coyote vs. Acme":
+#   release_date: 2026-08-28
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Ketchup Entertainment (rescued from WB shelving); trailer hit 25.6M views in 24h (indie record); marketing capacity uncertain"
+
+# Release date unknown — TODO confirm
+
+# "Tom and Jerry: Forbidden Compass":
+#   release_date: 2026-09-01  # TODO confirm
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Animated family"
+
+# "Minions & Monsters":
+#   release_date: 2026-07-01  # TODO confirm — likely Universal slate
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Likely Despicable Me franchise spinoff; release date and details unconfirmed in research"
+
+# "Evil Dead Burn":
+#   release_date: 2026-09-01  # TODO confirm
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Comp Evil Dead Rise 2023 ($23M opening / $67M domestic)"
+
+# "Disclosure Day":
+#   release_date: 2026-09-01  # TODO confirm
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: ""
+
+# "Power Ballad":
+#   release_date: 2026-09-01  # TODO confirm
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: ""
+
+# "Finding Emily":
+#   release_date: 2026-09-01  # TODO confirm
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: ""
+
+# "The Breadwinner":
+#   release_date: 2026-09-01  # TODO confirm
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: ""
+
+# "The End of Oak Street":
+#   release_date: 2026-09-01  # TODO confirm
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: ""
+
+# "Young Washington":
+#   release_date: 2026-09-01  # TODO confirm
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: ""
+
+# "Billie Eilish: Hit Me Hard and Soft - The Tour Live in 3D":
+#   release_date: 2026-09-01  # TODO confirm
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Concert film; comps Eras Tour ($93M opening / $180M domestic), Renaissance ($21M opening / $33M domestic)"
