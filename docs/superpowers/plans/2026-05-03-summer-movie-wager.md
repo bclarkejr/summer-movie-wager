@@ -1850,6 +1850,8 @@ Create `summer_movie_wager/render/__init__.py`:
 - [ ] **Step 2: Create the Jinja template**
 
 Create `summer_movie_wager/render/templates/index.html.j2`:
+
+{% raw %}
 ```jinja
 <!DOCTYPE html>
 <html lang="en">
@@ -1939,6 +1941,7 @@ Create `summer_movie_wager/render/templates/index.html.j2`:
 </body>
 </html>
 ```
+{% endraw %}
 
 - [ ] **Step 3: Create the stylesheet**
 
@@ -2154,7 +2157,7 @@ Open `tests/fixtures/expected_index.html` in a browser. Confirm:
 - Leaderboard renders with the two test rows
 - Movies table renders with the two test movies
 - Per-player details collapsible card is present and expandable
-- No raw `{{ ... }}` template placeholders are visible
+- No raw {% raw %}`{{ ... }}`{% endraw %} template placeholders are visible
 
 - [ ] **Step 8: Re-run tests to verify the snapshot locks**
 
@@ -2628,7 +2631,7 @@ Confirm visually:
 - Leaderboard shows all 8 players
 - Movies table is populated
 - Per-player detail cards expand on click
-- No Jinja `{{ ... }}` placeholder leakage
+- No Jinja {% raw %}`{{ ... }}`{% endraw %} placeholder leakage
 - The "current pts" column matches the site (3 for everyone except RadhaDR who has 8, as of 2026-05-03)
 
 - [ ] **Step 5: Commit**
