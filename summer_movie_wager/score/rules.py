@@ -18,10 +18,6 @@ def ranked_pick_points(predicted_position: int, actual_position: int) -> int:
     return 3  # in top 10 but off by 3+
 
 
-# Backwards-compatible alias for the previously-private helper.
-_ranked_pick_points = ranked_pick_points
-
-
 def score_player(picks: PlayerPicks, top_titles: list[str]) -> int:
     """Compute the wager points a player earns given the (partial or complete) top finalists.
 
