@@ -1,0 +1,6 @@
+# Per-movie corrections / classifications. Schema per entry:
+#   <movie_title>:
+#     release_date: YYYY-MM-DD       # override scraper's value
+#     category: wide | animated_family   # default 'wide' if unspecified
+#     status: pre_release | in_theaters | closed   # override status inference
+#     alias_of: <canonical_title>    # if scraper returned a variant title

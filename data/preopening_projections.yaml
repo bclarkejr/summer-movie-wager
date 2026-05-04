@@ -1,0 +1,11 @@
+# Hand-curated analyst pre-release box office estimates.
+# Schema per entry:
+#   <movie_title>:
+#     release_date: YYYY-MM-DD
+#     opening_weekend_estimate: <int dollars>
+#     total_domestic_estimate: <int dollars>
+#     confidence: high | med | low
+#     source: "<analyst source + date>"
+#     as_of: YYYY-MM-DD
+#     notes: "<freeform>"
+# Movies missing from this file get projected_in_window_gross=0 and a "no projection" badge.
