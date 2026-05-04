@@ -1,0 +1,23 @@
+:root { color-scheme: light dark; }
+body { font: 14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 980px; margin: 1.5em auto; padding: 0 1em; }
+h1 { font-size: 1.5em; margin-bottom: 0.2em; }
+h2 { font-size: 1.1em; margin-top: 1.6em; border-bottom: 1px solid #888; padding-bottom: 0.2em; }
+.meta { color: #888; font-size: 0.9em; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 0.35em 0.6em; border-bottom: 1px solid #4443; }
+th { font-weight: 600; }
+td:first-child { font-weight: 500; }
+.badge { font-size: 0.75em; padding: 0.1em 0.5em; border-radius: 3px; background: #8884; }
+.badge-pre_release { background: #88f4; }
+.badge-in_theaters { background: #4a4; color: white; }
+.badge-closed, .badge-wont_score, .badge-no_projection { background: #8884; }
+.muted { color: #888; font-size: 0.9em; }
+details { margin: 0.6em 0; }
+summary { cursor: pointer; padding: 0.3em 0; }
+.dark-horse-label { font-weight: 600; margin-top: 0.6em; margin-bottom: 0.2em; }
+.source { font-size: 0.85em; color: #888; }
+footer { margin-top: 3em; padding-top: 1em; border-top: 1px solid #4443; color: #888; font-size: 0.85em; }
+@media (max-width: 600px) {
+  body { font-size: 13px; }
+  th, td { padding: 0.25em 0.4em; }
+}

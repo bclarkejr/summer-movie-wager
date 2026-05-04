@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Summer Movie Wager 2026</title>
+<style>{{ inline_css | safe }}</style>
+</head>
+<body>
+<header>
+  <h1>Summer Movie Wager 2026</h1>
+  <p class="meta">Window 2026-04-30 → 2026-09-07 · refreshed {{ generated_at }}</p>
+</header>
+
+<section class="leaderboard">
+  <h2>Leaderboard</h2>
+  <table>
+    <thead>
+      <tr><th>Player</th><th>Current</th><th>Projected median</th><th>80% range</th><th>Win odds</th></tr>
+    </thead>
+    <tbody>
+    {% for row in leaderboard %}
+      <tr data-player="{{ row.username }}" class="player-row">
+        <td>{{ row.username }}</td>
+        <td>{{ row.current_pts }}</td>
+        <td>{{ row.median_pts | int }}</td>
+        <td>[{{ row.p10_pts | int }} – {{ row.p90_pts | int }}]</td>
+        <td title="tie odds: {{ '%.0f'|format(row.tie_prob*100) }}%">{{ '%.0f'|format(row.win_prob*100) }}%</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="movies">
+  <h2>Movies (projected window gross)</h2>
+  <table>
+    <thead>
+      <tr><th>Movie</th><th>Released</th><th>Status</th><th>Projected median</th><th>80% range</th><th>Cumulative</th><th>Source</th></tr>
+    </thead>
+    <tbody>
+    {% for movie in movies %}
+      <tr>
+        <td>{{ movie.title }}</td>
+        <td>{{ movie.release_date }}</td>
+        <td><span class="badge badge-{{ movie.status }}">{{ movie.status_label }}</span></td>
+        <td>${{ '{:,.0f}'.format(movie.median_in_window_gross) }}</td>
+        <td>[${{ '{:,.0f}'.format(movie.p10) }} – ${{ '{:,.0f}'.format(movie.p90) }}]</td>
+        <td>{% if movie.cumulative_to_date %}${{ '{:,.0f}'.format(movie.cumulative_to_date) }}{% else %}—{% endif %}</td>
+        <td class="source">{{ movie.source }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="players">
+  <h2>Per-player detail</h2>
+  {% for player in player_details %}
+  <details data-player="{{ player.username }}">
+    <summary>{{ player.username }} — projected {{ player.median_pts | int }}, current {{ player.current_pts }}</summary>
+    <ol class="ranked-picks">
+    {% for pick in player.ranked %}
+      <li>
+        <strong>{{ pick.title }}</strong>
+        <span class="muted">→ projected #{{ pick.projected_rank or '—' }} ·
+          ${{ '{:,.0f}'.format(pick.projected_gross) }} ·
+          contributes {{ pick.projected_pts }} pts
+        </span>
+      </li>
+    {% endfor %}
+    </ol>
+    <p class="dark-horse-label">Dark horses</p>
+    <ul class="dark-horses">
+    {% for dh in player.dark_horses %}
+      <li>{{ dh.title }} <span class="muted">→ projected #{{ dh.projected_rank or '—' }} · {{ dh.projected_pts }} pt</span></li>
+    {% endfor %}
+    </ul>
+  </details>
+  {% endfor %}
+</section>
+
+<footer>
+  <p>Source data: <a href="https://thesummermoviewager.com/help.php">Summer Movie Wager rules</a>. Raw snapshot: <a href="data.json">data.json</a>.</p>
+</footer>
+</body>
+</html>
