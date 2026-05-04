@@ -14,6 +14,9 @@
 
 <section class="leaderboard">
   <h2>Leaderboard</h2>
+  {% if not forecast_available %}
+  <p class="meta forecast-unavailable">Forecast unavailable — {{ forecast_unavailable_reason }}. Showing current points only.</p>
+  {% endif %}
   <table>
     <thead>
       <tr><th>Player</th><th>Current</th><th>Projected median</th><th>80% range</th><th>Win odds</th></tr>
@@ -23,9 +26,9 @@
       <tr data-player="{{ row.username }}" class="player-row">
         <td>{{ row.username }}</td>
         <td>{{ row.current_pts }}</td>
-        <td>{{ row.median_pts | int }}</td>
-        <td>[{{ row.p10_pts | int }} – {{ row.p90_pts | int }}]</td>
-        <td title="tie odds: {{ '%.0f'|format(row.tie_prob*100) }}%">{{ '%.0f'|format(row.win_prob*100) }}%</td>
+        <td>{% if row.median_pts is none %}—{% else %}{{ row.median_pts | int }}{% endif %}</td>
+        <td>{% if row.p10_pts is none or row.p90_pts is none %}—{% else %}[{{ row.p10_pts | int }} – {{ row.p90_pts | int }}]{% endif %}</td>
+        <td{% if row.tie_prob is not none %} title="tie odds: {{ '%.0f'|format(row.tie_prob*100) }}%"{% endif %}>{% if row.win_prob is none %}—{% else %}{{ '%.0f'|format(row.win_prob*100) }}%{% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>
@@ -58,7 +61,7 @@
   <h2>Per-player detail</h2>
   {% for player in player_details %}
   <details data-player="{{ player.username }}">
-    <summary>{{ player.username }} — projected {{ player.median_pts | int }}, current {{ player.current_pts }}</summary>
+    <summary>{{ player.username }} — projected {% if player.median_pts is none %}—{% else %}{{ player.median_pts | int }}{% endif %}, current {{ player.current_pts }}</summary>
     <ol class="ranked-picks">
     {% for pick in player.ranked %}
       <li>

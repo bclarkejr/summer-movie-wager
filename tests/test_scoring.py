@@ -110,7 +110,20 @@ def test_combined_realistic_scenario():
     assert score_player(picks, top_10) == 13 + 3 + 7 + 1
 
 
-def test_top_10_must_have_exactly_ten_entries():
+def test_top_titles_more_than_ten_raises():
     picks = make_picks(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"])
     with pytest.raises(ValueError):
-        score_player(picks, ["A", "B", "C"])
+        score_player(picks, [f"X{i}" for i in range(11)])
+
+
+def test_partial_top_titles_scores_only_present_ranks():
+    # Only 3 finalists known: only those ranks count.
+    # Picks: TARGET at #1 (matches actual #1 → 13). Other picks would-be-actual ranks
+    # are unknown, so they score 0.
+    picks = make_picks(["TARGET", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10"])
+    assert score_player(picks, ["TARGET", "B", "C"]) == 13
+
+
+def test_empty_top_titles_scores_zero():
+    picks = make_picks(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"])
+    assert score_player(picks, []) == 0

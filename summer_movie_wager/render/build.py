@@ -25,13 +25,11 @@ from summer_movie_wager.render.page import (
     RenderInput,
     render,
 )
-from summer_movie_wager.score import score_player
-from summer_movie_wager.score.rules import _ranked_pick_points
+from summer_movie_wager.score import ranked_pick_points, score_player
 from summer_movie_wager.types import (
     Category,
     Confidence,
     MovieStatus,
-    PlayerPicks,
     PreopeningEntry,
     Projection,
     SiteSnapshot,
@@ -64,13 +62,28 @@ def main(argv: list[str] | None = None) -> int:
 
     movies = _normalize_movies(snapshot, overrides, preopening, today=today)
     projections = _project_all(movies, preopening, snapshot, overrides, today=today)
+    _warn_missing_projections(movies, preopening, today=today)
 
-    sim = simulate_season(
-        list(snapshot.players.values()),
-        projections,
-        n_trials=10_000,
-        seed=20260907,
-    )
+    non_zero = _count_non_zero_projections(projections)
+    forecast_available = non_zero >= 10
+    forecast_unavailable_reason = ""
+    sim: Any | None = None
+    if forecast_available:
+        sim = simulate_season(
+            list(snapshot.players.values()),
+            projections,
+            n_trials=10_000,
+            seed=20260907,
+        )
+    else:
+        forecast_unavailable_reason = (
+            f"only {non_zero} movie(s) have non-zero projections "
+            f"(need 10 for an honest top-10 ranking)"
+        )
+        print(
+            f"[build] WARNING: skipping simulation — {forecast_unavailable_reason}",
+            file=sys.stderr,
+        )
 
     current_top10 = _current_top_10(snapshot.cumulative_grosses)
     current_pts = {
@@ -83,17 +96,28 @@ def main(argv: list[str] | None = None) -> int:
     movie_rows = _build_movie_rows(movies, projections, snapshot, sim, current_top10)
     player_details = _build_player_details(snapshot, projections, current_pts, sim)
 
-    raw = {
+    raw: dict[str, Any] = {
         "captured_at": str(snapshot.captured_at),
         "site_reported_points": snapshot.site_reported_points,
         "computed_current_points": current_pts,
-        "win_prob": sim.win_prob,
-        "tie_prob": sim.tie_prob,
-        "median_final_pts": sim.median_final_pts,
-        "p10_final_pts": sim.p10_final_pts,
-        "p90_final_pts": sim.p90_final_pts,
+        "forecast_available": forecast_available,
+        "non_zero_projections": non_zero,
         "projections": [p.model_dump() for p in projections],
     }
+    if forecast_available and sim is not None:
+        raw["win_prob"] = sim.win_prob
+        raw["tie_prob"] = sim.tie_prob
+        raw["median_final_pts"] = sim.median_final_pts
+        raw["p10_final_pts"] = sim.p10_final_pts
+        raw["p90_final_pts"] = sim.p90_final_pts
+    else:
+        raw["forecast_unavailable_reason"] = forecast_unavailable_reason
+        # Emit explicit nulls so consumers don't confuse "no forecast" with "missing key".
+        raw["win_prob"] = {u: None for u in snapshot.players}
+        raw["tie_prob"] = {u: None for u in snapshot.players}
+        raw["median_final_pts"] = {u: None for u in snapshot.players}
+        raw["p10_final_pts"] = {u: None for u in snapshot.players}
+        raw["p90_final_pts"] = {u: None for u in snapshot.players}
 
     render(
         DOCS_DIR,
@@ -103,10 +127,12 @@ def main(argv: list[str] | None = None) -> int:
             movies=movie_rows,
             player_details=player_details,
             raw_snapshot=raw,
+            forecast_available=forecast_available,
+            forecast_unavailable_reason=forecast_unavailable_reason,
         ),
     )
 
-    if not args.local:
+    if not args.local and sim is not None:
         _append_history(snapshot, sim, today=today)
 
     print(f"[build] wrote {DOCS_DIR}/index.html", file=sys.stderr)
@@ -219,6 +245,36 @@ def _project_all(
     return projections
 
 
+def _count_non_zero_projections(projections: list[Projection]) -> int:
+    return sum(1 for p in projections if p.median_in_window_gross > 0)
+
+
+def _warn_missing_projections(
+    movies: dict[str, dict[str, Any]],
+    preopening: dict[str, PreopeningEntry],
+    *,
+    today: date,
+) -> None:
+    """Warn about picked PRE_RELEASE movies with no analyst entry that would otherwise score."""
+    missing: list[str] = []
+    for title, m in movies.items():
+        if m["status"] != MovieStatus.PRE_RELEASE:
+            continue
+        if title in preopening:
+            continue
+        if m["release_date"] > WINDOW_END:
+            # Legitimately won't score — no analyst entry needed.
+            continue
+        missing.append(title)
+    if missing:
+        bullet_lines = "\n  - ".join(sorted(missing))
+        print(
+            f"[build] WARNING: {len(missing)} picks have no projection "
+            f"(add to data/preopening_projections.yaml):\n  - {bullet_lines}",
+            file=sys.stderr,
+        )
+
+
 def _load_history() -> dict[str, list[tuple[date, float]]]:
     path = DATA_DIR / "box_office_history.jsonl"
     if not path.exists():
@@ -235,15 +291,16 @@ def _load_history() -> dict[str, list[tuple[date, float]]]:
 
 
 def _current_top_10(grosses: dict[str, float]) -> list[str]:
-    """Return up to 10 titles ranked by gross (descending). Pads with empty strings if fewer."""
-    ranked = [
+    """Return up to 10 titles ranked by gross (descending). Excludes zero-gross movies.
+
+    May return fewer than 10 titles if fewer than 10 movies have positive cumulative gross.
+    `score_player` accepts partial top-titles lists.
+    """
+    return [
         title
-        for title, _ in sorted(grosses.items(), key=lambda kv: kv[1], reverse=True)
+        for title, gross in sorted(grosses.items(), key=lambda kv: kv[1], reverse=True)
+        if gross > 0
     ][:10]
-    while len(ranked) < 10:
-        # score_player requires exactly 10 entries; pad with sentinels that no pick will match.
-        ranked.append(f"__no_movie_{len(ranked)}__")
-    return ranked
 
 
 def _validate_against_site(
@@ -265,23 +322,40 @@ def _validate_against_site(
 
 def _build_leaderboard(
     snapshot: SiteSnapshot,
-    sim: Any,
+    sim: Any | None,
     current_pts: dict[str, int],
 ) -> list[LeaderboardRow]:
     rows: list[LeaderboardRow] = []
     for username in snapshot.players:
-        rows.append(
-            LeaderboardRow(
-                username=username,
-                current_pts=current_pts.get(username, 0),
-                median_pts=sim.median_final_pts[username],
-                p10_pts=sim.p10_final_pts[username],
-                p90_pts=sim.p90_final_pts[username],
-                win_prob=sim.win_prob[username],
-                tie_prob=sim.tie_prob[username],
+        if sim is None:
+            rows.append(
+                LeaderboardRow(
+                    username=username,
+                    current_pts=current_pts.get(username, 0),
+                    median_pts=None,
+                    p10_pts=None,
+                    p90_pts=None,
+                    win_prob=None,
+                    tie_prob=None,
+                )
             )
-        )
-    rows.sort(key=lambda r: r.median_pts, reverse=True)
+        else:
+            rows.append(
+                LeaderboardRow(
+                    username=username,
+                    current_pts=current_pts.get(username, 0),
+                    median_pts=sim.median_final_pts[username],
+                    p10_pts=sim.p10_final_pts[username],
+                    p90_pts=sim.p90_final_pts[username],
+                    win_prob=sim.win_prob[username],
+                    tie_prob=sim.tie_prob[username],
+                )
+            )
+    if sim is None:
+        # No forecast → fall back to current points order.
+        rows.sort(key=lambda r: r.current_pts, reverse=True)
+    else:
+        rows.sort(key=lambda r: r.median_pts or 0, reverse=True)
     return rows
 
 
@@ -355,14 +429,18 @@ def _build_player_details(
     snapshot: SiteSnapshot,
     projections: list[Projection],
     current_pts: dict[str, int],
-    sim: Any,
+    sim: Any | None,
 ) -> list[PlayerDetail]:
     proj_by_title = {p.movie_title: p for p in projections}
-    median_top_10 = sorted(
-        proj_by_title.values(),
-        key=lambda p: p.median_in_window_gross,
-        reverse=True,
-    )[:10]
+    median_top_10 = [
+        p
+        for p in sorted(
+            proj_by_title.values(),
+            key=lambda p: p.median_in_window_gross,
+            reverse=True,
+        )
+        if p.median_in_window_gross > 0
+    ][:10]
     median_top_titles = [p.movie_title for p in median_top_10]
     median_position = {t: i + 1 for i, t in enumerate(median_top_titles)}
 
@@ -379,13 +457,16 @@ def _build_player_details(
         out.append(
             PlayerDetail(
                 username=username,
-                median_pts=sim.median_final_pts[username],
+                median_pts=sim.median_final_pts[username] if sim is not None else None,
                 current_pts=current_pts.get(username, 0),
                 ranked=ranked_details,
                 dark_horses=dh_details,
             )
         )
-    out.sort(key=lambda p: p.median_pts, reverse=True)
+    if sim is None:
+        out.sort(key=lambda p: p.current_pts, reverse=True)
+    else:
+        out.sort(key=lambda p: p.median_pts or 0, reverse=True)
     return out
 
 
@@ -401,7 +482,7 @@ def _pick_detail(
     median_gross = proj.median_in_window_gross if proj else 0.0
     actual_rank = median_position.get(title, 0)
     if kind == "ranked" and actual_rank > 0 and predicted_rank is not None:
-        pts = _ranked_pick_points(predicted_rank, actual_rank)
+        pts = ranked_pick_points(predicted_rank, actual_rank)
     elif kind == "dark_horse" and actual_rank > 0:
         pts = 1
     else:

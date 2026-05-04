@@ -18,11 +18,11 @@ _STATIC = Path(__file__).parent / "static"
 class LeaderboardRow:
     username: str
     current_pts: int
-    median_pts: float
-    p10_pts: float
-    p90_pts: float
-    win_prob: float
-    tie_prob: float
+    median_pts: float | None
+    p10_pts: float | None
+    p90_pts: float | None
+    win_prob: float | None
+    tie_prob: float | None
 
 
 @dataclass(frozen=True)
@@ -49,7 +49,7 @@ class PickDetail:
 @dataclass(frozen=True)
 class PlayerDetail:
     username: str
-    median_pts: float
+    median_pts: float | None
     current_pts: int
     ranked: list[PickDetail]
     dark_horses: list[PickDetail]
@@ -62,6 +62,8 @@ class RenderInput:
     movies: list[MovieRow]
     player_details: list[PlayerDetail]
     raw_snapshot: dict[str, Any] = field(default_factory=dict)
+    forecast_available: bool = True
+    forecast_unavailable_reason: str = ""
 
 
 def render(out_dir: Path, data: RenderInput) -> None:
@@ -81,6 +83,8 @@ def render(out_dir: Path, data: RenderInput) -> None:
         movies=data.movies,
         player_details=data.player_details,
         inline_css=inline_css,
+        forecast_available=data.forecast_available,
+        forecast_unavailable_reason=data.forecast_unavailable_reason,
     )
     (out_dir / "index.html").write_text(html)
     (out_dir / "data.json").write_text(json.dumps(data.raw_snapshot, indent=2, default=str))
