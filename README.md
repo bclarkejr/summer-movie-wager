@@ -142,7 +142,7 @@ The file already contains commented-out placeholder blocks for all 26 unreleased
 4. Update `source` and `as_of`.
 5. Run `uv run python -m summer_movie_wager.render.build --local` and check that the movie appears in the projections table.
 
-**Where to find estimates:** Box Office Pro ([boxofficetheory.com](https://boxofficetheory.com)) is the primary source. Deadline and The Numbers often publish tracking. If no professional tracking exists, use your own judgment and set `confidence: low`.
+**Where to find estimates:** Box Office Theory ([boxofficetheory.com](https://boxofficetheory.com)) is the primary source. Deadline and The Numbers often publish tracking. If no professional tracking exists, use your own judgment and set `confidence: low`.
 
 ### Fixing a title mismatch or wrong category
 

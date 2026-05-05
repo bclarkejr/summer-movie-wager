@@ -132,8 +132,10 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
 
-    if not args.local and sim is not None:
-        _append_history(snapshot, sim, today=today)
+    if not args.local:
+        _append_box_office_history(snapshot, today=today)
+        if sim is not None:
+            _append_forecast_history(snapshot, sim, today=today)
 
     print(f"[build] wrote {DOCS_DIR}/index.html", file=sys.stderr)
     return 0
@@ -495,9 +497,8 @@ def _pick_detail(
     )
 
 
-def _append_history(snapshot: SiteSnapshot, sim: Any, *, today: date) -> None:
+def _append_box_office_history(snapshot: SiteSnapshot, *, today: date) -> None:
     box_path = DATA_DIR / "box_office_history.jsonl"
-    forecast_path = DATA_DIR / "forecast_history.jsonl"
     with box_path.open("a") as f:
         for movie, gross in snapshot.cumulative_grosses.items():
             f.write(
@@ -510,6 +511,10 @@ def _append_history(snapshot: SiteSnapshot, sim: Any, *, today: date) -> None:
                 )
                 + "\n"
             )
+
+
+def _append_forecast_history(snapshot: SiteSnapshot, sim: Any, *, today: date) -> None:
+    forecast_path = DATA_DIR / "forecast_history.jsonl"
     with forecast_path.open("a") as f:
         for username in snapshot.players:
             f.write(
