@@ -115,3 +115,19 @@ def test_today_before_release_raises():
             category=Category.WIDE,
             observed_history=[],
         )
+
+
+def test_release_date_defaults_to_today_projects_forward():
+    # When a movie has no known release date, _normalize_movies defaults release_date=today.
+    # days_since_release == 0 but cumulative > 0 (opening weekend already captured).
+    # The projection must exceed the current gross — it should not be capped at the current gross.
+    today = date(2026, 5, 4)
+    gross, sigma = project_decay(
+        release_date=today,
+        today=today,
+        cumulative_gross_to_date=77_000_000.0,
+        category=Category.WIDE,
+        observed_history=[],
+    )
+    assert gross > 77_000_000, "projection must exceed current gross when movie is still running"
+    assert sigma == pytest.approx(0.30)

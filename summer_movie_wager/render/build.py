@@ -65,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
     _warn_missing_projections(movies, preopening, today=today)
 
     non_zero = _count_non_zero_projections(projections)
-    forecast_available = non_zero >= 10
+    forecast_available = non_zero >= 25
     forecast_unavailable_reason = ""
     sim: Any | None = None
     if forecast_available:
@@ -78,7 +78,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         forecast_unavailable_reason = (
             f"only {non_zero} movie(s) have non-zero projections "
-            f"(need 10 for an honest top-10 ranking)"
+            f"(need 25 for an honest top-10 ranking)"
         )
         print(
             f"[build] WARNING: skipping simulation — {forecast_unavailable_reason}",

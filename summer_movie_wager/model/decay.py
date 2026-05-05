@@ -34,18 +34,33 @@ def project_decay(
     if today >= WINDOW_END:
         return cumulative_gross_to_date, sigma
 
+    days_since_release = (today - release_date).days
+    days_remaining = (WINDOW_END - today).days
+
+    # Degenerate case: release_date defaulted to today but we already have gross data
+    # (movie opened over a prior weekend with no known release date in our records).
+    # Treat the current cumulative as the opening-week gross and project from week 2.
+    if days_since_release == 0 and cumulative_gross_to_date > 0:
+        projected_remaining = _sum_weekly_remaining(
+            week_1_gross=cumulative_gross_to_date,
+            wow=wow,
+            weeks_already_played=1,
+            days_already_in_current_week=0,
+            days_remaining=days_remaining,
+        )
+        return cumulative_gross_to_date + projected_remaining, sigma
+
     week_1_gross = _calibrate_week_1(
         cumulative_gross_to_date=cumulative_gross_to_date,
-        days_since_release=(today - release_date).days,
+        days_since_release=days_since_release,
         wow=wow,
     )
 
-    days_remaining = (WINDOW_END - today).days
     projected_remaining = _sum_weekly_remaining(
         week_1_gross=week_1_gross,
         wow=wow,
         weeks_already_played=weeks_observed,
-        days_already_in_current_week=(today - release_date).days % 7,
+        days_already_in_current_week=days_since_release % 7,
         days_remaining=days_remaining,
     )
     return cumulative_gross_to_date + projected_remaining, sigma
