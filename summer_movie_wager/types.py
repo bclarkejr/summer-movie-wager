@@ -55,11 +55,11 @@ class PreopeningEntry(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     release_date: date
-    opening_weekend_estimate: float
-    total_domestic_estimate: float
-    confidence: Confidence
-    source: str
-    as_of: date
+    opening_weekend_estimate: float | None = None
+    total_domestic_estimate: float | None = None
+    confidence: Confidence | None = None
+    source: str | None = None
+    as_of: date | None = None
     notes: str = ""
 
 

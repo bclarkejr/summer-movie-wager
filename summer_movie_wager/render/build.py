@@ -150,13 +150,18 @@ def _load_yaml(path: Path) -> dict[str, Any]:
 def _parse_preopening(raw: dict[str, Any]) -> dict[str, PreopeningEntry]:
     out: dict[str, PreopeningEntry] = {}
     for title, entry in raw.items():
+        ow = entry.get("opening_weekend_estimate")
+        td = entry.get("total_domestic_estimate")
+        conf = entry.get("confidence")
+        src = entry.get("source")
+        as_of = entry.get("as_of")
         out[title] = PreopeningEntry(
             release_date=date.fromisoformat(str(entry["release_date"])),
-            opening_weekend_estimate=float(entry["opening_weekend_estimate"]),
-            total_domestic_estimate=float(entry["total_domestic_estimate"]),
-            confidence=Confidence(entry["confidence"]),
-            source=str(entry["source"]),
-            as_of=date.fromisoformat(str(entry["as_of"])),
+            opening_weekend_estimate=float(ow) if ow is not None else None,
+            total_domestic_estimate=float(td) if td is not None else None,
+            confidence=Confidence(conf) if conf is not None else None,
+            source=str(src) if src is not None else None,
+            as_of=date.fromisoformat(str(as_of)) if as_of is not None else None,
             notes=str(entry.get("notes", "")),
         )
     return out
@@ -230,7 +235,11 @@ def _project_all(
                 category=m["category"],
                 observed_history=obs,
             )
-        elif m["status"] == MovieStatus.PRE_RELEASE and title in preopening:
+        elif (
+            m["status"] == MovieStatus.PRE_RELEASE
+            and title in preopening
+            and preopening[title].opening_weekend_estimate is not None
+        ):
             entry = preopening[title]
             gross, sigma = project_preopening(
                 release_date=entry.release_date,
@@ -262,7 +271,7 @@ def _warn_missing_projections(
     for title, m in movies.items():
         if m["status"] != MovieStatus.PRE_RELEASE:
             continue
-        if title in preopening:
+        if title in preopening and preopening[title].opening_weekend_estimate is not None:
             continue
         if m["release_date"] > WINDOW_END:
             # Legitimately won't score — no analyst entry needed.
