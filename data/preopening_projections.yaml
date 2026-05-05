@@ -15,80 +15,141 @@
 # numbers with analyst estimates, set confidence (high|med|low), and
 # update source / as_of. Re-run: uv run python -m summer_movie_wager.render.build --local
 
+# These numbers are pulled from https://boxofficetheory.com as they become available.
+# If numbers aren't released on Box Office Theory, then Bruce is just taking a guess.
+
+# ---------------------------------------------------------------------------
+# Already opened movies
+# ---------------------------------------------------------------------------
+
+"The Devil Wears Prada 2":
+  release_date: 2026-05-01
+  opening_weekend_estimate: 79_000_000
+  total_domestic_estimate: 230_000_000
+  confidence: high
+  source: "Box Office Theory"
+  as_of: 2026-04-23
+  notes: ""
+
+"Animal Farm":
+  release_date: 2026-05-01
+  opening_weekend_estimate: 2_500_000
+  total_domestic_estimate: 6_250_000
+  confidence: high
+  source: "Box Office Theory"
+  as_of: 2026-04-23
+  notes: ""
+
+"Hokum":
+  release_date: 2026-05-01
+  opening_weekend_estimate: 4_000_000
+  total_domestic_estimate: 9_500_000
+  confidence: high
+  source: "Box Office Theory"
+  as_of: 2026-04-23
+  notes: ""
+
+"That Time I Got Reincarnated as a Slime the Movie: Tears of the Azure Sea":
+  release_date: 2026-05-01
+  opening_weekend_estimate: 2_000_000
+  total_domestic_estimate: 3_000_000
+  confidence: high
+  source: "Box Office Theory"
+  as_of: 2026-04-23
+  notes: ""
+
+"Deep Water":
+  release_date: 2026-05-01
+  opening_weekend_estimate: 0  # No projections found
+  total_domestic_estimate: 0   # No projections found
+  confidence: low
+  source: "N/A"
+  as_of: 2026-04-23
+  notes: ""
+
 # ---------------------------------------------------------------------------
 # Active entries
 # ---------------------------------------------------------------------------
 
 "Mortal Kombat II":
   release_date: 2026-05-08
-  opening_weekend_estimate: 57000000
-  total_domestic_estimate: 100000000
+  opening_weekend_estimate: 45_000_000
+  total_domestic_estimate: 96_000_000
   confidence: med
-  source: "Deadline opening forecast ($50-65M, 2026-04) + SlashFilm/ComingSoon analytics total ($80-120M, 2026-04-10)"
+  source: "Box Office Theory $40-50M opening + $80-109M total (2026-05-04, adjusted down week over week)"
   as_of: 2026-05-04
-  notes: "Opening midpoint of $50-65M industry tracking; total midpoint of $80-120M projected domestic run"
+  notes: "Opening midpoint of $40-50M industry tracking; total midpoint of $80-109M projected domestic run"
 
 "Star Wars: The Mandalorian and Grogu":
   release_date: 2026-05-22
-  opening_weekend_estimate: 95000000
-  total_domestic_estimate: 220000000
+  opening_weekend_estimate: 80_000_000
+  total_domestic_estimate: 195_000_000
   confidence: med
-  source: "Box Office Pro long-range forecast ($90-100M opening, recently raised); domestic total benchmarked to Solo ($213.7M)"
+  source: "Box Office Theory 74-90M opening + $152-228M total (2026-05-04)"
   as_of: 2026-05-04
-  notes: "Solo: A Star Wars Story finaled at $213.7M domestic with a $103M 4-day opening; M&G opening tracking similar but with stronger marketing climb"
+  notes: "Opening slightly above midpoint of $74-90M industry tracking; total slightly above midpoint of $152-228M projected domestic run"
+
+# May 2026 releases
+
+"The Sheep Detectives":
+  release_date: 2026-05-08
+  opening_weekend_estimate: 13_000_000
+  total_domestic_estimate: 47_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-04
+  notes: "Hugh Jackman family-skewing whodunit; opening from BOP tracking, total TBD"
+
+"I Love Boosters":
+  release_date: 2026-05-22
+  opening_weekend_estimate: 5_000_000
+  total_domestic_estimate: 14_700_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-04
+  notes: "NEON indie counter-programmer opposite Star Wars; BOP comp was Sorry to Bother You ($17.4M total)"
+
+"Passenger":
+  release_date: 2026-05-22
+  opening_weekend_estimate: 6_000_000
+  total_domestic_estimate: 14_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-04
+  notes: "Paramount supernatural horror, dir. André Øvredal; moved up from May 29 to avoid Backrooms/Scary Movie"
+
+"Backrooms":
+  release_date: 2026-05-29
+  opening_weekend_estimate: 18_000_000
+  total_domestic_estimate: 35_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-04
+  notes: ""
+
+"The Breadwinner":
+  release_date: 2026-05-29
+  opening_weekend_estimate: 23_000_000
+  total_domestic_estimate: 84_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-04
+  notes: ""
 
 # ---------------------------------------------------------------------------
 # Placeholders — uncomment and fill as analyst data arrives
 # ---------------------------------------------------------------------------
 
-# May 2026 releases
-
-# "The Sheep Detectives":
-#   release_date: 2026-05-08
-#   opening_weekend_estimate: 12000000  # TODO: BOP tracked $10-15M opening — confirm
-#   total_domestic_estimate: 0  # TODO: no analyst total surfaced; needs lookup
-#   confidence: low
-#   source: "Box Office Pro long-range forecast (via koimoi citation), 2026-05"
-#   as_of: 2026-05-04
-#   notes: "Hugh Jackman family-skewing whodunit; opening from BOP tracking, total TBD"
-
-# "I Love Boosters":
-#   release_date: 2026-05-22
-#   opening_weekend_estimate: 3000000  # TODO: BOP tracked $2-4M opening — confirm
-#   total_domestic_estimate: 0  # TODO: no analyst total surfaced
-#   confidence: low
-#   source: "Box Office Pro long-range forecast, 2026-04"
-#   as_of: 2026-05-04
-#   notes: "NEON indie counter-programmer opposite Star Wars; BOP comp was Sorry to Bother You ($17.4M total)"
-
-# "Passenger":
-#   release_date: 2026-05-22
-#   opening_weekend_estimate: 0  # TODO
-#   total_domestic_estimate: 0  # TODO
-#   confidence: low
-#   source: ""
-#   as_of: 2026-05-04
-#   notes: "Paramount supernatural horror, dir. André Øvredal; moved up from May 29 to avoid Backrooms/Scary Movie"
-
-# "Backrooms":
-#   release_date: 2026-05-29  # TODO confirm — Paramount; mentioned alongside Passenger and Scary Movie
-#   opening_weekend_estimate: 0  # TODO
-#   total_domestic_estimate: 0  # TODO
-#   confidence: low
-#   source: ""
-#   as_of: 2026-05-04
-#   notes: ""
+# June 2026 releases
 
 # "Scary Movie":
-#   release_date: 2026-05-29  # TODO confirm — Paramount
+#   release_date: 2026-06-05  # TODO confirm — Paramount
 #   opening_weekend_estimate: 0  # TODO
 #   total_domestic_estimate: 0  # TODO
 #   confidence: low
 #   source: ""
 #   as_of: 2026-05-04
 #   notes: ""
-
-# June 2026 releases
 
 # "Masters of the Universe":
 #   release_date: 2026-06-05
@@ -223,15 +284,6 @@
 #   notes: ""
 
 # "Finding Emily":
-#   release_date: 2026-09-01  # TODO confirm
-#   opening_weekend_estimate: 0  # TODO
-#   total_domestic_estimate: 0  # TODO
-#   confidence: low
-#   source: ""
-#   as_of: 2026-05-04
-#   notes: ""
-
-# "The Breadwinner":
 #   release_date: 2026-09-01  # TODO confirm
 #   opening_weekend_estimate: 0  # TODO
 #   total_domestic_estimate: 0  # TODO
