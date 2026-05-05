@@ -432,6 +432,10 @@ def _build_movie_rows(
                 source=src,
             )
         )
+    
+    # Sort by release date (earliest first), then by projected gross (highest first).
+    # This means that movies with no projection (median=0) will be sorted by release date.
+    rows.sort(key=lambda r: r.release_date)
     rows.sort(key=lambda r: r.median_in_window_gross, reverse=True)
     return rows
 
