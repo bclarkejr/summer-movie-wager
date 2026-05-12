@@ -84,17 +84,17 @@
 
 "Mortal Kombat II":
   release_date: 2026-05-08
-  opening_weekend_estimate: 45_000_000
-  total_domestic_estimate: 96_000_000
+  opening_weekend_estimate: 44_500_000
+  total_domestic_estimate: 101_000_000
   confidence: med
-  source: "Box Office Theory $40-50M opening + $80-109M total (2026-05-04, adjusted down week over week)"
+  source: "Box Office Theory $40-50M opening + $77-104M total (2026-05-04, adjusted down week over week)"
   as_of: 2026-05-04
   notes: "Opening midpoint of $40-50M industry tracking; total midpoint of $80-109M projected domestic run"
 
 "The Sheep Detectives":
   release_date: 2026-05-08
-  opening_weekend_estimate: 13_000_000
-  total_domestic_estimate: 47_000_000
+  opening_weekend_estimate: 16_900_000
+  total_domestic_estimate: 60_000_000
   confidence: med
   source: "Box Office Theory forecast"
   as_of: 2026-05-04
@@ -102,8 +102,8 @@
 
 "Star Wars: The Mandalorian and Grogu":
   release_date: 2026-05-22
-  opening_weekend_estimate: 80_000_000
-  total_domestic_estimate: 195_000_000
+  opening_weekend_estimate: 86_500_000
+  total_domestic_estimate: 215_000_000
   confidence: med
   source: "Box Office Theory 74-90M opening + $152-228M total (2026-05-04)"
   as_of: 2026-05-04
@@ -111,8 +111,8 @@
 
 "I Love Boosters":
   release_date: 2026-05-22
-  opening_weekend_estimate: 5_000_000
-  total_domestic_estimate: 14_700_000
+  opening_weekend_estimate: 4_000_000
+  total_domestic_estimate: 11_800_000
   confidence: low
   source: "Box Office Theory forecast"
   as_of: 2026-05-04
@@ -129,8 +129,8 @@
 
 "Backrooms":
   release_date: 2026-05-29
-  opening_weekend_estimate: 18_000_000
-  total_domestic_estimate: 35_000_000
+  opening_weekend_estimate: 21_000_000
+  total_domestic_estimate: 40_000_000
   confidence: low
   source: "Box Office Theory forecast"
   as_of: 2026-05-04
@@ -145,29 +145,29 @@
   as_of: 2026-05-04
   notes: ""
 
-# ---------------------------------------------------------------------------
-# Placeholders — uncomment and fill as analyst data arrives
-# ---------------------------------------------------------------------------
-
 # June 2026 releases
 
 "Scary Movie":
   release_date: 2026-06-05
-#   opening_weekend_estimate: 0  # TODO
-#   total_domestic_estimate: 0  # TODO
-#   confidence: low
-#   source: ""
-#   as_of: 2026-05-04
-#   notes: ""
+  opening_weekend_estimate: 41_000_000
+  total_domestic_estimate: 85_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-04
+  notes: "35-52M opening range per BOT; 73-105M total gross per BOT"
 
 "Masters of the Universe":
   release_date: 2026-06-05
-#   opening_weekend_estimate: 11000000  # TODO: independent forecasts $10-12M / $10-15M
-#   total_domestic_estimate: 0  # TODO: no analyst total surfaced
-#   confidence: low
-#   source: "Independent forecasts, 2026-04 (no specific BOP article surfaced)"
-#   as_of: 2026-05-04
-#   notes: "Amazon MGM live-action He-Man; Nicholas Galitzine starring"
+  opening_weekend_estimate: 32_500_000
+  total_domestic_estimate: 78_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-04
+  notes: "25-35M opening range per BOT; 55-90M total gross per BOT"
+
+# ---------------------------------------------------------------------------
+# Placeholders — uncomment and fill as analyst data arrives
+# ---------------------------------------------------------------------------
 
 "Power Ballad":
   release_date: 2026-06-05  # TODO confirm
