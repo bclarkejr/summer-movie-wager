@@ -102,12 +102,12 @@
 
 "Star Wars: The Mandalorian and Grogu":
   release_date: 2026-05-22
-  opening_weekend_estimate: 86_500_000
-  total_domestic_estimate: 215_000_000
+  opening_weekend_estimate: 90_000_000
+  total_domestic_estimate: 224_000_000
   confidence: med
-  source: "Box Office Theory 74-90M opening + $152-228M total (2026-05-04)"
+  source: "Box Office Theory forecast"
   as_of: 2026-05-04
-  notes: "Opening slightly above midpoint of $74-90M industry tracking; total slightly above midpoint of $152-228M projected domestic run"
+  notes: "81-96M opening range per BOT; 166-239M total gross per BOT"
 
 "I Love Boosters":
   release_date: 2026-05-22
@@ -129,8 +129,8 @@
 
 "Backrooms":
   release_date: 2026-05-29
-  opening_weekend_estimate: 21_000_000
-  total_domestic_estimate: 40_000_000
+  opening_weekend_estimate: 31_000_000
+  total_domestic_estimate: 71_000_000
   confidence: low
   source: "Box Office Theory forecast"
   as_of: 2026-05-04
@@ -138,8 +138,8 @@
 
 "The Breadwinner":
   release_date: 2026-05-29
-  opening_weekend_estimate: 23_000_000
-  total_domestic_estimate: 84_000_000
+  opening_weekend_estimate: 22_000_000
+  total_domestic_estimate: 80_600_000
   confidence: low
   source: "Box Office Theory forecast"
   as_of: 2026-05-04
@@ -165,21 +165,21 @@
   as_of: 2026-05-04
   notes: "25-35M opening range per BOT; 55-90M total gross per BOT"
 
+"Disclosure Day":
+  release_date: 2026-06-12
+  opening_weekend_estimate: 54_000_000
+  total_domestic_estimate: 170_000_000
+  confidence: med
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-04
+  notes: "45-59M opening range per BOT; 140-221M total gross per BOT"
+
 # ---------------------------------------------------------------------------
 # Placeholders — uncomment and fill as analyst data arrives
 # ---------------------------------------------------------------------------
 
 "Power Ballad":
   release_date: 2026-06-05  # TODO confirm
-#   opening_weekend_estimate: 0  # TODO
-#   total_domestic_estimate: 0  # TODO
-#   confidence: low
-#   source: ""
-#   as_of: 2026-05-04
-#   notes: ""
-
-"Disclosure Day":
-  release_date: 2026-06-12
 #   opening_weekend_estimate: 0  # TODO
 #   total_domestic_estimate: 0  # TODO
 #   confidence: low
