@@ -21,15 +21,55 @@
     "zmeister": 4
   },
   "forecast_available": false,
-  "non_zero_projections": 21,
+  "non_zero_projections": 20,
   "projections": [
+    {
+      "movie_title": "Spider-Man: Brand New Day",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0
+    },
+    {
+      "movie_title": "Passenger",
+      "median_in_window_gross": 13997609.091536188,
+      "sigma": 0.45
+    },
+    {
+      "movie_title": "Masters of the Universe",
+      "median_in_window_gross": 77946183.72769356,
+      "sigma": 0.45
+    },
+    {
+      "movie_title": "Supergirl",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0
+    },
+    {
+      "movie_title": "Animal Farm",
+      "median_in_window_gross": 6255217.594898154,
+      "sigma": 0.23333333333333334
+    },
+    {
+      "movie_title": "I Love Boosters",
+      "median_in_window_gross": 11780876.599526696,
+      "sigma": 0.45
+    },
     {
       "movie_title": "Young Washington",
       "median_in_window_gross": 0.0,
       "sigma": 0.0
     },
     {
-      "movie_title": "Coyote vs. Acme",
+      "movie_title": "Disclosure Day",
+      "median_in_window_gross": 168582347.6862042,
+      "sigma": 0.3
+    },
+    {
+      "movie_title": "Power Ballad",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0
+    },
+    {
+      "movie_title": "The Odyssey",
       "median_in_window_gross": 0.0,
       "sigma": 0.0
     },
@@ -39,74 +79,24 @@
       "sigma": 0.23333333333333334
     },
     {
-      "movie_title": "Spider-Man: Brand New Day",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0
-    },
-    {
-      "movie_title": "Supergirl",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0
-    },
-    {
-      "movie_title": "Moana",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0
-    },
-    {
-      "movie_title": "Power Ballad",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0
-    },
-    {
-      "movie_title": "Masters of the Universe",
-      "median_in_window_gross": 77946183.72769356,
-      "sigma": 0.45
-    },
-    {
-      "movie_title": "Is God Is",
-      "median_in_window_gross": 4922372.395680487,
-      "sigma": 0.3
-    },
-    {
-      "movie_title": "The Breadwinner",
-      "median_in_window_gross": 79815546.16584533,
-      "sigma": 0.45
-    },
-    {
-      "movie_title": "Tom and Jerry: Forbidden Compass",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0
-    },
-    {
       "movie_title": "Scary Movie",
       "median_in_window_gross": 84988201.73924935,
       "sigma": 0.45
     },
     {
-      "movie_title": "Passenger",
-      "median_in_window_gross": 13997609.091536188,
-      "sigma": 0.45
-    },
-    {
-      "movie_title": "PAW Patrol: The Dino Movie",
+      "movie_title": "Insidious: Out of the Further",
       "median_in_window_gross": 0.0,
       "sigma": 0.0
     },
     {
-      "movie_title": "The Sheep Detectives",
-      "median_in_window_gross": 53797043.536328614,
-      "sigma": 0.26666666666666666
-    },
-    {
-      "movie_title": "I Love Boosters",
-      "median_in_window_gross": 11780876.599526696,
+      "movie_title": "Backrooms",
+      "median_in_window_gross": 70982708.45543447,
       "sigma": 0.45
     },
     {
-      "movie_title": "The Devil Wears Prada 2",
-      "median_in_window_gross": 224719388.49505758,
-      "sigma": 0.23333333333333334
+      "movie_title": "Billie Eilish: Hit Me Hard and Soft",
+      "median_in_window_gross": 16919315.87935546,
+      "sigma": 0.26666666666666666
     },
     {
       "movie_title": "Obsession",
@@ -119,34 +109,19 @@
       "sigma": 0.26666666666666666
     },
     {
-      "movie_title": "Star Wars: The Mandalorian and Grogu",
-      "median_in_window_gross": 223922407.34816483,
-      "sigma": 0.3
+      "movie_title": "Moana",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0
     },
     {
-      "movie_title": "Hokum",
-      "median_in_window_gross": 20014601.37160538,
+      "movie_title": "Coyote vs. Acme",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0
+    },
+    {
+      "movie_title": "That Time I Got Reincarnated as a Slime the Movie: Tears of the Azure Sea",
+      "median_in_window_gross": 1625886.9747001403,
       "sigma": 0.23333333333333334
-    },
-    {
-      "movie_title": "Disclosure Day",
-      "median_in_window_gross": 168582347.6862042,
-      "sigma": 0.3
-    },
-    {
-      "movie_title": "Billie Eilish: Hit Me Hard and Soft",
-      "median_in_window_gross": 20907284.84184508,
-      "sigma": 0.3
-    },
-    {
-      "movie_title": "The Odyssey",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0
-    },
-    {
-      "movie_title": "The End of Oak Street",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0
     },
     {
       "movie_title": "In the Grey",
@@ -154,17 +129,32 @@
       "sigma": 0.3
     },
     {
-      "movie_title": "Evil Dead Burn",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0
-    },
-    {
-      "movie_title": "Billie Eilish: Hit Me Hard and Soft - The Tour Live in 3D",
-      "median_in_window_gross": 19999997.742074337,
+      "movie_title": "Is God Is",
+      "median_in_window_gross": 4922372.395680487,
       "sigma": 0.3
     },
     {
       "movie_title": "Minions & Monsters",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0
+    },
+    {
+      "movie_title": "Hokum",
+      "median_in_window_gross": 20014601.37160538,
+      "sigma": 0.23333333333333334
+    },
+    {
+      "movie_title": "Star Wars: The Mandalorian and Grogu",
+      "median_in_window_gross": 223922407.34816483,
+      "sigma": 0.3
+    },
+    {
+      "movie_title": "The Devil Wears Prada 2",
+      "median_in_window_gross": 224719388.49505758,
+      "sigma": 0.23333333333333334
+    },
+    {
+      "movie_title": "Toy Story 5",
       "median_in_window_gross": 0.0,
       "sigma": 0.0
     },
@@ -179,32 +169,37 @@
       "sigma": 0.0
     },
     {
-      "movie_title": "Animal Farm",
-      "median_in_window_gross": 6255217.594898154,
-      "sigma": 0.23333333333333334
-    },
-    {
-      "movie_title": "Toy Story 5",
+      "movie_title": "The End of Oak Street",
       "median_in_window_gross": 0.0,
       "sigma": 0.0
     },
     {
-      "movie_title": "That Time I Got Reincarnated as a Slime the Movie: Tears of the Azure Sea",
-      "median_in_window_gross": 1625886.9747001403,
-      "sigma": 0.23333333333333334
-    },
-    {
-      "movie_title": "Insidious: Out of the Further",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0
-    },
-    {
-      "movie_title": "Backrooms",
-      "median_in_window_gross": 70982708.45543447,
+      "movie_title": "The Breadwinner",
+      "median_in_window_gross": 79815546.16584533,
       "sigma": 0.45
+    },
+    {
+      "movie_title": "PAW Patrol: The Dino Movie",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0
+    },
+    {
+      "movie_title": "The Sheep Detectives",
+      "median_in_window_gross": 53797043.536328614,
+      "sigma": 0.26666666666666666
+    },
+    {
+      "movie_title": "Tom and Jerry: Forbidden Compass",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0
+    },
+    {
+      "movie_title": "Evil Dead Burn",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0
     }
   ],
-  "forecast_unavailable_reason": "only 21 movie(s) have non-zero projections (need 25 for an honest top-10 ranking)",
+  "forecast_unavailable_reason": "only 20 movie(s) have non-zero projections (need 25 for an honest top-10 ranking)",
   "win_prob": {
     "radhadr": null,
     "bclarke": null,
