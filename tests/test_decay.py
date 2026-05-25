@@ -154,3 +154,10 @@ def test_week1_fraction_earned_full_week_is_one():
 def test_week1_fraction_earned_zero_days_is_zero():
     frac = _week1_fraction_earned(date(2026, 5, 21), 0)
     assert frac == pytest.approx(0.0, abs=0.001)
+
+
+def test_week1_fraction_earned_monday_open_four_days():
+    # Monday open: Mon=0.08, Tue=0.07, Wed=0.08, Thu=0.09 → 0.32
+    # Tests that the % 7 wrap in the index calculation is correct
+    frac = _week1_fraction_earned(date(2026, 5, 25), 4)
+    assert frac == pytest.approx(0.32, abs=0.001)

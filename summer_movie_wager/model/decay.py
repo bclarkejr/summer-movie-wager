@@ -20,7 +20,7 @@ def _week1_fraction_earned(release_date: date, days_in_partial_week: int) -> flo
 
     Uses day-of-week weights so that opening-weekend days (Fri/Sat/Sun) count
     for their true share (~68%) rather than a uniform 3/7 = 43%.
-    Clamped to [0, 1].
+    Result is always in [0, 1] because weights sum to 1.0 and `days` is bounded to [0, 7].
     """
     if days_in_partial_week <= 0:
         return 0.0
