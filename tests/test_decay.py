@@ -163,17 +163,17 @@ def test_week1_fraction_earned_monday_open_four_days():
     assert frac == pytest.approx(0.32, abs=0.001)
 
 
-def test_calibrate_week1_thursday_open_four_days():
-    # Mandalorian: opened Thu May 22, 4 days elapsed, $102M cumulative.
-    # Thu+Fri+Sat+Sun = 0.09+0.21+0.26+0.21 = 0.77 of week 1.
-    # week_1_gross should be 102M / 0.77 ≈ 132.5M (not 178M from uniform 4/7).
+def test_calibrate_week1_friday_open_four_days():
+    # Fri May 22, 4 days elapsed (Fri–Mon, Memorial Day weekend)
+    # Fri=0.21, Sat=0.26, Sun=0.21, Mon=0.08 → 0.76
+    # week_1_gross should be 102M / 0.76 ≈ 134.2M
     w1 = _calibrate_week_1(
         release_date=date(2026, 5, 22),
         cumulative_gross_to_date=102_000_000.0,
         days_since_release=4,
         wow=0.55,
     )
-    assert 130_000_000 < w1 < 135_000_000
+    assert 133_000_000 < w1 < 136_000_000
 
 
 def test_calibrate_week1_full_week_returns_cumulative():
@@ -185,3 +185,17 @@ def test_calibrate_week1_full_week_returns_cumulative():
         wow=0.55,
     )
     assert w1 == pytest.approx(80_000_000.0, rel=0.01)
+
+
+def test_calibrate_week1_second_week_partial_uses_uniform():
+    # Movie at day 10 (full_weeks=1, partial_days=3).
+    # Fallback path: partial term uses 3/7 uniform prorating (not DOW weights).
+    # denominator = wow^0 + wow^1 * (3/7) = 1.0 + 0.55 * 0.4286 = 1.2357
+    # week_1_gross = 80M / 1.2357 ≈ 64.7M
+    w1 = _calibrate_week_1(
+        release_date=date(2026, 5, 1),  # Friday (day-of-week doesn't affect result here)
+        cumulative_gross_to_date=80_000_000.0,
+        days_since_release=10,
+        wow=0.55,
+    )
+    assert 63_000_000 < w1 < 67_000_000
