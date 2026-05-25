@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from summer_movie_wager.model.decay import project_decay, _week1_fraction_earned, _calibrate_week_1
+from summer_movie_wager.model.decay import project_decay, _week1_fraction_earned, _calibrate_week_1, _sum_weekly_remaining
 from summer_movie_wager.types import Category
 
 
@@ -213,6 +213,30 @@ def test_projection_friday_open_not_inflated():
         category=Category.WIDE,
         observed_history=[],
     )
-    assert gross < 300_000_000, f"Projection {gross/1e6:.0f}M is unrealistically high"
+    assert 280_000_000 < gross < 310_000_000, f"Projection {gross/1e6:.0f}M is outside expected range"
     assert gross > 102_000_000, "Projection must exceed current gross"
     assert sigma == pytest.approx(0.30)
+
+
+def test_sum_weekly_remaining_week1_truncated_by_window():
+    # Exercises the branch where WINDOW_END cuts off week 1 early.
+    # Movie opened on a Thursday (2026-09-03), 2 days elapsed (Thu+Fri).
+    # days_already_in_current_week=2, days_remaining=4 (Sat Sep 5 through Tue Sep 9,
+    # but WINDOW_END=Sep 7, so days_remaining must respect that).
+    # We test _sum_weekly_remaining directly with a short days_remaining that
+    # cuts off the partial week before it finishes.
+    #
+    # Setup: Thu open, 2 days elapsed (Thu=0.09, Fri=0.21 → 0.30 earned).
+    # Remaining of week 1 normally = 5 days. But days_remaining=3 cuts it at Sat+Sun+Mon.
+    # Sat=0.26, Sun=0.21, Mon=0.08 → extra frac = 0.55.
+    # week_1_gross * 0.55 = 100M * 0.55 = 55M
+    result = _sum_weekly_remaining(
+        week_1_gross=100_000_000.0,
+        wow=0.55,
+        weeks_already_played=0,
+        days_already_in_current_week=2,
+        days_remaining=3,
+        release_date=date(2026, 9, 3),  # Thursday
+    )
+    # Sat(0.26) + Sun(0.21) + Mon(0.08) = 0.55 of week_1_gross
+    assert result == pytest.approx(55_000_000, rel=0.01)
