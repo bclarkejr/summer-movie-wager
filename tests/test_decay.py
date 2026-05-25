@@ -7,8 +7,11 @@ from summer_movie_wager.types import Category
 
 
 def test_just_opened_uses_default_wow_and_high_sigma():
-    # Movie opened 6 days ago with 50M earned. With default wow=0.55, week_1_gross calibrates
-    # so that ~6/7 of week 1 = 50M → week_1 ≈ 58.3M. Project full window.
+    # Movie opened 6 days ago (Monday Apr 27) with $50M earned.
+    # DOW weights for Mon–Sat = 0.79 → week_1_gross ≈ 63.3M.
+    # Remaining of week 1 (Sunday = 0.21): +13.3M.
+    # ~17 weeks remaining at wow=0.55: 63.3M * 1.22 ≈ 77.2M.
+    # Total ≈ 140.5M → assertion window 120M–165M.
     gross, sigma = project_decay(
         release_date=date(2026, 4, 27),
         today=date(2026, 5, 3),
@@ -16,9 +19,7 @@ def test_just_opened_uses_default_wow_and_high_sigma():
         category=Category.WIDE,
         observed_history=[],
     )
-    # Movie has ~18 weeks of window remaining. With wow=0.55:
-    # week_1 ≈ 58M, sum_{k=0..18} 58M * 0.55^k ≈ 58M / 0.45 ≈ 129M
-    assert 100_000_000 < gross < 160_000_000
+    assert 120_000_000 < gross < 165_000_000
     assert sigma == pytest.approx(0.30)
 
 
