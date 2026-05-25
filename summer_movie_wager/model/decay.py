@@ -81,6 +81,7 @@ def project_decay(
         weeks_already_played=weeks_observed,
         days_already_in_current_week=days_since_release % 7,
         days_remaining=days_remaining,
+        release_date=release_date,
     )
     return cumulative_gross_to_date + projected_remaining, sigma
 
@@ -150,8 +151,13 @@ def _sum_weekly_remaining(
     weeks_already_played: int,
     days_already_in_current_week: int,
     days_remaining: int,
+    release_date: date | None = None,
 ) -> float:
-    """Sum modeled grosses for the next `days_remaining` days starting at the current point."""
+    """Sum modeled grosses for the next `days_remaining` days starting at the current point.
+
+    For week-1 partial-week completion, uses day-of-week weights when release_date is
+    provided; falls back to uniform prorating for weeks 2+ or when release_date is absent.
+    """
     if days_remaining <= 0 or week_1_gross <= 0:
         return 0.0
 
@@ -163,7 +169,19 @@ def _sum_weekly_remaining(
     if days_already_in_current_week > 0:
         days_left_in_current_week = 7 - days_already_in_current_week
         chunk_days = min(days_left, days_left_in_current_week)
-        total += week_1_gross * (wow**week_index) * (chunk_days / 7.0)
+
+        if week_index == 0 and release_date is not None:
+            # Week 1: use complementary DOW fraction instead of chunk_days/7
+            earned_so_far = _week1_fraction_earned(release_date, days_already_in_current_week)
+            if chunk_days < days_left_in_current_week:
+                # Window ends before week 1 is done — only count the DOW weight of those days
+                remaining_frac = _week1_fraction_earned(release_date, days_already_in_current_week + chunk_days) - earned_so_far
+            else:
+                remaining_frac = 1.0 - earned_so_far
+            total += week_1_gross * remaining_frac
+        else:
+            total += week_1_gross * (wow**week_index) * (chunk_days / 7.0)
+
         days_left -= chunk_days
         week_index += 1
 

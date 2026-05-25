@@ -199,3 +199,20 @@ def test_calibrate_week1_second_week_partial_uses_uniform():
         wow=0.55,
     )
     assert 63_000_000 < w1 < 67_000_000
+
+
+def test_projection_friday_open_not_inflated():
+    # Mandalorian scenario: Fri May 22 open, 4 days in (Fri–Mon), $102M, WIDE.
+    # Measuring "through Monday" = Tuesday date (4-day difference).
+    # With the fix, total projection must be well under $300M.
+    # Industry expectation is ~$200-250M for this opening pace.
+    gross, sigma = project_decay(
+        release_date=date(2026, 5, 22),
+        today=date(2026, 5, 26),  # Tuesday: 4 days after Friday
+        cumulative_gross_to_date=102_000_000.0,
+        category=Category.WIDE,
+        observed_history=[],
+    )
+    assert gross < 300_000_000, f"Projection {gross/1e6:.0f}M is unrealistically high"
+    assert gross > 102_000_000, "Projection must exceed current gross"
+    assert sigma == pytest.approx(0.30)
