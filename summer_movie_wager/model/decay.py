@@ -69,6 +69,7 @@ def project_decay(
         return cumulative_gross_to_date + projected_remaining, sigma
 
     week_1_gross = _calibrate_week_1(
+        release_date=release_date,
         cumulative_gross_to_date=cumulative_gross_to_date,
         days_since_release=days_since_release,
         wow=wow,
@@ -118,17 +119,24 @@ def _sigma_from_weeks(weeks_observed: int) -> float:
 
 
 def _calibrate_week_1(
-    *, cumulative_gross_to_date: float, days_since_release: int, wow: float
+    *, release_date: date, cumulative_gross_to_date: float, days_since_release: int, wow: float
 ) -> float:
-    """Solve for week_1_gross such that the modeled cumulative-to-date matches input."""
+    """Solve for week_1_gross such that the modeled cumulative-to-date matches input.
+
+    Uses day-of-week weights for the first partial week instead of uniform prorating,
+    so that opening-weekend days count for their true share of week-1 gross.
+    """
     if days_since_release <= 0:
         return 0.0
     full_weeks = days_since_release // 7
     partial_days = days_since_release % 7
 
-    # Modeled cumulative = sum_{k=0..full_weeks-1} W*wow^k + W*wow^full_weeks * partial/7
     geo_full = sum(wow**k for k in range(full_weeks))
-    partial_term = (wow**full_weeks) * (partial_days / 7.0) if partial_days > 0 else 0.0
+    if partial_days > 0:
+        partial_frac = _week1_fraction_earned(release_date, partial_days) if full_weeks == 0 else partial_days / 7.0
+        partial_term = (wow**full_weeks) * partial_frac
+    else:
+        partial_term = 0.0
     denominator = geo_full + partial_term
     if denominator <= 0:
         return 0.0

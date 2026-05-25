@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from summer_movie_wager.model.decay import project_decay, _week1_fraction_earned
+from summer_movie_wager.model.decay import project_decay, _week1_fraction_earned, _calibrate_week_1
 from summer_movie_wager.types import Category
 
 
@@ -161,3 +161,27 @@ def test_week1_fraction_earned_monday_open_four_days():
     # Tests that the % 7 wrap in the index calculation is correct
     frac = _week1_fraction_earned(date(2026, 5, 25), 4)
     assert frac == pytest.approx(0.32, abs=0.001)
+
+
+def test_calibrate_week1_thursday_open_four_days():
+    # Mandalorian: opened Thu May 22, 4 days elapsed, $102M cumulative.
+    # Thu+Fri+Sat+Sun = 0.09+0.21+0.26+0.21 = 0.77 of week 1.
+    # week_1_gross should be 102M / 0.77 ≈ 132.5M (not 178M from uniform 4/7).
+    w1 = _calibrate_week_1(
+        release_date=date(2026, 5, 22),
+        cumulative_gross_to_date=102_000_000.0,
+        days_since_release=4,
+        wow=0.55,
+    )
+    assert 130_000_000 < w1 < 135_000_000
+
+
+def test_calibrate_week1_full_week_returns_cumulative():
+    # After a full 7 days, week_1_gross == cumulative (no partial adjustment needed).
+    w1 = _calibrate_week_1(
+        release_date=date(2026, 5, 19),  # Monday open
+        cumulative_gross_to_date=80_000_000.0,
+        days_since_release=7,
+        wow=0.55,
+    )
+    assert w1 == pytest.approx(80_000_000.0, rel=0.01)
