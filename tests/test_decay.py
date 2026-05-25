@@ -205,8 +205,8 @@ def test_calibrate_week1_second_week_partial_uses_uniform():
 def test_projection_friday_open_not_inflated():
     # Mandalorian scenario: Fri May 22 open, 4 days in (Fri–Mon), $102M, WIDE.
     # Measuring "through Monday" = Tuesday date (4-day difference).
-    # With the fix, total projection must be well under $300M.
-    # Industry expectation is ~$200-250M for this opening pace.
+    # At wow=0.55 default, corrected DOW weights give ~$298M (vs ~$529M pre-fix).
+    # The 280M–310M window guards against regression to the inflated pre-fix output.
     gross, sigma = project_decay(
         release_date=date(2026, 5, 22),
         today=date(2026, 5, 26),  # Tuesday: 4 days after Friday
