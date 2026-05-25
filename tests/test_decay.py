@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from summer_movie_wager.model.decay import project_decay
+from summer_movie_wager.model.decay import project_decay, _week1_fraction_earned
 from summer_movie_wager.types import Category
 
 
@@ -131,3 +131,26 @@ def test_release_date_defaults_to_today_projects_forward():
     )
     assert gross > 77_000_000, "projection must exceed current gross when movie is still running"
     assert sigma == pytest.approx(0.30)
+
+
+def test_week1_fraction_earned_thursday_open_four_days():
+    # Mandalorian scenario: opened Thursday May 21, 4 days elapsed (Thu–Sun)
+    # Thu=0.09, Fri=0.21, Sat=0.26, Sun=0.21 → 0.77
+    frac = _week1_fraction_earned(date(2026, 5, 21), 4)
+    assert frac == pytest.approx(0.77, abs=0.001)
+
+
+def test_week1_fraction_earned_friday_open_three_days():
+    # Standard Friday opening: Fri=0.21, Sat=0.26, Sun=0.21 → 0.68
+    frac = _week1_fraction_earned(date(2026, 5, 22), 3)
+    assert frac == pytest.approx(0.68, abs=0.001)
+
+
+def test_week1_fraction_earned_full_week_is_one():
+    frac = _week1_fraction_earned(date(2026, 5, 21), 7)
+    assert frac == pytest.approx(1.0, abs=0.001)
+
+
+def test_week1_fraction_earned_zero_days_is_zero():
+    frac = _week1_fraction_earned(date(2026, 5, 21), 0)
+    assert frac == pytest.approx(0.0, abs=0.001)

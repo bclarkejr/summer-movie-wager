@@ -10,6 +10,24 @@ _DEFAULT_WOW: dict[Category, float] = {
     Category.ANIMATED_FAMILY: 0.65,
 }
 
+# Fraction of a typical week's gross earned on each day (Mon=0 … Sun=6).
+# Weights sum to 1.0. Source: industry box-office day-of-week distribution.
+_DOW_WEIGHTS: list[float] = [0.08, 0.07, 0.08, 0.09, 0.21, 0.26, 0.21]
+
+
+def _week1_fraction_earned(release_date: date, days_in_partial_week: int) -> float:
+    """Fraction of week-1 gross expected to have been earned in the first N days.
+
+    Uses day-of-week weights so that opening-weekend days (Fri/Sat/Sun) count
+    for their true share (~68%) rather than a uniform 3/7 = 43%.
+    Clamped to [0, 1].
+    """
+    if days_in_partial_week <= 0:
+        return 0.0
+    days = min(days_in_partial_week, 7)
+    dow_start = release_date.weekday()  # 0=Mon … 6=Sun
+    return sum(_DOW_WEIGHTS[(dow_start + i) % 7] for i in range(days))
+
 
 def project_decay(
     *,
