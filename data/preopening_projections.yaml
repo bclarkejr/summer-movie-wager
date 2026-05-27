@@ -100,7 +100,16 @@
   as_of: 2026-05-04
   notes: "Hugh Jackman family-skewing whodunit; opening from BOP tracking, total TBD"
 
-"The Mandalorian and Grogu":
+"Obsession":
+  release_date: 2026-05-15
+  opening_weekend_estimate: 14_500_000
+  total_domestic_estimate: 36_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-15
+  notes: "NEON indie counter-programmer opposite Star Wars; BOP comp was Sorry to Bother You ($17.4M total)"
+
+"Star Wars: The Mandalorian and Grogu":
   release_date: 2026-05-22
   opening_weekend_estimate: 90_000_000
   total_domestic_estimate: 224_000_000
