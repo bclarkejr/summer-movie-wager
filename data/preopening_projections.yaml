@@ -187,7 +187,7 @@
   release_date: 2026-06-19
   opening_weekend_estimate: 140_000_000
   total_domestic_estimate: 495_000_000
-  confidence: low
+  confidence: med
   source: "Box Office Theory forecast"
   as_of: 2026-05-22
   notes: "130-160M opening range per BOT; 465-602M total gross per BOT"
@@ -196,7 +196,7 @@
   release_date: 2026-06-26
   opening_weekend_estimate: 56_000_000
   total_domestic_estimate: 137_000_000
-  confidence: low
+  confidence: med
   source: "Box Office Theory forecast"
   as_of: 2026-05-22
   notes: "47-65M opening range per BOT; 107-181M total gross per BOT"
@@ -210,32 +210,32 @@
   as_of: 2026-05-22
   notes: "15-25M opening range per BOT; 27-49M total gross per BOT"
 
+# July 2026 releases
+
+"Minions & Monsters":
+  release_date: 2026-07-01
+  opening_weekend_estimate: 57_000_000
+  total_domestic_estimate: 268_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-04
+  notes: "53-62M opening range per BOT; 248-291M total gross per BOT"
+
+"Young Washington":
+  release_date: 2026-07-03 
+  opening_weekend_estimate: 28_000_000
+  total_domestic_estimate: 105_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-04
+  notes: "23-35M opening range per BOT; 85-145M total gross per BOT"
+
 # ---------------------------------------------------------------------------
 # Placeholders — uncomment and fill as analyst data arrives
 # ---------------------------------------------------------------------------
 
 "Power Ballad":
   release_date: 2026-06-05  # TODO confirm
-#   opening_weekend_estimate: 0  # TODO
-#   total_domestic_estimate: 0  # TODO
-#   confidence: low
-#   source: ""
-#   as_of: 2026-05-04
-#   notes: ""
-
-# July 2026 releases
-
-"Minions & Monsters":
-  release_date: 2026-07-01
-#   opening_weekend_estimate: 0  # TODO
-#   total_domestic_estimate: 0  # TODO
-#   confidence: low
-#   source: ""
-#   as_of: 2026-05-04
-#   notes: "Despicable Me franchise spinoff; comp Minions: The Rise of Gru ($125M opening / $251M domestic)"
-
-"Young Washington":
-  release_date: 2026-07-03  # TODO confirm
 #   opening_weekend_estimate: 0  # TODO
 #   total_domestic_estimate: 0  # TODO
 #   confidence: low
