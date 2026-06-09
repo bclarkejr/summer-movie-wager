@@ -176,21 +176,21 @@
 
 "Disclosure Day":
   release_date: 2026-06-12
-  opening_weekend_estimate: 54_000_000
-  total_domestic_estimate: 170_000_000
+  opening_weekend_estimate: 50_500_000
+  total_domestic_estimate: 159_000_000
   confidence: med
   source: "Box Office Theory forecast"
-  as_of: 2026-05-22
-  notes: "45-59M opening range per BOT; 140-221M total gross per BOT"
+  as_of: 2026-06-05
+  notes: "40-55M opening range per BOT; 125-206M total gross per BOT"
 
 "Toy Story 5":
   release_date: 2026-06-19
-  opening_weekend_estimate: 140_000_000
-  total_domestic_estimate: 495_000_000
+  opening_weekend_estimate: 155_000_000
+  total_domestic_estimate: 516_000_000
   confidence: med
   source: "Box Office Theory forecast"
-  as_of: 2026-05-22
-  notes: "130-160M opening range per BOT; 465-602M total gross per BOT"
+  as_of: 2026-06-05
+  notes: "145-165M opening range per BOT; 490-602M total gross per BOT"
 
 "Supergirl":
   release_date: 2026-06-26
@@ -198,17 +198,17 @@
   total_domestic_estimate: 137_000_000
   confidence: med
   source: "Box Office Theory forecast"
-  as_of: 2026-05-22
-  notes: "47-65M opening range per BOT; 107-181M total gross per BOT"
+  as_of: 2026-06-05
+  notes: "47-60M opening range per BOT; 107-167M total gross per BOT"
 
 "Jackass: Best and Last":
   release_date: 2026-06-26
-  opening_weekend_estimate: 17_000_000
+  opening_weekend_estimate: 16_000_000
   total_domestic_estimate: 38_000_000
   confidence: low
   source: "Box Office Theory forecast"
-  as_of: 2026-05-22
-  notes: "15-25M opening range per BOT; 27-49M total gross per BOT"
+  as_of: 2026-06-05
+  notes: "14-19M opening range per BOT; 28-46M total gross per BOT"
 
 # July 2026 releases
 
@@ -218,7 +218,7 @@
   total_domestic_estimate: 268_000_000
   confidence: low
   source: "Box Office Theory forecast"
-  as_of: 2026-05-04
+  as_of: 2026-05-29
   notes: "53-62M opening range per BOT; 248-291M total gross per BOT"
 
 "Young Washington":
@@ -227,8 +227,26 @@
   total_domestic_estimate: 105_000_000
   confidence: low
   source: "Box Office Theory forecast"
-  as_of: 2026-05-04
+  as_of: 2026-05-29
   notes: "23-35M opening range per BOT; 85-145M total gross per BOT"
+
+"Evil Dead Burn":
+  release_date: 2026-07-10
+  opening_weekend_estimate: 26_000_000
+  total_domestic_estimate: 69_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-06-05
+  notes: "21-30M opening range per BOT; 45-75M total gross per BOT"
+
+"Moana":
+  release_date: 2026-07-10
+  opening_weekend_estimate: 92_000_000
+  total_domestic_estimate: 270_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-06-05
+  notes: "80-105M opening range per BOT; 240-305M total gross per BOT"
 
 # ---------------------------------------------------------------------------
 # Placeholders — uncomment and fill as analyst data arrives
@@ -242,24 +260,6 @@
 #   source: ""
 #   as_of: 2026-05-04
 #   notes: ""
-
-"Evil Dead Burn":
-  release_date: 2026-07-10
-#   opening_weekend_estimate: 0  # TODO
-#   total_domestic_estimate: 0  # TODO
-#   confidence: low
-#   source: ""
-#   as_of: 2026-05-04
-#   notes: "Comp Evil Dead Rise 2023 ($23M opening / $67M domestic)"
-
-"Moana":
-  release_date: 2026-07-10  # TODO confirm exact July date — live action remake
-#   opening_weekend_estimate: 0  # TODO
-#   total_domestic_estimate: 0  # TODO
-#   confidence: low
-#   source: ""
-#   as_of: 2026-05-04
-#   notes: "Live-action Disney remake; one analyst speculation reaches $1B WW but no opening tracking found"
 
 "The Odyssey":
   release_date: 2026-07-17
