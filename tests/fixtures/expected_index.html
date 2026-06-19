@@ -15,8 +15,8 @@
   --bg-row-alt:     transparent;
   --bg-summary:     #f9f7ff;
   --text:           #2d2d3a;
-  --text-muted:     #999;
-  --text-source:    #aaa;
+  --text-muted:     #767676;
+  --text-source:    #767676;
   --border:         #f0eeff;
   --border-row:     #f3f3f3;
   --th-color:       #555;
@@ -165,6 +165,8 @@ h2 {
 .leaderboard h2 { color: #ff6b6b; }
 .players h2     { color: #a855f7; }
 
+.movies { overflow-x: auto; }
+
 /* ── Tables ── */
 table {
   width: 100%;
@@ -293,7 +295,7 @@ footer a { color: #4ecdc4; }
 </style>
 </head>
 <body>
-<button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle dark mode">
+<button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">
   <span class="icon" id="themeIcon">🌙</span>
   <span id="themeLabel">Dark mode</span>
 </button>
@@ -302,7 +304,11 @@ footer a { color: #4ecdc4; }
   var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   var saved = localStorage.getItem('smw-theme');
   var isDark = saved ? saved === 'dark' : prefersDark;
-  if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  if (isDark) {
+    document.getElementById('themeIcon').textContent = '☀️';
+    document.getElementById('themeLabel').textContent = 'Light mode';
+  }
   window.toggleTheme = function() {
     var goingDark = document.documentElement.getAttribute('data-theme') !== 'dark';
     document.documentElement.setAttribute('data-theme', goingDark ? 'dark' : 'light');
@@ -310,11 +316,6 @@ footer a { color: #4ecdc4; }
     document.getElementById('themeLabel').textContent = goingDark ? 'Light mode' : 'Dark mode';
     localStorage.setItem('smw-theme', goingDark ? 'dark' : 'light');
   };
-  document.addEventListener('DOMContentLoaded', function() {
-    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    document.getElementById('themeIcon').textContent = dark ? '☀️' : '🌙';
-    document.getElementById('themeLabel').textContent = dark ? 'Light mode' : 'Dark mode';
-  });
 })();
 </script>
 <header>

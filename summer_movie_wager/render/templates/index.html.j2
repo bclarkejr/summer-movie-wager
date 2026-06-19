@@ -10,7 +10,7 @@
 <style>{{ inline_css | safe }}</style>
 </head>
 <body>
-<button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle dark mode">
+<button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">
   <span class="icon" id="themeIcon">🌙</span>
   <span id="themeLabel">Dark mode</span>
 </button>
@@ -19,7 +19,11 @@
   var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   var saved = localStorage.getItem('smw-theme');
   var isDark = saved ? saved === 'dark' : prefersDark;
-  if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  if (isDark) {
+    document.getElementById('themeIcon').textContent = '☀️';
+    document.getElementById('themeLabel').textContent = 'Light mode';
+  }
   window.toggleTheme = function() {
     var goingDark = document.documentElement.getAttribute('data-theme') !== 'dark';
     document.documentElement.setAttribute('data-theme', goingDark ? 'dark' : 'light');
@@ -27,11 +31,6 @@
     document.getElementById('themeLabel').textContent = goingDark ? 'Light mode' : 'Dark mode';
     localStorage.setItem('smw-theme', goingDark ? 'dark' : 'light');
   };
-  document.addEventListener('DOMContentLoaded', function() {
-    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    document.getElementById('themeIcon').textContent = dark ? '☀️' : '🌙';
-    document.getElementById('themeLabel').textContent = dark ? 'Light mode' : 'Dark mode';
-  });
 })();
 </script>
 <header>

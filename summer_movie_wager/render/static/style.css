@@ -6,8 +6,8 @@
   --bg-row-alt:     transparent;
   --bg-summary:     #f9f7ff;
   --text:           #2d2d3a;
-  --text-muted:     #999;
-  --text-source:    #aaa;
+  --text-muted:     #767676;
+  --text-source:    #767676;
   --border:         #f0eeff;
   --border-row:     #f3f3f3;
   --th-color:       #555;
@@ -155,6 +155,8 @@ h2 {
 
 .leaderboard h2 { color: #ff6b6b; }
 .players h2     { color: #a855f7; }
+
+.movies { overflow-x: auto; }
 
 /* ── Tables ── */
 table {
