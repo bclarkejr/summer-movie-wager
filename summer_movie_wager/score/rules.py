@@ -19,15 +19,24 @@ def ranked_pick_points(predicted_position: int, actual_position: int) -> int:
 
 
 def score_player(picks: PlayerPicks, top_titles: list[str]) -> int:
-    """Compute the wager points a player earns given the (partial or complete) top finalists.
+    """
+    Compute the wager points a player earns given the (partial or complete) top finalists.
 
     `top_titles` is the rank-ordered list of the current/projected top finalists, length 0 to 10.
     Lengths above 10 are rejected. Lengths below 10 score every pick whose title matches one of
     the present ranks; absent ranks contribute 0 to the score.
     """
+
     if len(top_titles) > 10:
         raise ValueError(f"top_titles must have at most 10 entries, got {len(top_titles)}")
 
+    # TODO BAC 2026-06-19:
+    # This code is a little too cute.
+    # Claude is trying to track the actual position of each movie alongside the predicted position.
+    # This saves in some runtime efficiency (you only need to do one lookup), but it makes the code harder to understand.
+    # It might make sense to just keep an actual_top_ten array separate from the player's picks.
+    # Then we can just loop over the actual_top_ten and use a find command to see if the top ten movie is in the player's
+    # ranked picks.  That would mean we're searching for each movie each time, but definitely would lead to clearer code.
     actual_position: dict[str, int] = {title: i + 1 for i, title in enumerate(top_titles)}
 
     total = 0

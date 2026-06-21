@@ -73,7 +73,7 @@ Given a `(median_in_window_gross, sigma)` pair for every tracked movie, the simu
 2. For each trial: ranks movies by simulated gross, takes the top 10, applies scoring rules to every player's picks.
 3. Aggregates across trials to produce: median final points, p10/p90 (80% prediction interval), P(strictly highest score), P(tied for highest score).
 
-The simulation requires at least 10 non-zero projections to run. If fewer are available, the site shows current standings only with a warning.
+The simulation requires at least 30 non-zero projections to run. If fewer are available, the site shows current standings only with a warning.
 
 ## Running the pipeline
 

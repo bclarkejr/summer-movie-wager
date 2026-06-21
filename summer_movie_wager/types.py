@@ -26,6 +26,8 @@ class Confidence(StrEnum):
 
 
 class PlayerPicks(BaseModel):
+    """A player is defined by three properties - their username, their ranked top 10 picks, and their dark horse picks."""
+
     model_config = ConfigDict(frozen=True)
 
     username: str
@@ -38,17 +40,6 @@ class PlayerPicks(BaseModel):
         if len(set(all_titles)) != len(all_titles):
             raise ValueError("a player's 13 picks must all be distinct movie titles")
         return self
-
-
-class MovieRecord(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
-    title: str
-    release_date: date
-    status: MovieStatus
-    category: Category = Category.WIDE
-    cumulative_gross_in_window: float = 0.0
-    source: str = "scrape"
 
 
 class PreopeningEntry(BaseModel):
@@ -72,7 +63,16 @@ class Projection(BaseModel):
 
 
 class SiteSnapshot(BaseModel):
-    """One scrape of the play-along URL."""
+    """
+    This site snapshot comes from thesummermoviewager.com and is used to validate the pipeline's calculations against the site's reported points.
+    The direct link to the snapshot is at:
+    https://thesummermoviewager.com/index.php?year=2026&addPlayer=bclarke%2Cvivrad%2Czmeister%2Cbrettfern%2Ccarleigh%2Cradhadr%2Cemsullivan%2Cmhartje%2CAverageJoe&playAlongOnly=
+
+    The snapshot creates three dictionaries that we use to confirm our calculations are correct. The three dictionaries are:
+    1. players:  A dictionary of player usernames to their picks (PlayerPicks), validating the picks match what we have in data/picks_snapshot_2026.yaml.
+    2. cumulative_grosses:  A dictionary of movie titles to their cumulative grosses, which we use to calculate what _we_ think the points should be for each player.
+    3. site_reported_points:  A dictionary of player usernames to their points, as reported by thesummermoviewager.com.  We use this to validate our own calculations against the site.
+    """
 
     model_config = ConfigDict(frozen=True)
 

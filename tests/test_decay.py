@@ -136,15 +136,15 @@ def test_release_date_defaults_to_today_projects_forward():
 
 def test_week1_fraction_earned_thursday_open_four_days():
     # Mandalorian scenario: opened Thursday May 21, 4 days elapsed (Thu–Sun)
-    # Thu=0.09, Fri=0.21, Sat=0.26, Sun=0.21 → 0.77
+    # Thu=0.06, Fri=0.22, Sat=0.26, Sun=0.22 → 0.76
     frac = _week1_fraction_earned(date(2026, 5, 21), 4)
-    assert frac == pytest.approx(0.77, abs=0.001)
+    assert frac == pytest.approx(0.76, abs=0.001)
 
 
 def test_week1_fraction_earned_friday_open_three_days():
-    # Standard Friday opening: Fri=0.21, Sat=0.26, Sun=0.21 → 0.68
+    # Standard Friday opening: Fri=0.22, Sat=0.26, Sun=0.22 → 0.70
     frac = _week1_fraction_earned(date(2026, 5, 22), 3)
-    assert frac == pytest.approx(0.68, abs=0.001)
+    assert frac == pytest.approx(0.70, abs=0.001)
 
 
 def test_week1_fraction_earned_full_week_is_one():
@@ -158,23 +158,23 @@ def test_week1_fraction_earned_zero_days_is_zero():
 
 
 def test_week1_fraction_earned_monday_open_four_days():
-    # Monday open: Mon=0.08, Tue=0.07, Wed=0.08, Thu=0.09 → 0.32
+    # Monday open: Mon=0.07, Tue=0.10, Wed=0.07, Thu=0.06 → 0.30
     # Tests that the % 7 wrap in the index calculation is correct
     frac = _week1_fraction_earned(date(2026, 5, 25), 4)
-    assert frac == pytest.approx(0.32, abs=0.001)
+    assert frac == pytest.approx(0.30, abs=0.001)
 
 
 def test_calibrate_week1_friday_open_four_days():
     # Fri May 22, 4 days elapsed (Fri–Mon, Memorial Day weekend)
-    # Fri=0.21, Sat=0.26, Sun=0.21, Mon=0.08 → 0.76
-    # week_1_gross should be 102M / 0.76 ≈ 134.2M
+    # Fri=0.22, Sat=0.26, Sun=0.22, Mon=0.07 → 0.77
+    # week_1_gross should be 102M / 0.77 ≈ 132.5M
     w1 = _calibrate_week_1(
         release_date=date(2026, 5, 22),
         cumulative_gross_to_date=102_000_000.0,
         days_since_release=4,
         wow=0.55,
     )
-    assert 133_000_000 < w1 < 136_000_000
+    assert 131_000_000 < w1 < 134_000_000
 
 
 def test_calibrate_week1_full_week_returns_cumulative():

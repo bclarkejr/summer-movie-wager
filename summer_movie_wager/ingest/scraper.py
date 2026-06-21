@@ -28,6 +28,7 @@ _GROUP_USERNAMES = {
 
 def fetch_snapshot(*, captured_at: date | None = None, timeout: float = 30.0) -> SiteSnapshot:
     """Fetch and parse the live play-along page."""
+    
     if captured_at is None:
         captured_at = date.today()
     response = httpx.get(PLAYALONG_URL, timeout=timeout, follow_redirects=True)
@@ -43,7 +44,7 @@ def parse_snapshot(html_text: str, *, captured_at: date) -> SiteSnapshot:
         whose body holds 13 rows (10 ranked + 3 dark-horse).
       - Dark-horse rows have a `<i class="fas fa-chess-knight">` icon in the
         `<td class="mw pos">` cell instead of a numeric "N." position.
-      - The top-5 box-office grosses live in `<table class="mw toptengross ...">`
+      - The top-13 box-office grosses live in `<table class="mw toptengross ...">`
         with `<td class="mw name">TITLE</td><td class="mw result">$AMOUNT</td>` rows.
       - Standings live in `<table class="mw totalscoretable">` with rows of
         `<td class="mw name">USERNAME</td>...<td class="mw result">SCORE</td>`.
@@ -51,21 +52,23 @@ def parse_snapshot(html_text: str, *, captured_at: date) -> SiteSnapshot:
     If the site changes its HTML structure, this parser will need updating - the
     live-validation scoring check (Task 11) is designed to catch that drift.
     """
+
     tree = HTMLParser(html_text)
 
     players = _parse_players(tree)
     cumulative = _parse_cumulative_grosses(tree)
     site_points = _parse_site_reported_points(tree)
     return SiteSnapshot(
-        captured_at=captured_at,
-        players=players,
-        cumulative_grosses=cumulative,
-        site_reported_points=site_points,
+        captured_at = captured_at,
+        players = players,
+        cumulative_grosses = cumulative,
+        site_reported_points = site_points,
     )
 
 
 def _clean_text(raw: str) -> str:
     """Decode HTML entities, strip non-breaking-space whitespace, collapse runs of spaces."""
+
     text = html.unescape(raw or "")
     text = text.replace("\xa0", " ")
     text = re.sub(r"\s+", " ", text)
@@ -74,6 +77,7 @@ def _clean_text(raw: str) -> str:
 
 def _parse_players(tree: HTMLParser) -> dict[str, PlayerPicks]:
     """Extract picks from each `<table id="scTable_<USERNAME>">`."""
+
     players: dict[str, PlayerPicks] = {}
     for table in tree.css("table.playerpoints, table.mw.playerpoints"):
         table_id = table.attributes.get("id", "") or ""
@@ -87,9 +91,9 @@ def _parse_players(tree: HTMLParser) -> dict[str, PlayerPicks]:
         if len(ranked) != 10 or len(dark_horses) != 3:
             continue
         players[norm] = PlayerPicks(
-            username=norm,
-            ranked=ranked,
-            dark_horses=dark_horses,
+            username = norm,
+            ranked = ranked,
+            dark_horses = dark_horses,
         )
     return players
 
@@ -100,6 +104,7 @@ def _extract_picks_from_table(table: Node) -> tuple[list[str], list[str]]:
     A ranked row has `<td class="mw pos">N.</td>` with a digit.
     A dark-horse row has `<i class="fas fa-chess-knight">` inside the position cell.
     """
+
     ranked_by_pos: dict[int, str] = {}
     dark_horses: list[str] = []
 
@@ -134,6 +139,7 @@ def _extract_picks_from_table(table: Node) -> tuple[list[str], list[str]]:
 
 def _parse_cumulative_grosses(tree: HTMLParser) -> dict[str, float]:
     """Read the top-N gross table: `<td class="mw name">TITLE</td><td class="mw result">$AMOUNT</td>`."""
+
     grosses: dict[str, float] = {}
     table = tree.css_first("table.toptengross, table.mw.toptengross")
     if table is None:
@@ -157,6 +163,7 @@ def _parse_cumulative_grosses(tree: HTMLParser) -> dict[str, float]:
 
 def _parse_dollar_amount(text: str) -> float | None:
     """Parse strings like "$77,000,000" or "$1.5M" into a float (USD)."""
+
     if not text:
         return None
     cleaned = text.replace("$", "").strip()
@@ -179,6 +186,7 @@ def _parse_site_reported_points(tree: HTMLParser) -> dict[str, int]:
 
     Each row: `<td class="mw pos">N.</td><td class="mw name">USERNAME</td>...<td class="mw result">SCORE</td>`.
     """
+
     found: dict[str, int] = {}
     table = tree.css_first("table.totalscoretable, table.mw.totalscoretable")
     if table is None:

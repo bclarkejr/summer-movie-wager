@@ -185,8 +185,8 @@
 
 "Toy Story 5":
   release_date: 2026-06-19
-  opening_weekend_estimate: 155_000_000
-  total_domestic_estimate: 516_000_000
+  opening_weekend_estimate: 168_000_000
+  total_domestic_estimate: 559_000_000
   confidence: med
   source: "Box Office Theory forecast"
   as_of: 2026-06-05
@@ -194,8 +194,8 @@
 
 "Supergirl":
   release_date: 2026-06-26
-  opening_weekend_estimate: 56_000_000
-  total_domestic_estimate: 137_000_000
+  opening_weekend_estimate: 48_000_000
+  total_domestic_estimate: 105_000_000
   confidence: med
   source: "Box Office Theory forecast"
   as_of: 2026-06-05
@@ -203,8 +203,8 @@
 
 "Jackass: Best and Last":
   release_date: 2026-06-26
-  opening_weekend_estimate: 16_000_000
-  total_domestic_estimate: 38_000_000
+  opening_weekend_estimate: 15_000_000
+  total_domestic_estimate: 35_600_000
   confidence: low
   source: "Box Office Theory forecast"
   as_of: 2026-06-05
@@ -241,8 +241,8 @@
 
 "Moana":
   release_date: 2026-07-10
-  opening_weekend_estimate: 92_000_000
-  total_domestic_estimate: 270_000_000
+  opening_weekend_estimate: 88_000_000
+  total_domestic_estimate: 258_000_000
   confidence: low
   source: "Box Office Theory forecast"
   as_of: 2026-06-05

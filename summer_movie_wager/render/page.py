@@ -67,24 +67,37 @@ class RenderInput:
 
 
 def render(out_dir: Path, data: RenderInput) -> None:
-    """Render index.html and data.json into out_dir."""
+    """
+    Render index.html and data.json into out_dir.
+
+    Pretty straightforward. There are three sections on the HTML page:
+
+    1. Leaderboard: A table of all players and their current points, projected points, and win/tie probabilities.
+    2. Movie projections: A table of all movies and their projected gross/points, plus some metadata like release date and status.
+    3. Per-player details: For each player, an expandable section showing their picks and the projected points for each pick.
+    
+    Note that all three sections rely on the arrays to already be sorted appropriately.  We want to show which movies and players are
+    at the top of the leaderboard, but render will not do any sorting itself.
+
+    The HTML is generated from a Jinja2 template. The CSS is inlined into the HTML for simplicity.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
     env = Environment(
-        loader=FileSystemLoader(str(_TEMPLATES)),
+        loader = FileSystemLoader(str(_TEMPLATES)),
         # select_autoescape misses .j2 suffixes; force escaping unconditionally
         # since movie titles and other fields originate from external scrapes.
-        autoescape=True,
+        autoescape = True,
     )
     template = env.get_template("index.html.j2")
     inline_css = (_STATIC / "style.css").read_text()
     html = template.render(
-        generated_at=data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
-        leaderboard=data.leaderboard,
-        movies=data.movies,
-        player_details=data.player_details,
-        inline_css=inline_css,
-        forecast_available=data.forecast_available,
-        forecast_unavailable_reason=data.forecast_unavailable_reason,
+        generated_at = data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
+        leaderboard = data.leaderboard,
+        movies = data.movies,
+        player_details = data.player_details,
+        inline_css = inline_css,
+        forecast_available = data.forecast_available,
+        forecast_unavailable_reason = data.forecast_unavailable_reason,
     )
     (out_dir / "index.html").write_text(html)
     (out_dir / "data.json").write_text(json.dumps(data.raw_snapshot, indent=2, default=str))

@@ -26,7 +26,8 @@ def project_preopening(
     confidence: Confidence,
     category: Category,
 ) -> tuple[float, float]:
-    """Convert an analyst pre-release estimate into (in_window_gross, sigma).
+    """
+    Convert an analyst pre-release estimate into (in_window_gross, sigma).
 
     Returns (0.0, 0.0) if the movie won't open inside the window.
     """
@@ -38,6 +39,13 @@ def project_preopening(
     if total_domestic_estimate <= 0 or opening_weekend_estimate <= 0:
         return 0.0, sigma
 
+    # TODO BAC 2026-06-20:
+    # This math isn't quite right. It assumes that the movie is playing for an infinite number of weeks.
+    # While that's mostly fine for a guesstimate, a movie is only playing for ~8 weeks. Anything beyond that
+    # adds essentially zero gross.
+    # Maybe that's worth considering here? Effectively, find the decay rate to go from the opening weekend
+    # to the total domestic in 8 weeks time.
+    # 
     # Derive implied week-over-week multiplier so the infinite geometric series
     # sums to total_domestic_estimate when week_1 = opening_weekend_estimate.
     implied_wow = 1.0 - (opening_weekend_estimate / total_domestic_estimate)
@@ -46,17 +54,33 @@ def project_preopening(
 
     week_1_gross = opening_weekend_estimate
     in_window = _sum_weekly(
-        week_1_gross=week_1_gross,
-        wow=implied_wow,
-        start=release_date,
-        end=WINDOW_END,
+        week_1_gross = week_1_gross,
+        wow = implied_wow,
+        start = release_date,
+        end = WINDOW_END,
     )
     in_window = min(in_window, total_domestic_estimate)
+
+    # The value returned here becomes the "median" displayed on the site
+    # (median_in_window_gross). It is the IN-WINDOW gross only (release_date -> WINDOW_END),
+    # so it diverges from total_domestic_estimate in preopening_projections.yaml — most
+    # noticeably for titles releasing late in the window, where much of the theatrical run
+    # falls after WINDOW_END (Sep 7). We could consider making the displayed median equal
+    # total_domestic_estimate (or otherwise reconciling the two) so the site value always
+    # matches the analyst total in the YAML. Caveat to weigh when implementing: the wager
+    # only scores in-window box office, so the simulator's ranking should likely keep using
+    # the in-window figure even if the *displayed* median changes.
+    #
+    # TODO BAC 2026-06-20:
+    # A happy medium here could be to display the total domestic estimate for any movie that
+    # will play for 8+ weeks in the window.  And for any movie that will play for less than
+    # 8 weeks, we would display the estimated in-window gross.
     return in_window, sigma
 
 
 def _sum_weekly(*, week_1_gross: float, wow: float, start: date, end: date) -> float:
-    """Sum modeled weekly grosses for the date range [start, end] (inclusive on both ends).
+    """
+    Sum modeled weekly grosses for the date range [start, end] (inclusive on both ends).
 
     Week k contributes week_1_gross * wow**(k-1). Final partial week is prorated by
     (days_remaining / 7).

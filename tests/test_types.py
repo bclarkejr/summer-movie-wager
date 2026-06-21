@@ -5,7 +5,6 @@ import pytest
 from summer_movie_wager.types import (
     Category,
     Confidence,
-    MovieRecord,
     MovieStatus,
     PlayerPicks,
     Projection,
@@ -41,19 +40,6 @@ def test_player_picks_rejects_duplicate_titles():
             ranked=["A", "A", "B", "C", "D", "E", "F", "G", "H", "I"],
             dark_horses=["J", "K", "L"],
         )
-
-
-def test_movie_record_round_trip():
-    m = MovieRecord(
-        title="Toy Story 5",
-        release_date=date(2026, 6, 19),
-        status=MovieStatus.PRE_RELEASE,
-        category=Category.ANIMATED_FAMILY,
-        cumulative_gross_in_window=0.0,
-        source="seed",
-    )
-    assert m.model_dump()["status"] == "pre_release"
-    assert m.model_dump()["category"] == "animated_family"
 
 
 def test_projection_records_median_and_sigma():

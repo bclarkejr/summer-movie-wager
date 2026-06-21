@@ -12,11 +12,12 @@ _DEFAULT_WOW: dict[Category, float] = {
 
 # Fraction of a typical week's gross earned on each day (Mon=0 … Sun=6).
 # Weights sum to 1.0. Source: industry box-office day-of-week distribution.
-_DOW_WEIGHTS: list[float] = [0.08, 0.07, 0.08, 0.09, 0.21, 0.26, 0.21]
+_DOW_WEIGHTS: list[float] = [0.07, 0.1, 0.07, 0.06, 0.22, 0.26, 0.22]
 
 
 def _week1_fraction_earned(release_date: date, days_in_partial_week: int) -> float:
-    """Fraction of week-1 gross expected to have been earned in the first N days.
+    """
+    Fraction of week-1 gross expected to have been earned in the first N days.
 
     Uses day-of-week weights so that opening-weekend days (Fri/Sat/Sun) count
     for their true share (~68%) rather than a uniform 3/7 = 43%.
@@ -37,7 +38,8 @@ def project_decay(
     category: Category,
     observed_history: list[tuple[date, float]],
 ) -> tuple[float, float]:
-    """Project total in-window gross given current state and optional history.
+    """
+    Project total in-window gross given current state and optional history.
 
     Returns (projected_total_in_window_gross, sigma).
     """
@@ -87,14 +89,26 @@ def project_decay(
 
 
 def _resolve_wow(category: Category, history: list[tuple[date, float]]) -> float:
+    """
+    Given a movie's category and optional observed history, this will attempt to resolve the week-over-week decay rate (WoW) for the movie.
+    For movies with only one or no weeks of history, the default week-over-week decay rate for the movie's category is used (animated films decay slower).
+    For movies with at least two weeks of history, the function will calculate every week-over-week hold for the movie and use the geometric mean of those
+    holds to estimate the movie's decay rate.
+    The geometric mean is blended with the default decay rate based on how many weeks of history are available.  Once we have 5 or more weeks of history,
+    the geometric mean is used exclusively.
+    """
     default = _DEFAULT_WOW[category]
     if len(history) < 2:
         return default
+    
+    # If we have two or more weeks of history, then we'll calculate the weekly gross (i.e., the deltas)
+    # and then use that weekly gross to determine the week-over-week holds.
     sorted_history = sorted(history, key=lambda row: row[0])
     deltas = [
         sorted_history[i + 1][1] - sorted_history[i][1]
         for i in range(len(sorted_history) - 1)
     ]
+
     # WoW estimated as geometric mean of consecutive delta ratios
     ratios = [
         deltas[i + 1] / deltas[i]
@@ -103,15 +117,25 @@ def _resolve_wow(category: Category, history: list[tuple[date, float]]) -> float
     ]
     if not ratios:
         return default
+    
+    # For those not familiar with geometric mean: https://en.wikipedia.org/wiki/Geometric_mean
+    # geo_mean(r1, r2, ..., rn) = (r1 * r2 * ... * rn)^(1/n)
     geo_mean = 1.0
     for r in ratios:
         geo_mean *= r
     geo_mean = geo_mean ** (1.0 / len(ratios))
+
+    # Blend the geometric mean with the default based on how many weeks of history we have,
+    # so that we don't overfit to a noisy estimate when we have limited history.
     weight = min(1.0, (len(history) - 1) / 5.0)
     return weight * geo_mean + (1.0 - weight) * default
 
 
 def _sigma_from_weeks(weeks_observed: int) -> float:
+    """
+    The more weeks we observe, the more confident we are in the projection.
+    This function returns a sigma value (i.e., our uncertainty in the projection) that decreases as the number of weeks observed increases.
+    """
     if weeks_observed >= 6:
         return 0.10
     if weeks_observed <= 0:
@@ -122,7 +146,8 @@ def _sigma_from_weeks(weeks_observed: int) -> float:
 def _calibrate_week_1(
     *, release_date: date, cumulative_gross_to_date: float, days_since_release: int, wow: float
 ) -> float:
-    """Solve for week_1_gross such that the modeled cumulative-to-date matches input.
+    """
+    Solve for week_1_gross such that the modeled cumulative-to-date matches input.
 
     Uses day-of-week weights for the first partial week instead of uniform prorating,
     so that opening-weekend days count for their true share of week-1 gross.

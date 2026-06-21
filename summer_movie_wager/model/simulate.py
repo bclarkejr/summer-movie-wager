@@ -26,7 +26,8 @@ def simulate_season(
     n_trials: int = 10_000,
     seed: int | None = None,
 ) -> SimulationResult:
-    """Run Monte Carlo over per-movie lognormal samples.
+    """
+    Run Monte Carlo over per-movie lognormal samples.
 
     For each trial: sample each movie's gross, rank top 10, score every player, record outcome.
     """
@@ -42,6 +43,18 @@ def simulate_season(
     # samples shape: (n_trials, n_movies)
     # Lognormal draw: exp(mu + sigma * Z) where mu = log(median).
     # Guard against median=0 (would produce log(0)). Treat zero-median movies as fixed at 0.
+    #
+    # TODO: For in-theaters movies, the lognormal draw can produce a final gross BELOW the
+    # box office the movie has already accumulated (cumulative_gross_to_date) — which is
+    # physically impossible, since a movie cannot end up earning less than it already has.
+    # Consider flooring each sample at the movie's accumulated gross, e.g.
+    #   samples = np.maximum(samples, accumulated_floor)
+    # where accumulated_floor is 0 for pre-release titles and cumulative_gross_to_date for
+    # in-theaters titles. NOTE: this requires plumbing the per-movie accumulated gross into
+    # the simulator — Projection currently carries only (median, sigma), so the floor is not
+    # available here yet (would need to be threaded through from build.py:_project_all).
+    # Example: The Devil Wears Prada 2 had already made $217,854,487 per box_office_history.jsonl,
+    # but its sigma currently allows simulated outcomes below that figure.
     samples = np.zeros((n_trials, n_movies), dtype=float)
     nonzero = medians > 0
     if nonzero.any():
@@ -63,8 +76,11 @@ def simulate_season(
         pts_per_player[player.username] = scores
 
     # Aggregate outcomes per player
+    # Effectively each row is a player and each column is a trial.  We want to know for each player how many trials they won, tied, and their score percentiles.
+    # It's a 2D array / matrix that we can then quickly figure out how many trials each player won, tied, and their score percentiles.
     score_matrix = np.stack([pts_per_player[p.username] for p in players])  # (n_players, n_trials)
     max_per_trial = score_matrix.max(axis=0)
+    # When comparing arrays, this produces a boolean array of the same shape as score_matrix, where each element is True if that player's score equals the max score for that trial.
     is_top = score_matrix == max_per_trial
     n_winners_per_trial = is_top.sum(axis=0)
 
