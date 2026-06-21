@@ -15,8 +15,8 @@
   --bg-row-alt:     transparent;
   --bg-summary:     #f9f7ff;
   --text:           #2d2d3a;
-  --text-muted:     #999;
-  --text-source:    #aaa;
+  --text-muted:     #767676;
+  --text-source:    #767676;
   --border:         #f0eeff;
   --border-row:     #f3f3f3;
   --th-color:       #555;
@@ -165,6 +165,8 @@ h2 {
 .leaderboard h2 { color: #ff6b6b; }
 .players h2     { color: #a855f7; }
 
+.movies { overflow-x: auto; }
+
 /* ── Tables ── */
 table {
   width: 100%;
@@ -293,7 +295,7 @@ footer a { color: #4ecdc4; }
 </style>
 </head>
 <body>
-<button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle dark mode">
+<button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">
   <span class="icon" id="themeIcon">🌙</span>
   <span id="themeLabel">Dark mode</span>
 </button>
@@ -302,7 +304,11 @@ footer a { color: #4ecdc4; }
   var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   var saved = localStorage.getItem('smw-theme');
   var isDark = saved ? saved === 'dark' : prefersDark;
-  if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  if (isDark) {
+    document.getElementById('themeIcon').textContent = '☀️';
+    document.getElementById('themeLabel').textContent = 'Light mode';
+  }
   window.toggleTheme = function() {
     var goingDark = document.documentElement.getAttribute('data-theme') !== 'dark';
     document.documentElement.setAttribute('data-theme', goingDark ? 'dark' : 'light');
@@ -310,16 +316,11 @@ footer a { color: #4ecdc4; }
     document.getElementById('themeLabel').textContent = goingDark ? 'Light mode' : 'Dark mode';
     localStorage.setItem('smw-theme', goingDark ? 'dark' : 'light');
   };
-  document.addEventListener('DOMContentLoaded', function() {
-    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    document.getElementById('themeIcon').textContent = dark ? '☀️' : '🌙';
-    document.getElementById('themeLabel').textContent = dark ? 'Light mode' : 'Dark mode';
-  });
 })();
 </script>
 <header>
   <h1>Summer Movie Wager 2026</h1>
-  <p class="meta">Window 2026-04-30 → 2026-09-07 · refreshed 2026-06-19 23:04 UTC</p>
+  <p class="meta">Window 2026-04-30 → 2026-09-07 · refreshed 2026-06-20 17:14 UTC</p>
 </header>
 
 <section class="leaderboard card">
@@ -335,66 +336,66 @@ footer a { color: #4ecdc4; }
     
       <tr data-player="vivrad" class="player-row">
         <td>vivrad</td>
-        <td>24</td>
-        <td>—</td>
-        <td>—</td>
-        <td>—</td>
+        <td style="text-align: center;">26</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
       </tr>
     
       <tr data-player="brettfern" class="player-row">
         <td>brettfern</td>
-        <td>21</td>
-        <td>—</td>
-        <td>—</td>
-        <td>—</td>
-      </tr>
-    
-      <tr data-player="bclarke" class="player-row">
-        <td>bclarke</td>
-        <td>18</td>
-        <td>—</td>
-        <td>—</td>
-        <td>—</td>
-      </tr>
-    
-      <tr data-player="carleigh" class="player-row">
-        <td>carleigh</td>
-        <td>18</td>
-        <td>—</td>
-        <td>—</td>
-        <td>—</td>
-      </tr>
-    
-      <tr data-player="emsullivan" class="player-row">
-        <td>emsullivan</td>
-        <td>18</td>
-        <td>—</td>
-        <td>—</td>
-        <td>—</td>
+        <td style="text-align: center;">21</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
       </tr>
     
       <tr data-player="mhartje" class="player-row">
         <td>mhartje</td>
-        <td>17</td>
-        <td>—</td>
-        <td>—</td>
-        <td>—</td>
+        <td style="text-align: center;">19</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
+      </tr>
+    
+      <tr data-player="bclarke" class="player-row">
+        <td>bclarke</td>
+        <td style="text-align: center;">18</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
+      </tr>
+    
+      <tr data-player="carleigh" class="player-row">
+        <td>carleigh</td>
+        <td style="text-align: center;">18</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
+      </tr>
+    
+      <tr data-player="emsullivan" class="player-row">
+        <td>emsullivan</td>
+        <td style="text-align: center;">18</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
       </tr>
     
       <tr data-player="zmeister" class="player-row">
         <td>zmeister</td>
-        <td>13</td>
-        <td>—</td>
-        <td>—</td>
-        <td>—</td>
+        <td style="text-align: center;">15</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
       </tr>
     
       <tr data-player="radhadr" class="player-row">
         <td>radhadr</td>
-        <td>11</td>
-        <td>—</td>
-        <td>—</td>
-        <td>—</td>
+        <td style="text-align: center;">14</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
+        <td style="text-align: center;">—</td>
       </tr>
     
     </tbody>
@@ -433,9 +434,9 @@ footer a { color: #4ecdc4; }
         <td>Obsession</td>
         <td>2026-05-15</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$337,747,953</td>
-        <td>[$284,695,422 – $400,686,736]</td>
-        <td>$198,654,815</td>
+        <td>$336,943,358</td>
+        <td>[$284,017,211 – $399,732,206]</td>
+        <td>$201,634,620</td>
         <td class="source">decay model</td>
       </tr>
     
@@ -463,9 +464,9 @@ footer a { color: #4ecdc4; }
         <td>The Devil Wears Prada 2</td>
         <td>2026-05-01</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$221,267,753</td>
-        <td>[$194,652,033 – $251,522,769]</td>
-        <td>$218,526,350</td>
+        <td>$221,242,334</td>
+        <td>[$194,629,672 – $251,493,875]</td>
+        <td>$218,683,830</td>
         <td class="source">decay model</td>
       </tr>
     
@@ -473,9 +474,9 @@ footer a { color: #4ecdc4; }
         <td>Backrooms</td>
         <td>2026-05-29</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$185,595,325</td>
-        <td>[$143,631,161 – $239,819,998]</td>
-        <td>$160,295,784</td>
+        <td>$192,271,826</td>
+        <td>[$148,798,067 – $248,447,146]</td>
+        <td>$167,880,096</td>
         <td class="source">decay model</td>
       </tr>
     
@@ -483,9 +484,9 @@ footer a { color: #4ecdc4; }
         <td>Star Wars: The Mandalorian and Grogu</td>
         <td>2026-05-22</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$180,028,702</td>
-        <td>[$145,404,032 – $222,898,451]</td>
-        <td>$167,325,286</td>
+        <td>$179,664,703</td>
+        <td>[$145,110,040 – $222,447,774]</td>
+        <td>$167,864,990</td>
         <td class="source">decay model</td>
       </tr>
     
@@ -493,9 +494,9 @@ footer a { color: #4ecdc4; }
         <td>Disclosure Day</td>
         <td>2026-06-12</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$129,589,850</td>
-        <td>[$92,076,013 – $182,387,668]</td>
-        <td>$58,351,520</td>
+        <td>$126,186,665</td>
+        <td>[$89,657,987 – $177,597,949]</td>
+        <td>$61,283,500</td>
         <td class="source">decay model</td>
       </tr>
     
@@ -503,8 +504,8 @@ footer a { color: #4ecdc4; }
         <td>Scary Movie</td>
         <td>2026-06-05</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$128,355,283</td>
-        <td>[$95,179,261 – $173,095,258]</td>
+        <td>$124,873,779</td>
+        <td>[$92,597,622 – $168,400,229]</td>
         <td>$89,558,273</td>
         <td class="source">decay model</td>
       </tr>
@@ -533,8 +534,8 @@ footer a { color: #4ecdc4; }
         <td>Mortal Kombat II</td>
         <td>2026-05-08</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$79,746,183</td>
-        <td>[$70,153,723 – $90,650,267]</td>
+        <td>$79,730,824</td>
+        <td>[$70,140,211 – $90,632,807]</td>
         <td>$79,579,103</td>
         <td class="source">decay model</td>
       </tr>
@@ -543,9 +544,9 @@ footer a { color: #4ecdc4; }
         <td>Masters of the Universe</td>
         <td>2026-06-05</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$72,305,549</td>
-        <td>[$53,616,716 – $97,508,629]</td>
-        <td>$50,450,281</td>
+        <td>$71,549,422</td>
+        <td>[$53,056,025 – $96,488,944]</td>
+        <td>$51,314,557</td>
         <td class="source">decay model</td>
       </tr>
     
@@ -553,9 +554,9 @@ footer a { color: #4ecdc4; }
         <td>The Sheep Detectives</td>
         <td>2026-05-08</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$69,437,401</td>
-        <td>[$61,084,957 – $78,931,914]</td>
-        <td>$63,309,712</td>
+        <td>$69,361,501</td>
+        <td>[$61,018,187 – $78,845,636]</td>
+        <td>$63,533,559</td>
         <td class="source">decay model</td>
       </tr>
     
@@ -571,10 +572,10 @@ footer a { color: #4ecdc4; }
     
       <tr>
         <td>The Amazing Digital Circus: The Last Act</td>
-        <td>2026-06-19</td>
+        <td>2026-06-20</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$52,016,240</td>
-        <td>[$35,412,893 – $76,404,070]</td>
+        <td>$52,013,676</td>
+        <td>[$35,411,148 – $76,400,305]</td>
         <td>$23,421,793</td>
         <td class="source">decay model</td>
       </tr>
@@ -593,9 +594,9 @@ footer a { color: #4ecdc4; }
         <td>The Breadwinner</td>
         <td>2026-05-29</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$22,068,146</td>
-        <td>[$17,078,412 – $28,515,711]</td>
-        <td>$18,290,159</td>
+        <td>$21,969,850</td>
+        <td>[$17,002,341 – $28,388,696]</td>
+        <td>$18,447,849</td>
         <td class="source">decay model</td>
       </tr>
     
@@ -613,8 +614,8 @@ footer a { color: #4ecdc4; }
         <td>Passenger</td>
         <td>2026-05-22</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$18,561,425</td>
-        <td>[$14,991,532 – $22,981,407]</td>
+        <td>$18,515,349</td>
+        <td>[$14,954,318 – $22,924,360]</td>
         <td>$18,027,541</td>
         <td class="source">decay model</td>
       </tr>
@@ -623,8 +624,8 @@ footer a { color: #4ecdc4; }
         <td>Hokum</td>
         <td>2026-05-01</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$17,017,311</td>
-        <td>[$14,970,343 – $19,344,171]</td>
+        <td>$17,015,762</td>
+        <td>[$14,968,980 – $19,342,410]</td>
         <td>$17,000,014</td>
         <td class="source">decay model</td>
       </tr>
@@ -690,7 +691,7 @@ footer a { color: #4ecdc4; }
       </tr>
     
       <tr>
-        <td>PAW Patrol: The Dino Movie</td>
+        <td>The End of Oak Street</td>
         <td>2026-08-14</td>
         <td><span class="badge badge-no_projection">no projection</span></td>
         <td>$0</td>
@@ -700,7 +701,7 @@ footer a { color: #4ecdc4; }
       </tr>
     
       <tr>
-        <td>The End of Oak Street</td>
+        <td>PAW Patrol: The Dino Movie</td>
         <td>2026-08-14</td>
         <td><span class="badge badge-no_projection">no projection</span></td>
         <td>$0</td>
@@ -757,7 +758,7 @@ footer a { color: #4ecdc4; }
   <h2>🎭 Per-player detail</h2>
   
   <details data-player="vivrad">
-    <summary>vivrad — projected —, current 24</summary>
+    <summary>vivrad — projected —, current 26</summary>
     <ol class="ranked-picks">
     
       <li>
@@ -795,7 +796,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Star Wars: The Mandalorian and Grogu</strong>
         <span class="muted">→ projected #8 ·
-          $180,028,702 ·
+          $179,664,703 ·
           contributes 3 pts
         </span>
       </li>
@@ -811,7 +812,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Disclosure Day</strong>
         <span class="muted">→ projected #9 ·
-          $129,589,850 ·
+          $126,186,665 ·
           contributes 5 pts
         </span>
       </li>
@@ -827,7 +828,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>The Devil Wears Prada 2</strong>
         <span class="muted">→ projected #6 ·
-          $221,267,753 ·
+          $221,242,334 ·
           contributes 3 pts
         </span>
       </li>
@@ -835,7 +836,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Masters of the Universe</strong>
         <span class="muted">→ projected #— ·
-          $72,305,549 ·
+          $71,549,422 ·
           contributes 0 pts
         </span>
       </li>
@@ -900,7 +901,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>The Devil Wears Prada 2</strong>
         <span class="muted">→ projected #6 ·
-          $221,267,753 ·
+          $221,242,334 ·
           contributes 10 pts
         </span>
       </li>
@@ -908,7 +909,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Star Wars: The Mandalorian and Grogu</strong>
         <span class="muted">→ projected #8 ·
-          $180,028,702 ·
+          $179,664,703 ·
           contributes 7 pts
         </span>
       </li>
@@ -916,7 +917,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Disclosure Day</strong>
         <span class="muted">→ projected #9 ·
-          $129,589,850 ·
+          $126,186,665 ·
           contributes 7 pts
         </span>
       </li>
@@ -932,7 +933,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Scary Movie</strong>
         <span class="muted">→ projected #10 ·
-          $128,355,283 ·
+          $124,873,779 ·
           contributes 13 pts
         </span>
       </li>
@@ -946,6 +947,103 @@ footer a { color: #4ecdc4; }
       <li>Mortal Kombat II <span class="muted">→ projected #— · 0 pt</span></li>
     
       <li>Masters of the Universe <span class="muted">→ projected #— · 0 pt</span></li>
+    
+    </ul>
+  </details>
+  
+  <details data-player="mhartje">
+    <summary>mhartje — projected —, current 19</summary>
+    <ol class="ranked-picks">
+    
+      <li>
+        <strong>Moana</strong>
+        <span class="muted">→ projected #4 ·
+          $250,619,257 ·
+          contributes 3 pts
+        </span>
+      </li>
+    
+      <li>
+        <strong>Toy Story 5</strong>
+        <span class="muted">→ projected #1 ·
+          $549,921,890 ·
+          contributes 7 pts
+        </span>
+      </li>
+    
+      <li>
+        <strong>Supergirl</strong>
+        <span class="muted">→ projected #— ·
+          $104,827,592 ·
+          contributes 0 pts
+        </span>
+      </li>
+    
+      <li>
+        <strong>Spider-Man: Brand New Day</strong>
+        <span class="muted">→ projected #— ·
+          $0 ·
+          contributes 0 pts
+        </span>
+      </li>
+    
+      <li>
+        <strong>The Odyssey</strong>
+        <span class="muted">→ projected #2 ·
+          $391,611,906 ·
+          contributes 3 pts
+        </span>
+      </li>
+    
+      <li>
+        <strong>Star Wars: The Mandalorian and Grogu</strong>
+        <span class="muted">→ projected #8 ·
+          $179,664,703 ·
+          contributes 5 pts
+        </span>
+      </li>
+    
+      <li>
+        <strong>The Devil Wears Prada 2</strong>
+        <span class="muted">→ projected #6 ·
+          $221,242,334 ·
+          contributes 7 pts
+        </span>
+      </li>
+    
+      <li>
+        <strong>Minions &amp; Monsters</strong>
+        <span class="muted">→ projected #5 ·
+          $242,528,397 ·
+          contributes 3 pts
+        </span>
+      </li>
+    
+      <li>
+        <strong>Disclosure Day</strong>
+        <span class="muted">→ projected #9 ·
+          $126,186,665 ·
+          contributes 10 pts
+        </span>
+      </li>
+    
+      <li>
+        <strong>Scary Movie</strong>
+        <span class="muted">→ projected #10 ·
+          $124,873,779 ·
+          contributes 13 pts
+        </span>
+      </li>
+    
+    </ol>
+    <p class="dark-horse-label">🐴 Dark horses</p>
+    <ul class="dark-horses">
+    
+      <li>Power Ballad <span class="muted">→ projected #— · 0 pt</span></li>
+    
+      <li>I Love Boosters <span class="muted">→ projected #— · 0 pt</span></li>
+    
+      <li>The Sheep Detectives <span class="muted">→ projected #— · 0 pt</span></li>
     
     </ul>
   </details>
@@ -981,7 +1079,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>The Devil Wears Prada 2</strong>
         <span class="muted">→ projected #6 ·
-          $221,267,753 ·
+          $221,242,334 ·
           contributes 5 pts
         </span>
       </li>
@@ -1005,7 +1103,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Star Wars: The Mandalorian and Grogu</strong>
         <span class="muted">→ projected #8 ·
-          $180,028,702 ·
+          $179,664,703 ·
           contributes 7 pts
         </span>
       </li>
@@ -1021,7 +1119,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Disclosure Day</strong>
         <span class="muted">→ projected #9 ·
-          $129,589,850 ·
+          $126,186,665 ·
           contributes 10 pts
         </span>
       </li>
@@ -1029,7 +1127,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Mortal Kombat II</strong>
         <span class="muted">→ projected #— ·
-          $79,746,183 ·
+          $79,730,824 ·
           contributes 0 pts
         </span>
       </li>
@@ -1094,7 +1192,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>The Devil Wears Prada 2</strong>
         <span class="muted">→ projected #6 ·
-          $221,267,753 ·
+          $221,242,334 ·
           contributes 10 pts
         </span>
       </li>
@@ -1102,7 +1200,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Star Wars: The Mandalorian and Grogu</strong>
         <span class="muted">→ projected #8 ·
-          $180,028,702 ·
+          $179,664,703 ·
           contributes 7 pts
         </span>
       </li>
@@ -1118,7 +1216,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Disclosure Day</strong>
         <span class="muted">→ projected #9 ·
-          $129,589,850 ·
+          $126,186,665 ·
           contributes 10 pts
         </span>
       </li>
@@ -1126,7 +1224,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Backrooms</strong>
         <span class="muted">→ projected #7 ·
-          $185,595,325 ·
+          $192,271,826 ·
           contributes 3 pts
         </span>
       </li>
@@ -1183,7 +1281,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>The Devil Wears Prada 2</strong>
         <span class="muted">→ projected #6 ·
-          $221,267,753 ·
+          $221,242,334 ·
           contributes 7 pts
         </span>
       </li>
@@ -1207,7 +1305,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Star Wars: The Mandalorian and Grogu</strong>
         <span class="muted">→ projected #8 ·
-          $180,028,702 ·
+          $179,664,703 ·
           contributes 10 pts
         </span>
       </li>
@@ -1215,7 +1313,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Disclosure Day</strong>
         <span class="muted">→ projected #9 ·
-          $129,589,850 ·
+          $126,186,665 ·
           contributes 10 pts
         </span>
       </li>
@@ -1223,7 +1321,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Backrooms</strong>
         <span class="muted">→ projected #7 ·
-          $185,595,325 ·
+          $192,271,826 ·
           contributes 3 pts
         </span>
       </li>
@@ -1241,105 +1339,8 @@ footer a { color: #4ecdc4; }
     </ul>
   </details>
   
-  <details data-player="mhartje">
-    <summary>mhartje — projected —, current 17</summary>
-    <ol class="ranked-picks">
-    
-      <li>
-        <strong>Moana</strong>
-        <span class="muted">→ projected #4 ·
-          $250,619,257 ·
-          contributes 3 pts
-        </span>
-      </li>
-    
-      <li>
-        <strong>Toy Story 5</strong>
-        <span class="muted">→ projected #1 ·
-          $549,921,890 ·
-          contributes 7 pts
-        </span>
-      </li>
-    
-      <li>
-        <strong>Supergirl</strong>
-        <span class="muted">→ projected #— ·
-          $104,827,592 ·
-          contributes 0 pts
-        </span>
-      </li>
-    
-      <li>
-        <strong>Spider-Man: Brand New Day</strong>
-        <span class="muted">→ projected #— ·
-          $0 ·
-          contributes 0 pts
-        </span>
-      </li>
-    
-      <li>
-        <strong>The Odyssey</strong>
-        <span class="muted">→ projected #2 ·
-          $391,611,906 ·
-          contributes 3 pts
-        </span>
-      </li>
-    
-      <li>
-        <strong>Star Wars: The Mandalorian and Grogu</strong>
-        <span class="muted">→ projected #8 ·
-          $180,028,702 ·
-          contributes 5 pts
-        </span>
-      </li>
-    
-      <li>
-        <strong>The Devil Wears Prada 2</strong>
-        <span class="muted">→ projected #6 ·
-          $221,267,753 ·
-          contributes 7 pts
-        </span>
-      </li>
-    
-      <li>
-        <strong>Minions &amp; Monsters</strong>
-        <span class="muted">→ projected #5 ·
-          $242,528,397 ·
-          contributes 3 pts
-        </span>
-      </li>
-    
-      <li>
-        <strong>Disclosure Day</strong>
-        <span class="muted">→ projected #9 ·
-          $129,589,850 ·
-          contributes 10 pts
-        </span>
-      </li>
-    
-      <li>
-        <strong>Scary Movie</strong>
-        <span class="muted">→ projected #10 ·
-          $128,355,283 ·
-          contributes 13 pts
-        </span>
-      </li>
-    
-    </ol>
-    <p class="dark-horse-label">🐴 Dark horses</p>
-    <ul class="dark-horses">
-    
-      <li>Power Ballad <span class="muted">→ projected #— · 0 pt</span></li>
-    
-      <li>I Love Boosters <span class="muted">→ projected #— · 0 pt</span></li>
-    
-      <li>The Sheep Detectives <span class="muted">→ projected #— · 0 pt</span></li>
-    
-    </ul>
-  </details>
-  
   <details data-player="zmeister">
-    <summary>zmeister — projected —, current 13</summary>
+    <summary>zmeister — projected —, current 15</summary>
     <ol class="ranked-picks">
     
       <li>
@@ -1377,7 +1378,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Star Wars: The Mandalorian and Grogu</strong>
         <span class="muted">→ projected #8 ·
-          $180,028,702 ·
+          $179,664,703 ·
           contributes 3 pts
         </span>
       </li>
@@ -1401,7 +1402,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>The Devil Wears Prada 2</strong>
         <span class="muted">→ projected #6 ·
-          $221,267,753 ·
+          $221,242,334 ·
           contributes 5 pts
         </span>
       </li>
@@ -1409,7 +1410,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Scary Movie</strong>
         <span class="muted">→ projected #10 ·
-          $128,355,283 ·
+          $124,873,779 ·
           contributes 7 pts
         </span>
       </li>
@@ -1436,7 +1437,7 @@ footer a { color: #4ecdc4; }
   </details>
   
   <details data-player="radhadr">
-    <summary>radhadr — projected —, current 11</summary>
+    <summary>radhadr — projected —, current 14</summary>
     <ol class="ranked-picks">
     
       <li>
@@ -1466,7 +1467,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Star Wars: The Mandalorian and Grogu</strong>
         <span class="muted">→ projected #8 ·
-          $180,028,702 ·
+          $179,664,703 ·
           contributes 3 pts
         </span>
       </li>
@@ -1482,7 +1483,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>The Devil Wears Prada 2</strong>
         <span class="muted">→ projected #6 ·
-          $221,267,753 ·
+          $221,242,334 ·
           contributes 10 pts
         </span>
       </li>
@@ -1490,7 +1491,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>The Breadwinner</strong>
         <span class="muted">→ projected #— ·
-          $22,068,146 ·
+          $21,969,850 ·
           contributes 0 pts
         </span>
       </li>
@@ -1514,7 +1515,7 @@ footer a { color: #4ecdc4; }
       <li>
         <strong>Passenger</strong>
         <span class="muted">→ projected #— ·
-          $18,561,425 ·
+          $18,515,349 ·
           contributes 0 pts
         </span>
       </li>

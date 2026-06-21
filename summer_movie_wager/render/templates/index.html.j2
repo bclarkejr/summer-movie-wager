@@ -51,10 +51,10 @@
     {% for row in leaderboard %}
       <tr data-player="{{ row.username }}" class="player-row">
         <td>{{ row.username }}</td>
-        <td>{{ row.current_pts }}</td>
-        <td>{% if row.median_pts is none %}—{% else %}{{ row.median_pts | int }}{% endif %}</td>
-        <td>{% if row.p10_pts is none or row.p90_pts is none %}—{% else %}[{{ row.p10_pts | int }} – {{ row.p90_pts | int }}]{% endif %}</td>
-        <td{% if row.tie_prob is not none %} title="tie odds: {{ '%.0f'|format(row.tie_prob*100) }}%"{% endif %}>{% if row.win_prob is none %}—{% else %}{{ '%.0f'|format(row.win_prob*100) }}%{% endif %}</td>
+        <td style="text-align: center;">{{ row.current_pts }}</td>
+        <td style="text-align: center;">{% if row.median_pts is none %}—{% else %}{{ row.median_pts | int }}{% endif %}</td>
+        <td style="text-align: center;">{% if row.p10_pts is none or row.p90_pts is none %}—{% else %}[{{ row.p10_pts | int }} – {{ row.p90_pts | int }}]{% endif %}</td>
+        <td style="text-align: center;"{% if row.tie_prob is not none %} title="tie odds: {{ '%.0f'|format(row.tie_prob*100) }}%"{% endif %}>{% if row.win_prob is none %}—{% else %}{{ '%.0f'|format(row.win_prob*100) }}%{% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>
