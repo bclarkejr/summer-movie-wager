@@ -1,77 +1,42 @@
 {
-  "captured_at": "2026-06-20",
+  "captured_at": "2026-06-22",
   "site_reported_points": {
-    "vivrad": 26,
-    "brettfern": 21,
-    "mhartje": 19,
-    "bclarke": 18,
-    "carleigh": 18,
-    "emsullivan": 18,
-    "zmeister": 15,
-    "radhadr": 14
+    "vivrad": 35,
+    "brettfern": 24,
+    "mhartje": 22,
+    "bclarke": 21,
+    "carleigh": 21,
+    "emsullivan": 21,
+    "zmeister": 20,
+    "radhadr": 15
   },
   "computed_current_points": {
-    "vivrad": 26,
-    "brettfern": 21,
-    "mhartje": 19,
-    "bclarke": 18,
-    "carleigh": 18,
-    "emsullivan": 18,
-    "zmeister": 15,
-    "radhadr": 14
+    "vivrad": 35,
+    "brettfern": 24,
+    "mhartje": 22,
+    "bclarke": 21,
+    "carleigh": 21,
+    "emsullivan": 21,
+    "zmeister": 20,
+    "radhadr": 15
   },
   "forecast_available": false,
   "non_zero_projections": 25,
   "projections": [
     {
-      "movie_title": "Minions & Monsters",
-      "median_in_window_gross": 242528397.36272916,
-      "sigma": 0.45
-    },
-    {
-      "movie_title": "Obsession",
-      "median_in_window_gross": 336943357.9406271,
-      "sigma": 0.13333333333333333
-    },
-    {
-      "movie_title": "Billie Eilish: Hit Me Hard and Soft",
-      "median_in_window_gross": 19999997.742074337,
-      "sigma": 0.3
-    },
-    {
-      "movie_title": "Coyote vs. Acme",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0
-    },
-    {
-      "movie_title": "The Devil Wears Prada 2",
-      "median_in_window_gross": 221242334.44941902,
-      "sigma": 0.1
-    },
-    {
-      "movie_title": "I Love Boosters",
-      "median_in_window_gross": 11780876.599526696,
-      "sigma": 0.45
-    },
-    {
-      "movie_title": "That Time I Got Reincarnated as a Slime the Movie: Tears of the Azure Sea",
-      "median_in_window_gross": 2999999.9952063905,
+      "movie_title": "Hokum",
+      "median_in_window_gross": 9499614.79062002,
       "sigma": 0.2
     },
     {
-      "movie_title": "The Odyssey",
-      "median_in_window_gross": 391611906.2442299,
-      "sigma": 0.45
+      "movie_title": "Scary Movie",
+      "median_in_window_gross": 128620788.48319644,
+      "sigma": 0.23333333333333334
     },
     {
-      "movie_title": "Toy Story 5",
-      "median_in_window_gross": 549921890.1084665,
-      "sigma": 0.3
-    },
-    {
-      "movie_title": "Power Ballad",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0
+      "movie_title": "The Devil Wears Prada 2",
+      "median_in_window_gross": 221503146.15116554,
+      "sigma": 0.1
     },
     {
       "movie_title": "Tom and Jerry: Forbidden Compass",
@@ -79,12 +44,57 @@
       "sigma": 0.0
     },
     {
-      "movie_title": "The End of Oak Street",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0
+      "movie_title": "That Time I Got Reincarnated as a Slime the Movie: Tears of the Azure Sea",
+      "median_in_window_gross": 2999999.9952063905,
+      "sigma": 0.2
     },
     {
-      "movie_title": "Finding Emily",
+      "movie_title": "Masters of the Universe",
+      "median_in_window_gross": 76034989.40183127,
+      "sigma": 0.23333333333333334
+    },
+    {
+      "movie_title": "Billie Eilish: Hit Me Hard and Soft",
+      "median_in_window_gross": 19999997.742074337,
+      "sigma": 0.3
+    },
+    {
+      "movie_title": "Mortal Kombat II",
+      "median_in_window_gross": 79775272.71029009,
+      "sigma": 0.1
+    },
+    {
+      "movie_title": "Minions & Monsters",
+      "median_in_window_gross": 242528397.36272916,
+      "sigma": 0.45
+    },
+    {
+      "movie_title": "Jackass: Best and Last",
+      "median_in_window_gross": 35486238.49837343,
+      "sigma": 0.45
+    },
+    {
+      "movie_title": "Disclosure Day",
+      "median_in_window_gross": 141958004.40946242,
+      "sigma": 0.26666666666666666
+    },
+    {
+      "movie_title": "Star Wars: The Mandalorian and Grogu",
+      "median_in_window_gross": 182225881.3279282,
+      "sigma": 0.16666666666666666
+    },
+    {
+      "movie_title": "Toy Story 5",
+      "median_in_window_gross": 506343769.27271074,
+      "sigma": 0.3
+    },
+    {
+      "movie_title": "Passenger",
+      "median_in_window_gross": 18437761.00960188,
+      "sigma": 0.16666666666666666
+    },
+    {
+      "movie_title": "Coyote vs. Acme",
       "median_in_window_gross": 0.0,
       "sigma": 0.0
     },
@@ -94,44 +104,54 @@
       "sigma": 0.0
     },
     {
-      "movie_title": "PAW Patrol: The Dino Movie",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0
-    },
-    {
-      "movie_title": "Disclosure Day",
-      "median_in_window_gross": 126186665.40222663,
-      "sigma": 0.26666666666666666
-    },
-    {
-      "movie_title": "Young Washington",
-      "median_in_window_gross": 99541128.87347013,
-      "sigma": 0.45
-    },
-    {
-      "movie_title": "The Amazing Digital Circus: The Last Act",
-      "median_in_window_gross": 52013675.9374467,
-      "sigma": 0.3
-    },
-    {
       "movie_title": "Evil Dead Burn",
       "median_in_window_gross": 67768325.10692354,
       "sigma": 0.45
     },
     {
-      "movie_title": "The Breadwinner",
-      "median_in_window_gross": 21969849.869318128,
-      "sigma": 0.19999999999999996
+      "movie_title": "PAW Patrol: The Dino Movie",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0
     },
     {
-      "movie_title": "Scary Movie",
-      "median_in_window_gross": 124873779.32804379,
-      "sigma": 0.23333333333333334
+      "movie_title": "I Love Boosters",
+      "median_in_window_gross": 11780876.599526696,
+      "sigma": 0.45
     },
     {
-      "movie_title": "Star Wars: The Mandalorian and Grogu",
-      "median_in_window_gross": 179664702.78816187,
-      "sigma": 0.16666666666666666
+      "movie_title": "Deep Water",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.45
+    },
+    {
+      "movie_title": "Finding Emily",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0
+    },
+    {
+      "movie_title": "The End of Oak Street",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0
+    },
+    {
+      "movie_title": "Supergirl",
+      "median_in_window_gross": 104827592.02314307,
+      "sigma": 0.3
+    },
+    {
+      "movie_title": "Obsession",
+      "median_in_window_gross": 347431173.34589624,
+      "sigma": 0.13333333333333333
+    },
+    {
+      "movie_title": "The Amazing Digital Circus: The Last Act",
+      "median_in_window_gross": 52008548.45280768,
+      "sigma": 0.3
+    },
+    {
+      "movie_title": "Insidious: Out of the Further",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0
     },
     {
       "movie_title": "Moana",
@@ -139,18 +159,18 @@
       "sigma": 0.45
     },
     {
-      "movie_title": "Mortal Kombat II",
-      "median_in_window_gross": 79730823.52475074,
+      "movie_title": "The Sheep Detectives",
+      "median_in_window_gross": 69890327.33907732,
       "sigma": 0.1
     },
     {
-      "movie_title": "Hokum",
-      "median_in_window_gross": 17015761.75819936,
-      "sigma": 0.1
+      "movie_title": "Young Washington",
+      "median_in_window_gross": 99541128.87347013,
+      "sigma": 0.45
     },
     {
-      "movie_title": "Backrooms",
-      "median_in_window_gross": 192271825.67555934,
+      "movie_title": "The Breadwinner",
+      "median_in_window_gross": 22402587.44922768,
       "sigma": 0.19999999999999996
     },
     {
@@ -159,37 +179,17 @@
       "sigma": 0.2
     },
     {
-      "movie_title": "Deep Water",
-      "median_in_window_gross": 0.0,
+      "movie_title": "The Odyssey",
+      "median_in_window_gross": 391611906.2442299,
       "sigma": 0.45
     },
     {
-      "movie_title": "Supergirl",
-      "median_in_window_gross": 104827592.02314307,
-      "sigma": 0.3
+      "movie_title": "Backrooms",
+      "median_in_window_gross": 196237013.77574188,
+      "sigma": 0.19999999999999996
     },
     {
-      "movie_title": "Jackass: Best and Last",
-      "median_in_window_gross": 35486238.49837343,
-      "sigma": 0.45
-    },
-    {
-      "movie_title": "The Sheep Detectives",
-      "median_in_window_gross": 69361500.87005247,
-      "sigma": 0.1
-    },
-    {
-      "movie_title": "Masters of the Universe",
-      "median_in_window_gross": 71549421.98510599,
-      "sigma": 0.23333333333333334
-    },
-    {
-      "movie_title": "Passenger",
-      "median_in_window_gross": 18515349.328126717,
-      "sigma": 0.16666666666666666
-    },
-    {
-      "movie_title": "Insidious: Out of the Further",
+      "movie_title": "Power Ballad",
       "median_in_window_gross": 0.0,
       "sigma": 0.0
     }
