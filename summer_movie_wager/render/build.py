@@ -51,7 +51,7 @@ def main(argv: list[str] | None = None) -> int:
     4. _project_all:  For each movie, project its in-window gross and uncertainty (sigma) based on its status and available data.
          For IN_THEATERS movies, use the decay model.  For PRE_RELEASE movies with an analyst entry, use the preopening projection model.
          For other PRE_RELEASE movies, project zero gross.
-    5. simulate_season:  If there are at least 30 movies with non-zero projections, simulate the season 10,000 times to estimate each player's win probability and final points distribution.
+    5. simulate_season:  If there are at least 25 movies with non-zero projections, simulate the season 10,000 times to estimate each player's win probability and final points distribution.
     6. _validate_against_site:  Compare our computed current points against the site's reported points to ensure our scoring engine is correct.
     7. render:  Render the HTML page using the leaderboard, movie rows, and player details.
     8. _append_box_office_history and _append_forecast_history:  Append the current box office and forecast data to history files for future reference.
@@ -76,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
     bootstrap_or_validate(snapshot.players, DATA_DIR / "picks_snapshot_2026.yaml")
 
     # This is the real value-add of the pipeline.  Using the week-over-week decay model and preopening projections, we can start to guess what each film will gross in the wager window.
-    # Once we have 30 projections (i.e., once we have an industry projection for Spider-Man: Brand New Day), we simulate the season and estimate each player's win probability and final points distribution.
+    # Once we have 25 projections (i.e., once we have an industry projection for Spider-Man: Brand New Day), we simulate the season and estimate each player's win probability and final points distribution.
     overrides = _load_yaml(DATA_DIR / "movies_overrides.yaml")
     preopening_raw = _load_yaml(DATA_DIR / "preopening_projections.yaml")
     preopening = _parse_preopening(preopening_raw)
@@ -85,9 +85,9 @@ def main(argv: list[str] | None = None) -> int:
     projections = _project_all(movies, preopening, today=today)
     _warn_missing_projections(movies, preopening, today=today)
 
-    # We don't similuate until we have at least 30 projections.
+    # We don't similuate until we have at least 25 projections.
     non_zero = _count_non_zero_projections(projections)
-    forecast_available = non_zero >= 30
+    forecast_available = non_zero >= 25
     forecast_unavailable_reason = ""
     sim: Any | None = None
     if forecast_available:
@@ -100,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         forecast_unavailable_reason = (
             f"only {non_zero} movie(s) have non-zero projections "
-            f"(need 30 for an honest top-10 ranking)"
+            f"(need 25 for an honest top-10 ranking)"
         )
         print(
             f"[build] WARNING: skipping simulation — {forecast_unavailable_reason}",

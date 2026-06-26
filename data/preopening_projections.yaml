@@ -257,6 +257,15 @@
   as_of: 2026-06-13
   notes: "97-132M opening range per BOT; 325-475M total gross per BOT"
 
+"Spider-Man: Brand New Day":
+  release_date: 2026-07-31
+  opening_weekend_estimate: 228_000_000
+  total_domestic_estimate: 570_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-06-26
+  notes: "212-255M opening range per BOT; 475-655M total gross per BOT"
+
 # ---------------------------------------------------------------------------
 # Placeholders — uncomment and fill as analyst data arrives
 # ---------------------------------------------------------------------------
@@ -269,15 +278,6 @@
 #   source: ""
 #   as_of: 2026-05-04
 #   notes: ""
-
-"Spider-Man: Brand New Day":
-  release_date: 2026-07-31
-#   opening_weekend_estimate: 0  # TODO: industry consensus "$200M+" but no precise BOP range
-#   total_domestic_estimate: 0  # TODO
-#   confidence: med
-#   source: ""
-#   as_of: 2026-05-04
-#   notes: "Sony; trailer crossed 1B views in <1 week; consensus opening above $200M, comp No Way Home ($260M opening)"
 
 # August 2026 releases
 
