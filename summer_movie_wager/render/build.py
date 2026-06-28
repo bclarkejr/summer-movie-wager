@@ -290,8 +290,14 @@ def _project_all(
             )
         else:
             gross, sigma = 0.0, 0.0
+        floor = m["cumulative"] if m["status"] == MovieStatus.IN_THEATERS else 0.0
         projections.append(
-            Projection(movie_title=title, median_in_window_gross=gross, sigma=sigma)
+            Projection(
+                movie_title=title,
+                median_in_window_gross=gross,
+                sigma=sigma,
+                floor=floor,
+            )
         )
     return projections
 
@@ -479,8 +485,9 @@ def _build_movie_rows(
 
         # If there's a projection, then calculate the p10 and p90 values and add the movie row
         median = proj.median_in_window_gross
-        p10 = median * math.exp(-1.2816 * proj.sigma)
-        p90 = median * math.exp(1.2816 * proj.sigma)
+        remaining = max(0.0, median - proj.floor)
+        p10 = proj.floor + remaining * math.exp(-1.2816 * proj.sigma)
+        p90 = proj.floor + remaining * math.exp(1.2816 * proj.sigma)
         status_key = m["status"].value
         src = "decay model" if m["status"] == MovieStatus.IN_THEATERS else "analyst estimate"
         rows.append(

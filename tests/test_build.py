@@ -38,3 +38,36 @@ def test_count_non_zero_projections_zero_when_all_zero():
         for i in range(20)
     ]
     assert _count_non_zero_projections(projections) == 0
+
+
+def test_in_theaters_row_band_respects_floor():
+    # _build_movie_rows should produce p10 >= floor and a tight band for a
+    # deep-run film whose median is just above its banked gross.
+    import math
+    from summer_movie_wager.render.build import _build_movie_rows
+    from summer_movie_wager.types import MovieStatus, Projection
+
+    movies = {
+        "The Devil Wears Prada 2": {
+            "title": "The Devil Wears Prada 2",
+            "release_date": __import__("datetime").date(2026, 5, 1),
+            "status": MovieStatus.IN_THEATERS,
+            "category": __import__("summer_movie_wager.types", fromlist=["Category"]).Category.WIDE,
+            "cumulative": 219_602_888.0,
+        }
+    }
+    projections = [
+        Projection(
+            movie_title="The Devil Wears Prada 2",
+            median_in_window_gross=221_000_000.0,
+            sigma=0.10,
+            floor=219_602_888.0,
+        )
+    ]
+    rows = _build_movie_rows(movies, projections)
+    row = rows[0]
+    assert row.p10 >= 219_602_888.0
+    assert row.p90 <= 219_602_888.0 + 10_000_000
+    # exact formula check
+    remaining = 221_000_000.0 - 219_602_888.0
+    assert math.isclose(row.p90, 219_602_888.0 + remaining * math.exp(1.2816 * 0.10))
