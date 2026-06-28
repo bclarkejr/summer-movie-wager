@@ -48,6 +48,21 @@ def test_projection_records_median_and_sigma():
     assert p.sigma == 0.30
 
 
+def test_projection_floor_defaults_to_zero():
+    p = Projection(movie_title="Toy Story 5", median_in_window_gross=180_000_000.0, sigma=0.30)
+    assert p.floor == 0.0
+
+
+def test_projection_floor_can_be_set():
+    p = Projection(
+        movie_title="The Devil Wears Prada 2",
+        median_in_window_gross=221_000_000.0,
+        sigma=0.10,
+        floor=219_602_888.0,
+    )
+    assert p.floor == 219_602_888.0
+
+
 def test_confidence_values():
     assert Confidence.HIGH.value == "high"
     assert Confidence.MED.value == "med"

@@ -60,6 +60,7 @@ class Projection(BaseModel):
     movie_title: str
     median_in_window_gross: float
     sigma: float
+    floor: float = 0.0
 
 
 class SiteSnapshot(BaseModel):
