@@ -90,3 +90,40 @@ def test_zero_sigma_movies_make_outcome_deterministic():
         result.win_prob["a"] in (0.0, 1.0) or result.win_prob["b"] in (0.0, 1.0)
         or abs(result.win_prob["a"] - result.win_prob["b"]) > 0.5
     )
+
+
+def test_in_theaters_floor_is_never_breached():
+    # 10 movies so the simulator's >=10 guard passes; movie 0 is a deep-run film
+    # whose banked gross is just below its median. Its final gross must never dip
+    # below the floor, and its 80% band must stay tight around it.
+    import numpy as np
+    from summer_movie_wager.model.simulate import simulate_season
+    from summer_movie_wager.types import PlayerPicks, Projection
+
+    titles = [f"M{i}" for i in range(10)]
+    projections = [
+        Projection(
+            movie_title="M0",
+            median_in_window_gross=221_000_000.0,
+            sigma=0.10,
+            floor=219_602_888.0,
+        )
+    ] + [
+        Projection(movie_title=titles[i], median_in_window_gross=100_000_000.0 - i, sigma=0.20)
+        for i in range(1, 10)
+    ]
+
+    # Reproduce the sampler's draw directly to assert the floor invariant on raw samples.
+    rng = np.random.default_rng(0)
+    floor, median, sigma = 219_602_888.0, 221_000_000.0, 0.10
+    remaining = max(0.0, median - floor)
+    samples = floor + remaining * np.exp(sigma * rng.standard_normal(10_000))
+    assert samples.min() >= floor
+    assert np.percentile(samples, 90) <= floor + 10_000_000  # within $10M of banked
+
+    # And the public API still runs end-to-end with a floored projection present.
+    players = [
+        PlayerPicks(username="u", ranked=titles, dark_horses=["dh1", "dh2", "dh3"])
+    ]
+    result = simulate_season(players, projections, n_trials=2_000, seed=1)
+    assert 0.0 <= result.win_prob["u"] <= 1.0

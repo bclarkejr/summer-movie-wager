@@ -39,28 +39,19 @@ def simulate_season(
 
     medians = np.array([p.median_in_window_gross for p in projections], dtype=float)
     sigmas = np.array([p.sigma for p in projections], dtype=float)
+    floors = np.array([p.floor for p in projections], dtype=float)
+    remaining = np.maximum(0.0, medians - floors)
 
-    # samples shape: (n_trials, n_movies)
-    # Lognormal draw: exp(mu + sigma * Z) where mu = log(median).
-    # Guard against median=0 (would produce log(0)). Treat zero-median movies as fixed at 0.
-    #
-    # TODO: For in-theaters movies, the lognormal draw can produce a final gross BELOW the
-    # box office the movie has already accumulated (cumulative_gross_to_date) — which is
-    # physically impossible, since a movie cannot end up earning less than it already has.
-    # Consider flooring each sample at the movie's accumulated gross, e.g.
-    #   samples = np.maximum(samples, accumulated_floor)
-    # where accumulated_floor is 0 for pre-release titles and cumulative_gross_to_date for
-    # in-theaters titles. NOTE: this requires plumbing the per-movie accumulated gross into
-    # the simulator — Projection currently carries only (median, sigma), so the floor is not
-    # available here yet (would need to be threaded through from build.py:_project_all).
-    # Example: The Devil Wears Prada 2 had already made $217,854,487 per box_office_history.jsonl,
-    # but its sigma currently allows simulated outcomes below that figure.
+    # Uncertainty applies only to the unbanked (remaining) gross:
+    #   total = floor + remaining * exp(sigma * Z)
+    # exp() is always positive, so a sample can never fall below the banked floor.
+    # Pre-release titles have floor=0, recovering the plain lognormal draw.
     samples = np.zeros((n_trials, n_movies), dtype=float)
-    nonzero = medians > 0
-    if nonzero.any():
-        log_medians = np.log(medians[nonzero])
-        z = rng.standard_normal((n_trials, int(nonzero.sum())))
-        samples[:, nonzero] = np.exp(log_medians + sigmas[nonzero] * z)
+    draw = remaining > 0
+    if draw.any():
+        z = rng.standard_normal((n_trials, int(draw.sum())))
+        samples[:, draw] = remaining[draw] * np.exp(sigmas[draw] * z)
+    samples += floors
 
     # Rank each row, take top-10 indices descending by gross
     # argsort ascending; reverse and slice first 10
