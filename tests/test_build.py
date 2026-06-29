@@ -1,6 +1,7 @@
 """Tests for build.py orchestration helpers (the parts that don't need full pipeline I/O)."""
 
 from summer_movie_wager.render.build import (
+    _build_raw_sim_fields,
     _count_non_zero_projections,
     _current_top_10,
 )
@@ -71,3 +72,35 @@ def test_in_theaters_row_band_respects_floor():
     # exact formula check
     remaining = 221_000_000.0 - 219_602_888.0
     assert math.isclose(row.p90, 219_602_888.0 + remaining * math.exp(1.2816 * 0.10))
+
+
+def test_raw_has_winning_scenarios_when_forecast_available():
+    from summer_movie_wager.model.simulate import SimulationResult
+    from summer_movie_wager.types import WinningScenario
+
+    ws = WinningScenario(
+        films=["A"] * 10,
+        grid={"alice": [0] * 10},
+        totals={"alice": 42},
+        win_pct=100.0,
+        margin=5,
+    )
+    sim = SimulationResult(
+        win_prob={"alice": 1.0},
+        tie_prob={"alice": 0.0},
+        median_final_pts={"alice": 100.0},
+        p10_final_pts={"alice": 90.0},
+        p90_final_pts={"alice": 110.0},
+        winning_scenarios={"alice": ws},
+    )
+    raw: dict = {}
+    _build_raw_sim_fields(raw, sim, {"alice": object()}, True, "")
+    assert "winning_scenarios" in raw
+    entry = raw["winning_scenarios"]["alice"]
+    assert {"films", "grid", "totals", "win_pct", "margin"} <= set(entry)
+
+
+def test_raw_winning_scenarios_all_null_when_forecast_off():
+    raw: dict = {}
+    _build_raw_sim_fields(raw, None, {"alice": object(), "bob": object()}, False, "not enough")
+    assert set(raw["winning_scenarios"].values()) == {None}

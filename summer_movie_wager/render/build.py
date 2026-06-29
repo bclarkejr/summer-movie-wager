@@ -40,6 +40,35 @@ DATA_DIR = REPO_ROOT / "data"
 DOCS_DIR = REPO_ROOT / "docs"
 
 
+def _build_raw_sim_fields(
+    raw: dict[str, Any],
+    sim: Any | None,
+    snapshot_players: dict[str, Any],
+    forecast_available: bool,
+    forecast_unavailable_reason: str,
+) -> None:
+    """Populate sim-dependent keys into `raw`. Extracted so tests can call it directly."""
+    if forecast_available and sim is not None:
+        raw["win_prob"] = sim.win_prob
+        raw["tie_prob"] = sim.tie_prob
+        raw["median_final_pts"] = sim.median_final_pts
+        raw["p10_final_pts"] = sim.p10_final_pts
+        raw["p90_final_pts"] = sim.p90_final_pts
+        raw["winning_scenarios"] = {
+            u: (s.model_dump() if s is not None else None)
+            for u, s in sim.winning_scenarios.items()
+        }
+    else:
+        raw["forecast_unavailable_reason"] = forecast_unavailable_reason
+        # Emit explicit nulls so consumers don't confuse "no forecast" with "missing key".
+        raw["win_prob"] = {u: None for u in snapshot_players}
+        raw["tie_prob"] = {u: None for u in snapshot_players}
+        raw["median_final_pts"] = {u: None for u in snapshot_players}
+        raw["p10_final_pts"] = {u: None for u in snapshot_players}
+        raw["p90_final_pts"] = {u: None for u in snapshot_players}
+        raw["winning_scenarios"] = {u: None for u in snapshot_players}
+
+
 def main(argv: list[str] | None = None) -> int:
     """
     Run the full pipeline to refresh the site.  There are 8 steps to the pipeline:
@@ -128,20 +157,7 @@ def main(argv: list[str] | None = None) -> int:
         "non_zero_projections": non_zero,
         "projections": [p.model_dump() for p in projections],
     }
-    if forecast_available and sim is not None:
-        raw["win_prob"] = sim.win_prob
-        raw["tie_prob"] = sim.tie_prob
-        raw["median_final_pts"] = sim.median_final_pts
-        raw["p10_final_pts"] = sim.p10_final_pts
-        raw["p90_final_pts"] = sim.p90_final_pts
-    else:
-        raw["forecast_unavailable_reason"] = forecast_unavailable_reason
-        # Emit explicit nulls so consumers don't confuse "no forecast" with "missing key".
-        raw["win_prob"] = {u: None for u in snapshot.players}
-        raw["tie_prob"] = {u: None for u in snapshot.players}
-        raw["median_final_pts"] = {u: None for u in snapshot.players}
-        raw["p10_final_pts"] = {u: None for u in snapshot.players}
-        raw["p90_final_pts"] = {u: None for u in snapshot.players}
+    _build_raw_sim_fields(raw, sim, snapshot.players, forecast_available, forecast_unavailable_reason)
 
     render(
         DOCS_DIR,
