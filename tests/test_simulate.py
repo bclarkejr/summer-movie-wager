@@ -132,12 +132,12 @@ def test_no_scenario_when_player_never_wins():
     titles = [f"M{i}" for i in range(12)]
     strong = PlayerPicks(username="strong", ranked=titles[:10], dark_horses=["M10", "M11", "Mz"])
     # 'weak' predicts only films that essentially never reach the top 10
-    weak = PlayerPicks(username="weak", ranked=titles[2:12], dark_horses=["Ma", "Mb", "Mc"])
+    weak = PlayerPicks(username="weak", ranked=["M10", "M11", "Mx", "My", "Mz", "Ma", "Mb", "Mc", "Md", "Me"], dark_horses=["Mf", "Mg", "Mh"])
 
     res = simulate_season([strong, weak], _ten_projections(), n_trials=3_000, seed=7)
     # strong dominates; weak should have win_prob 0 and therefore no scenario
-    if res.win_prob["weak"] == 0.0:
-        assert res.winning_scenarios["weak"] is None
+    assert res.win_prob["weak"] == 0.0, "weak player unexpectedly won; re-examine test setup"
+    assert res.winning_scenarios["weak"] is None
     # strong always has a scenario
     assert res.winning_scenarios["strong"] is not None
 

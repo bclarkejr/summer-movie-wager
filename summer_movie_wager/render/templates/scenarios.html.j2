@@ -201,12 +201,12 @@ function applyTheme(t){
   const dark=(t==="dark")||(!t&&matchMedia("(prefers-color-scheme: dark)").matches);
   tgl.textContent=dark?"☀️ Light":"🌙 Dark";
 }
-applyTheme(localStorage.getItem("theme"));
+applyTheme(localStorage.getItem("smw-theme"));
 tgl.onclick=()=>{
   const cur=document.documentElement.getAttribute("data-theme")
     || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
   const next=cur==="dark"?"light":"dark";
-  localStorage.setItem("theme",next); applyTheme(next);
+  localStorage.setItem("smw-theme",next); applyTheme(next);
 };
 
 /* Flip this to false to preview the "not enough films" gated state */
