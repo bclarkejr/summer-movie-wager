@@ -4,7 +4,7 @@
 
 **Goal:** Add a tabbed per-player "how you win" grid to the site that shows, for each player, the most-likely actual top-10 finish in which they win the wager — computed from the existing 10k Monte Carlo trials, not from a placeholder reshuffle.
 
-**Architecture:** The simulator already produces, per trial, an actual top-10 ordering (`top_10_indices`) and a winner (`is_top`). We retain those, and for each player take the **medoid** of their strict-win trials (the most representative real winning finish) under an L1/Spearman-footrule rank distance. Each scenario emits the finish order, every player's per-rank point breakdown, totals, win %, and margin. These flow through `build.py` → `data.json` and into the rendered page, where the committed mockup's tab/grid JS drives the view. Gated on the existing `forecast_available` flag.
+**Architecture:** The simulator already produces, per trial, an actual top-10 ordering (`top_10_indices`) and a winner (`is_top`). We retain those, and for each player take the **medoid** of their strict-win trials (the most representative real winning finish) under an L1/Spearman-footrule rank distance. Each scenario emits the finish order, every player's per-rank point breakdown, totals, win %, and margin. These flow through `build.py` → `data.json` and into a new standalone `scenarios.html` page (linked from the leaderboard), where the committed mockup's tab/grid JS drives the view. Gated on the existing `forecast_available` flag.
 
 **Tech Stack:** Python 3, Pydantic v2, NumPy, Jinja2, pytest, `uv`. Front-end is vanilla JS + CSS reusing the existing theme tokens.
 
@@ -31,14 +31,14 @@
 summer_movie_wager/score/rules.py                  — add score_breakdown(); score_player delegates to it
 summer_movie_wager/types.py                         — add WinningScenario model
 summer_movie_wager/model/simulate.py                — keep per-trial orderings/winners; medoid; build winning_scenarios
-summer_movie_wager/render/build.py                  — thread winning_scenarios into raw dict (+ null branch)
-summer_movie_wager/render/page.py                   — pass scenarios JSON + win_prob + standing to template
-summer_movie_wager/render/templates/index.html.j2   — new Winning Scenarios <section> + tab/grid JS
-summer_movie_wager/render/static/style.css          — scenario view styles (lifted from the mockup)
-tests/test_score.py                                 — score_breakdown invariants
-tests/test_simulate.py                              — medoid scenarios: none-when-no-win, structure, consistency
-tests/test_build.py                                 — raw["winning_scenarios"] present/null
-tests/test_render_snapshot.py                       — page contains the section + const
+summer_movie_wager/render/build.py                     — thread winning_scenarios into raw dict (+ null branch)
+summer_movie_wager/render/page.py                      — render scenarios.html.j2 → docs/scenarios.html
+summer_movie_wager/render/templates/scenarios.html.j2  — NEW standalone Winning Scenarios page (from the mockup)
+summer_movie_wager/render/templates/index.html.j2      — gated nav link to scenarios.html
+tests/test_score.py                                    — score_breakdown invariants
+tests/test_simulate.py                                 — medoid scenarios: none-when-no-win, structure, consistency
+tests/test_build.py                                    — raw["winning_scenarios"] present/null
+tests/test_render_snapshot.py                          — scenarios.html has grid + const; index links to it (gated)
 ```
 
 ---
@@ -459,121 +459,152 @@ git commit -m "feat(build): emit winning_scenarios into data.json"
 
 ---
 
-## Task 5: Render the Winning Scenarios section
+## Task 5: Render a standalone `scenarios.html` page + link it from the leaderboard
 
 **Files:**
-- Modify: `summer_movie_wager/render/page.py` (`render`: pass scenario data to the template)
-- Modify: `summer_movie_wager/render/templates/index.html.j2` (new `<section>` + JS)
-- Modify: `summer_movie_wager/render/static/style.css` (scenario styles)
+- Create: `summer_movie_wager/render/templates/scenarios.html.j2` (from the committed mockup)
+- Modify: `summer_movie_wager/render/page.py` (`render`: also render `scenarios.html`)
+- Modify: `summer_movie_wager/render/templates/index.html.j2` (gated nav link)
 - Test: `tests/test_render_snapshot.py`
 
 **Interfaces:**
-- Consumes: `data.raw_snapshot["winning_scenarios"]` and `data.raw_snapshot["win_prob"]`.
-- Produces: rendered `index.html` containing a `#winning-scenarios` section and a `const SCENARIO_DATA = {...}` script when `forecast_available`.
+- Consumes: `data.raw_snapshot["winning_scenarios"]`, `data.raw_snapshot["win_prob"]`, `data.forecast_available`.
+- Produces: `out_dir/scenarios.html` containing the grid markup and `const DATA = {...}`; `out_dir/index.html` containing a `href="scenarios.html"` link when `forecast_available`.
 
 - [ ] **Step 1: Write the failing test**
 
-Add to `tests/test_render_snapshot.py` (reuse the file's existing render helper that produces the HTML string):
+Add to `tests/test_render_snapshot.py`:
 
 ```python
-def test_page_has_winning_scenarios_section(rendered_html_forecast_on):
-    html = rendered_html_forecast_on  # existing helper: rendered index.html with forecast on
-    assert 'id="winning-scenarios"' in html
-    assert "const SCENARIO_DATA" in html
-    # tab order data present
-    assert "winning_scenarios" not in html or "scenarios" in html  # sanity: const embedded
+def _render_pages(tmp_path, forecast_available):
+    from datetime import datetime, timezone
+    from summer_movie_wager.render.page import LeaderboardRow, RenderInput, render
+
+    leaderboard = [
+        LeaderboardRow(username="a", current_pts=10, median_pts=10.0,
+                       p10_pts=5.0, p90_pts=15.0, win_prob=0.5, tie_prob=0.0),
+        LeaderboardRow(username="b", current_pts=5, median_pts=5.0,
+                       p10_pts=1.0, p90_pts=9.0, win_prob=0.0, tie_prob=0.0),
+    ]
+    scenarios = {
+        "a": {"films": [f"F{i}" for i in range(10)],
+              "grid": {"a": [1] * 10, "b": [0] * 10},
+              "totals": {"a": 10, "b": 0}, "win_pct": 50.0, "margin": 10},
+        "b": None,
+    }
+    raw = {
+        "win_prob": {"a": 0.5, "b": 0.0},
+        "winning_scenarios": scenarios if forecast_available else {"a": None, "b": None},
+    }
+    render(tmp_path, RenderInput(
+        generated_at=datetime(2026, 6, 29, tzinfo=timezone.utc),
+        leaderboard=leaderboard, movies=[], player_details=[],
+        raw_snapshot=raw, forecast_available=forecast_available,
+        forecast_unavailable_reason="" if forecast_available else "only 3 movies projected",
+    ))
+    return (tmp_path / "index.html").read_text(), (tmp_path / "scenarios.html").read_text()
 
 
-def test_page_hides_scenarios_when_forecast_off(rendered_html_forecast_off):
-    html = rendered_html_forecast_off
-    assert 'id="winning-scenarios"' not in html
+def test_scenarios_page_and_link_when_forecast_on(tmp_path):
+    index, scenarios = _render_pages(tmp_path, True)
+    assert 'id="view"' in scenarios            # grid view markup present
+    assert "const DATA =" in scenarios          # scenarios embedded
+    assert "const FORECAST_AVAILABLE = true" in scenarios
+    assert 'href="scenarios.html"' in index     # leaderboard links to the page
+
+
+def test_scenarios_gated_and_unlinked_when_forecast_off(tmp_path):
+    index, scenarios = _render_pages(tmp_path, False)
+    assert "const FORECAST_AVAILABLE = false" in scenarios  # page shows gated notice
+    assert 'href="scenarios.html"' not in index             # link hidden
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `uv run pytest tests/test_render_snapshot.py -k winning_scenarios -v`
-Expected: FAIL — section/const absent.
+Run: `uv run pytest tests/test_render_snapshot.py -k scenarios -v`
+Expected: FAIL — `scenarios.html` is not written (`FileNotFoundError`).
 
-- [ ] **Step 3: Pass scenario data into the template**
+- [ ] **Step 3: Create the standalone page template**
 
-In `summer_movie_wager/render/page.py`, inside `render`, build a compact JS payload from `data.raw_snapshot` and add it to `template.render(...)`:
+Create `summer_movie_wager/render/templates/scenarios.html.j2` as a copy of the committed mockup `docs/previews/winning-scenarios.html` with exactly these edits (everything else — the full `<style>` block with theme tokens, the tab/grid render JS, and the dark-mode toggle — is kept verbatim; the page stays self-contained and does **not** use `inline_css`):
+
+1. In the `<script>` data block, replace the entire embedded literal
+   `const DATA = {...};` with:
+   ```js
+   const DATA = {{ scenario_json | safe }};
+   ```
+2. Replace the hardcoded toggle line `const FORECAST_AVAILABLE=true;` with:
+   ```js
+   const FORECAST_AVAILABLE = {{ 'true' if forecast_available else 'false' }};
+   ```
+3. In the gated notice `<div class="gated" id="gated">`, append the reason:
+   ```jinja
+   ⏳ Not enough films are in theaters yet to simulate win probabilities{% if forecast_unavailable_reason %} — {{ forecast_unavailable_reason }}{% endif %}. This view unlocks once the forecast is live.
+   ```
+4. Remove the `<span class="mock-flag">mockup</span>` from the `<h1>` and drop the
+   "Static mockup ·" wording in the `<footer>`, replacing the footer with:
+   ```jinja
+   <p><a href="index.html">← Back to the leaderboard</a></p>
+   Refreshed {{ generated_at }}.
+   ```
+
+> The mockup already structures the page exactly this way (`#view` vs `#gated`
+> toggled by `FORECAST_AVAILABLE`, its own dark-mode toggle persisting to
+> `localStorage`), so these are the only changes needed. `ponytail:` the page
+> keeps its own copy of the theme tokens rather than sharing `style.css` — a
+> deliberate simplification for a static page; unify only if the palettes ever
+> drift.
+
+- [ ] **Step 4: Render the page in `page.py`**
+
+In `summer_movie_wager/render/page.py`, inside `render`, after `index.html` is
+written, build the payload and render the second page (`env`, `inline_css`, and
+`json` are already in scope):
 
 ```python
-    win_prob = data.raw_snapshot.get("win_prob", {})
     scenario_payload = {
         "standing": [row.username for row in data.leaderboard],  # current-points order
-        "win_prob": win_prob,
+        "win_prob": data.raw_snapshot.get("win_prob", {}),
         "scenarios": data.raw_snapshot.get("winning_scenarios", {}),
     }
-    scenario_json = json.dumps(scenario_payload, default=str)
+    scenarios_html = env.get_template("scenarios.html.j2").render(
+        generated_at = data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
+        scenario_json = json.dumps(scenario_payload, default=str),
+        forecast_available = data.forecast_available,
+        forecast_unavailable_reason = data.forecast_unavailable_reason,
+    )
+    (out_dir / "scenarios.html").write_text(scenarios_html)
 ```
 
-Add to the `template.render(...)` call:
+> The payload shape `{standing, win_prob, scenarios}` is exactly what the mockup
+> JS expects (`DATA.standing`, `DATA.win_prob`, `DATA.scenarios`).
 
-```python
-        scenario_json = scenario_json,
-```
+- [ ] **Step 5: Add the gated nav link to the leaderboard**
 
-> `json` is already imported in `page.py`. The payload shape `{standing, win_prob, scenarios}` is exactly what the mockup's JS expects (`DATA.standing`, `DATA.win_prob`, `DATA.scenarios`).
-
-- [ ] **Step 4: Add the section + JS to the template**
-
-In `summer_movie_wager/render/templates/index.html.j2`, after the `players` section's closing `</section>`, add (only renders when the forecast is available):
+In `summer_movie_wager/render/templates/index.html.j2`, inside the header block
+near the `<p class="meta">Window …</p>` line, add:
 
 ```jinja
 {% if forecast_available %}
-<section class="winning-scenarios card" id="winning-scenarios">
-  <h2>🏆 Winning Scenarios</h2>
-  <p class="meta">Pick a player to see the most-likely top-10 finish in which they win the wager.</p>
-  <div class="ws-tabs" id="ws-tabs" role="tablist"></div>
-  <div class="ws-caption" id="ws-caption"></div>
-  <div class="ws-grid-wrap">
-    <table id="ws-grid">
-      <thead><tr id="ws-head"></tr></thead>
-      <tbody id="ws-body"></tbody>
-      <tfoot><tr id="ws-foot"></tr></tfoot>
-    </table>
-  </div>
-</section>
-<script>
-const SCENARIO_DATA = {{ scenario_json | safe }};
-</script>
-<script>
-{{ ws_render_js | safe }}
-</script>
+<p class="meta"><a class="scenarios-link" href="scenarios.html">🏆 See each player's winning scenarios →</a></p>
 {% endif %}
 ```
 
-To avoid duplicating logic, lift the **tab/grid render JS** verbatim from the committed mockup `docs/previews/winning-scenarios.html` — the block from `const DATA = ...` through the end of the `render()` definition — with these exact substitutions:
-- replace `const DATA = {...big literal...};` with `const DATA = SCENARIO_DATA;`
-- replace element IDs `tabs/head/body/foot/caption` with the prefixed IDs `ws-tabs/ws-head/ws-body/ws-foot/ws-caption`;
-- replace the mockup's class names `tabs/tab/scenario-caption/grid-wrap/...` with the `ws-`-prefixed equivalents used in Step 5 CSS;
-- drop the mockup's standalone `FORECAST_AVAILABLE` toggle and the dark-mode toggle block (the page already owns dark mode); call `render()` once at the end;
-- keep `tabOrder` (sort by `DATA.win_prob` desc) and the per-scenario column sort (`sort by sc.totals` desc) exactly as in the mockup.
+- [ ] **Step 6: Run tests to verify they pass**
 
-Provide this adapted JS to the template via a render kwarg. In `page.py`, read it from a sibling asset file and pass it:
-
-```python
-    ws_render_js = (_STATIC / "winning_scenarios.js").read_text()
-```
-add `ws_render_js = ws_render_js,` to `template.render(...)`, and create `summer_movie_wager/render/static/winning_scenarios.js` containing the adapted JS described above (everything except the embedded data literal, which comes from `SCENARIO_DATA`).
-
-- [ ] **Step 5: Add scenario styles**
-
-Append to `summer_movie_wager/render/static/style.css` the scenario rules from the mockup's `<style>` block (the `.tabs`, `.tab`, `.scenario-caption`, `.grid-wrap`, table, `.col-sel`, `tfoot` rules), each renamed with a `ws-` prefix / scoped under `.winning-scenarios` so they don't collide with existing table styles. Reuse the existing theme CSS variables (`--accent`, `--bg-card`, `--border`, `--win-bg`, etc.) already defined in `style.css`; do not redefine tokens.
-
-- [ ] **Step 6: Run tests; refresh the snapshot**
-
-Run: `uv run pytest tests/test_render_snapshot.py -v`
-Expected: the two new tests PASS. If the file keeps a full-page golden snapshot, inspect the diff; if the only change is the added section + const, update the golden fixture per the file's existing update convention. Re-run until green.
+Run: `uv run pytest tests/test_render_snapshot.py -k scenarios -v`
+Expected: PASS. If the file keeps a full-page golden snapshot of `index.html`,
+inspect the diff; if the only change is the added link line, update the golden
+fixture per the file's existing update convention. Re-run until green.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add summer_movie_wager/render/page.py summer_movie_wager/render/templates/index.html.j2 \
-        summer_movie_wager/render/static/style.css summer_movie_wager/render/static/winning_scenarios.js \
+git add summer_movie_wager/render/page.py \
+        summer_movie_wager/render/templates/scenarios.html.j2 \
+        summer_movie_wager/render/templates/index.html.j2 \
         tests/test_render_snapshot.py
-git commit -m "feat(render): add Winning Scenarios tabbed grid to the page"
+git commit -m "feat(render): add standalone scenarios.html page linked from the leaderboard"
 ```
 
 ---
@@ -601,7 +632,7 @@ Inspect `docs/data.json` → `winning_scenarios`:
 
 - [ ] **Step 4: Verify the rendered view**
 
-Open `docs/index.html`: the Winning Scenarios section renders; tabs are ordered by win % with zero-chance players grayed/disabled; clicking a tab swaps the grid and re-sorts columns so the selected player is the crowned (👑), left-most column. Confirm light/dark toggle and mobile horizontal scroll behave as in the mockup.
+Open `docs/index.html`: confirm the "Winning Scenarios" link appears, and follow it to `docs/scenarios.html`. On that page: tabs are ordered by win % with zero-chance players grayed/disabled; clicking a tab swaps the grid and re-sorts columns so the selected player is the crowned (👑), left-most column; the "← Back to the leaderboard" link returns to `index.html`. Confirm light/dark toggle and mobile horizontal scroll behave as in the mockup.
 
 - [ ] **Step 5: Commit any artifact churn**
 
@@ -615,7 +646,8 @@ git commit -m "chore: rebuild site with winning-scenarios view"
 ## Self-Review
 
 - **Spec coverage:**
-  - "What the view shows" (tabs by likelihood, per-scenario column sort, grayed no-win, gating) → Task 5 (template/JS reuse the mockup's `tabOrder` + totals sort) + Task 4/5 gating on `forecast_available`.
+  - "What the view shows" (tabs by likelihood, per-scenario column sort, grayed no-win, gating) → Task 5 (standalone `scenarios.html` from the mockup, reusing `tabOrder` + totals sort) + Task 4/5 gating on `forecast_available` (page shows gated notice; leaderboard link hidden).
+  - "Page" (separate `scenarios.html`, linked from `index.html`, self-contained styles + toggle) → Task 5 (new `scenarios.html.j2`, `page.py` renders it, gated link in `index.html.j2`).
   - Medoid algorithm + footrule/L1 distance + cap + "not nearest-reorder flip" → Task 3 (helper, constant, ponytail comment) + verified real in Task 6 Step 3.
   - `score_breakdown` helper + `score_player` delegation → Task 1.
   - `WinningScenario` model + `SimulationResult` field → Task 2.

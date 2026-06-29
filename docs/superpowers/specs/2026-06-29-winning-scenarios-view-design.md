@@ -43,12 +43,16 @@ that makes X's predictions out-score everyone else's.
     dimmed). A **Total** row crowns the winner (👑), who is always the selected
     player and the left-most column.
   - The selected player's column is highlighted.
-- **Gating** — the whole view is hidden until the forecast is available
+- **Gating** — scenarios exist only when the forecast is available
   (`forecast_available == True`, i.e. ≥ 25 non-zero projections — the same gate
-  that governs whether `win_prob` exists at all). Until then a "not enough films
-  in theaters yet" notice shows.
-- **Theme** — reuses the existing Nunito + purple light/dark token set; the view
-  is a new section in the rendered page, not a second site.
+  that governs whether `win_prob` exists at all). Until then the scenarios page
+  shows a "not enough films in theaters yet" notice and the leaderboard hides its
+  link to the page.
+- **Page** — the view is its **own page**, `docs/scenarios.html`, reached from a
+  nav link on the main leaderboard (`index.html`). It is a self-contained
+  standalone page (its own `<head>`, styles, and dark-mode toggle) reusing the
+  same Nunito + purple light/dark theme. It is **not** a section inside
+  `index.html`.
 
 ## How a scenario is computed — the core of this work
 
@@ -130,9 +134,10 @@ summer_movie_wager/score/rules.py        — add score_breakdown(); reuse it in 
 summer_movie_wager/types.py              — add WinningScenario model
 summer_movie_wager/model/simulate.py     — retain per-trial orderings + winners;
                                             compute winning_scenarios per player
-summer_movie_wager/render/build.py       — thread scenarios into data.json + RenderInput
-summer_movie_wager/render/page.py        — pass scenarios to the template
-summer_movie_wager/render/templates/index.html.j2 — new Winning Scenarios section + JS
+summer_movie_wager/render/build.py                     — thread scenarios into data.json + RenderInput
+summer_movie_wager/render/page.py                      — render the new page; write docs/scenarios.html
+summer_movie_wager/render/templates/scenarios.html.j2  — NEW standalone Winning Scenarios page (from the mockup)
+summer_movie_wager/render/templates/index.html.j2      — add a gated nav link to scenarios.html
 ```
 
 `decay.py`, `preopening.py`, and the uncertainty-floor logic are untouched.
@@ -166,9 +171,15 @@ data already in memory.
 `RenderInput`, exactly mirroring how `win_prob` is plumbed today, including the
 "forecast unavailable" branch that emits explicit nulls.
 
-The template embeds the scenarios as a JS const (same shape the mockup's `DATA`
-uses: `{standing, win_prob, scenarios}`) and reuses the mockup's tab/grid render
-logic. The view renders only when `forecast_available`.
+The new `scenarios.html.j2` page embeds the scenarios as a JS const (same shape
+the mockup's `DATA` uses: `{standing, win_prob, scenarios}`) and reuses the
+mockup's tab/grid render logic and dark-mode toggle. `page.py` renders it to
+`docs/scenarios.html` on every build. The page is self-contained — to avoid
+fragile partial token-sharing it keeps the mockup's full inline `<style>`
+(the theme tokens are duplicated from the main stylesheet, as they already are in
+the committed mockup; a deliberate `ponytail:` simplification for a static
+generated page). When `forecast_available` is false the page renders the gated
+notice instead of the grid, and `index.html` omits the link to it.
 
 ### data.json schema addition
 
@@ -218,9 +229,10 @@ branch for `win_prob` et al.).
     recorded for that trial (internal consistency).
 - **`tests/test_build.py`** — `raw["winning_scenarios"]` is present and
   well-formed when `forecast_available`, and is all-null when not.
-- **`tests/test_render_snapshot.py`** — the rendered page contains the Winning
-  Scenarios section and the embedded scenarios const when forecast is available;
-  refresh the snapshot fixture.
+- **`tests/test_render_snapshot.py`** — when forecast is available, `render`
+  writes `scenarios.html` containing the grid markup and the embedded scenarios
+  const, and `index.html` contains the `scenarios.html` link; when unavailable,
+  `scenarios.html` shows the gated notice and `index.html` omits the link.
 - **Determinism** — same seed ⇒ identical scenarios (medoid tie-break is
   deterministic: lowest trial index wins a distance tie).
 
@@ -234,11 +246,11 @@ branch for `win_prob` et al.).
      leader by `margin >= 1`;
    - every player with `win_prob == 0` (currently `radhadr`) has `null`;
    - per-player `grid` columns sum to the matching `totals`.
-3. Open `docs/index.html`: the Winning Scenarios section renders; tabs are
-   ordered by win % with zero-chance players grayed; clicking a tab swaps the
-   grid and re-sorts columns so the selected player is the crowned, left-most
-   column. Confirm light/dark and mobile horizontal-scroll behave as in the
-   mockup.
+3. Open `docs/index.html`: confirm the "Winning Scenarios" link appears; follow
+   it to `docs/scenarios.html`. There, tabs are ordered by win % with zero-chance
+   players grayed; clicking a tab swaps the grid and re-sorts columns so the
+   selected player is the crowned, left-most column. Confirm light/dark and
+   mobile horizontal-scroll behave as in the mockup.
 4. Confirm the rendered scenarios are **real** finishes (films vary per player,
    margins vary — *not* a uniform 1-point flip), demonstrating the medoid path
    replaced the mockup's placeholder heuristic.
