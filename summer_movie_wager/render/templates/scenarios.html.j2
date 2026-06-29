@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Winning Scenarios — Summer Movie Wager 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>{{ theme_css | safe }}</style>
+<style>
+* { box-sizing:border-box; }
+body {
+  font-family:'Nunito',sans-serif; font-size:15px; line-height:1.5;
+  max-width:1000px; margin:0 auto; padding:1.5em 1.2em 3em;
+  background:var(--bg); color:var(--text);
+  transition:background .25s,color .25s;
+}
+
+.theme-toggle {
+  position:fixed; top:1em; right:1em; z-index:100;
+  background:var(--bg-card); border:2px solid var(--border); border-radius:50px;
+  padding:.35em .9em; font-family:'Nunito',sans-serif; font-size:.85em; font-weight:700;
+  color:var(--text); cursor:pointer; box-shadow:0 2px 12px var(--shadow);
+  transition:transform .1s;
+}
+.theme-toggle:active { transform:scale(.94); }
+
+h1 { font-weight:800; font-size:1.7em; margin:0 0 .15em; }
+.subtitle { color:var(--text-muted); margin:0 0 1.2em; max-width:62ch; }
+
+/* ── Tab bar ── */
+.tabs {
+  display:flex; flex-wrap:wrap; gap:.5em; margin:0 0 .35em;
+  border-bottom:2px solid var(--border); padding-bottom:.9em;
+}
+.tab {
+  font-family:'Nunito',sans-serif; font-size:.95em; font-weight:700;
+  color:var(--text); background:var(--bg-card);
+  border:2px solid var(--border); border-radius:50px;
+  padding:.4em 1em; cursor:pointer; transition:background .15s,border-color .15s,transform .1s;
+}
+.tab:hover:not(.is-disabled) { background:var(--bg-hover); }
+.tab:active:not(.is-disabled) { transform:scale(.96); }
+.tab.is-active {
+  background:var(--accent-soft); border-color:var(--accent); color:var(--accent);
+}
+.tab .pct { font-weight:600; font-size:.82em; opacity:.8; margin-left:.4em; }
+.tab.is-disabled {
+  color:var(--zero); border-color:var(--border); background:transparent;
+  cursor:not-allowed; opacity:.55;
+}
+
+.scenario-caption { margin:1.1em 0 .8em; }
+.scenario-caption .who { font-weight:800; color:var(--accent); }
+.scenario-caption .lik { color:var(--text-muted); }
+
+/* ── Grid ── */
+.grid-wrap { overflow-x:auto; border-radius:14px; box-shadow:0 2px 16px var(--shadow); }
+table { border-collapse:collapse; width:100%; background:var(--bg-card); min-width:780px; }
+thead th {
+  position:sticky; top:0; background:var(--bg-card); color:var(--th-color);
+  font-size:.78em; font-weight:700; text-transform:uppercase; letter-spacing:.02em;
+  padding:.7em .5em; text-align:center; border-bottom:2px solid var(--border);
+}
+thead th.film-col { text-align:left; }
+tbody td {
+  padding:.55em .5em; text-align:center; border-bottom:1px solid var(--border-row);
+  font-variant-numeric:tabular-nums;
+}
+tbody tr:nth-child(even) { background:var(--bg-row-alt); }
+td.film-col { text-align:left; font-weight:600; white-space:nowrap; }
+td.film-col .rank {
+  display:inline-block; width:1.6em; color:var(--text-muted); font-weight:800;
+  font-size:.85em; text-align:right; margin-right:.5em;
+}
+td.zero { color:var(--zero); }
+/* highlighted column = the player whose winning scenario we're viewing */
+.col-sel { background:var(--accent-soft-2); }
+thead th.col-sel { color:var(--accent); }
+tfoot td {
+  padding:.7em .5em; text-align:center; font-weight:800;
+  border-top:2px solid var(--border); font-variant-numeric:tabular-nums;
+}
+tfoot td.film-col { text-align:left; text-transform:uppercase; font-size:.8em; letter-spacing:.03em; color:var(--th-color); }
+tfoot td.col-sel {
+  background:var(--win-bg); color:var(--win-color); border-radius:0 0 4px 4px;
+}
+.crown { font-size:.9em; }
+
+footer { margin-top:2em; color:var(--footer-color); font-size:.82em; }
+
+/* ── Disabled (not enough films to simulate) state ── */
+.gated {
+  display:none; background:var(--forecast-bg); border:1px solid var(--forecast-border);
+  color:var(--forecast-color); border-radius:12px; padding:1em 1.2em; font-weight:600;
+}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙 Dark</button>
+
+<h1>🏆 Winning Scenarios</h1>
+<p class="subtitle">
+  Pick a player to see the single most-likely <strong>top-10 box-office finish order</strong>
+  that crowns them champion — and exactly how everyone's predictions score against it.
+  Grayed-out players have no realistic path to winning.
+</p>
+
+<div class="gated" id="gated">
+  ⏳ Not enough films are in theaters yet to simulate win probabilities{% if forecast_unavailable_reason %} — {{ forecast_unavailable_reason }}{% endif %}. This view unlocks once the forecast is live.
+</div>
+
+<div id="view">
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <div class="scenario-caption" id="caption"></div>
+  <div class="grid-wrap">
+    <table id="grid">
+      <thead><tr id="head"></tr></thead>
+      <tbody id="body"></tbody>
+      <tfoot><tr id="foot"></tr></tfoot>
+    </table>
+  </div>
+</div>
+
+<footer>
+  <p><a href="index.html">← Back to the leaderboard</a></p>
+  Refreshed {{ generated_at }}.
+</footer>
+
+<script>
+const DATA = {{ scenario_json | safe }};
+
+const NICE = Object.fromEntries(DATA.standing.map(p => [p, p]));
+
+const players = DATA.standing;
+// tabs ordered by win likelihood (highest chance first)
+const tabOrder = [...players].sort((a,b)=>DATA.win_prob[b]-DATA.win_prob[a]);
+const enabled = tabOrder.filter(p => DATA.scenarios[p]);
+let selected = enabled[0];
+
+const tabsEl=document.getElementById("tabs");
+const headEl=document.getElementById("head");
+const bodyEl=document.getElementById("body");
+const footEl=document.getElementById("foot");
+const capEl=document.getElementById("caption");
+
+function buildTabs(){
+  tabsEl.innerHTML="";
+  tabOrder.forEach(p=>{
+    const sc=DATA.scenarios[p];
+    const b=document.createElement("button");
+    b.className="tab"+(p===selected?" is-active":"")+(sc?"":" is-disabled");
+    b.setAttribute("role","tab");
+    if(sc){
+      b.innerHTML=`${NICE[p]}<span class="pct">${sc.win_pct}%</span>`;
+      b.onclick=()=>{selected=p;render();};
+    }else{
+      b.innerHTML=`${NICE[p]}<span class="pct">0%</span>`;
+      b.title="No winning scenario — can't catch the field";
+    }
+    tabsEl.appendChild(b);
+  });
+}
+
+function render(){
+  buildTabs();
+  const sc=DATA.scenarios[selected];
+  // columns ordered by THIS scenario's projected finish (winner leftmost)
+  const cols=[...players].sort((a,b)=>sc.totals[b]-sc.totals[a]);
+  capEl.innerHTML=`Most likely finish in which <span class="who">${NICE[selected]}</span> wins the wager 🏆
+    <span class="lik">— ${NICE[selected]} edges the field by just ${sc.margin} pt; they win ~${sc.win_pct}% of all sims</span>`;
+
+  // header
+  headEl.innerHTML=`<th class="film-col">Actual top-10 finish</th>`+
+    cols.map(p=>`<th class="${p===selected?'col-sel':''}">${NICE[p]}</th>`).join("");
+
+  // body rows = films in finish order
+  bodyEl.innerHTML=sc.films.map((film,i)=>{
+    const cells=cols.map(p=>{
+      const v=sc.grid[p][i];
+      const cls=(v===0?"zero ":"")+(p===selected?"col-sel":"");
+      return `<td class="${cls.trim()}">${v||"·"}</td>`;
+    }).join("");
+    return `<tr><td class="film-col"><span class="rank">${i+1}.</span>${film}</td>${cells}</tr>`;
+  }).join("");
+
+  // totals (winner = cols[0], the selected player)
+  footEl.innerHTML=`<td class="film-col">Total</td>`+
+    cols.map((p,idx)=>{
+      const cls=p===selected?"col-sel":"";
+      const crown=idx===0?' <span class="crown">👑</span>':'';
+      return `<td class="${cls}">${sc.totals[p]}${crown}</td>`;
+    }).join("");
+}
+
+/* dark-mode toggle (same behavior as index.html) */
+const tgl=document.getElementById("themeToggle");
+function applyTheme(t){
+  if(t)document.documentElement.setAttribute("data-theme",t);
+  const dark=(t==="dark")||(!t&&matchMedia("(prefers-color-scheme: dark)").matches);
+  tgl.textContent=dark?"☀️ Light":"🌙 Dark";
+}
+applyTheme(localStorage.getItem("theme"));
+tgl.onclick=()=>{
+  const cur=document.documentElement.getAttribute("data-theme")
+    || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+  const next=cur==="dark"?"light":"dark";
+  localStorage.setItem("theme",next); applyTheme(next);
+};
+
+/* Flip this to false to preview the "not enough films" gated state */
+const FORECAST_AVAILABLE = {{ 'true' if forecast_available else 'false' }};
+if(!FORECAST_AVAILABLE){
+  document.getElementById("view").style.display="none";
+  document.getElementById("gated").style.display="block";
+}else{
+  render();
+}
+</script>
+</body>
+</html>

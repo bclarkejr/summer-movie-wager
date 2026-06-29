@@ -89,7 +89,8 @@ def render(out_dir: Path, data: RenderInput) -> None:
         autoescape = True,
     )
     template = env.get_template("index.html.j2")
-    inline_css = (_STATIC / "style.css").read_text()
+    theme_css = (_STATIC / "theme.css").read_text()
+    inline_css = theme_css + "\n" + (_STATIC / "style.css").read_text()
     html = template.render(
         generated_at = data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
         leaderboard = data.leaderboard,
@@ -101,3 +102,17 @@ def render(out_dir: Path, data: RenderInput) -> None:
     )
     (out_dir / "index.html").write_text(html)
     (out_dir / "data.json").write_text(json.dumps(data.raw_snapshot, indent=2, default=str))
+
+    scenario_payload = {
+        "standing": [row.username for row in data.leaderboard],
+        "win_prob": data.raw_snapshot.get("win_prob", {}),
+        "scenarios": data.raw_snapshot.get("winning_scenarios", {}),
+    }
+    scenarios_html = env.get_template("scenarios.html.j2").render(
+        generated_at = data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
+        theme_css = theme_css,
+        scenario_json = json.dumps(scenario_payload, default=str),
+        forecast_available = data.forecast_available,
+        forecast_unavailable_reason = data.forecast_unavailable_reason,
+    )
+    (out_dir / "scenarios.html").write_text(scenarios_html)
