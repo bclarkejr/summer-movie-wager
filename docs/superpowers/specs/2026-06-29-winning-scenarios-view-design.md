@@ -49,10 +49,10 @@ that makes X's predictions out-score everyone else's.
   shows a "not enough films in theaters yet" notice and the leaderboard hides its
   link to the page.
 - **Page** — the view is its **own page**, `docs/scenarios.html`, reached from a
-  nav link on the main leaderboard (`index.html`). It is a self-contained
-  standalone page (its own `<head>`, styles, and dark-mode toggle) reusing the
-  same Nunito + purple light/dark theme. It is **not** a section inside
-  `index.html`.
+  nav link on the main leaderboard (`index.html`). It is a standalone page (its
+  own `<head>`, layout styles, and dark-mode toggle). It is **not** a section
+  inside `index.html`. Both pages draw their palette from a single shared
+  theme-token stylesheet (see below), so light/dark colors stay in sync.
 
 ## How a scenario is computed — the core of this work
 
@@ -135,7 +135,9 @@ summer_movie_wager/types.py              — add WinningScenario model
 summer_movie_wager/model/simulate.py     — retain per-trial orderings + winners;
                                             compute winning_scenarios per player
 summer_movie_wager/render/build.py                     — thread scenarios into data.json + RenderInput
-summer_movie_wager/render/page.py                      — render the new page; write docs/scenarios.html
+summer_movie_wager/render/page.py                      — inline shared theme.css into both pages; write docs/scenarios.html
+summer_movie_wager/render/static/theme.css             — NEW shared theme tokens (extracted from style.css)
+summer_movie_wager/render/static/style.css             — token blocks moved out to theme.css
 summer_movie_wager/render/templates/scenarios.html.j2  — NEW standalone Winning Scenarios page (from the mockup)
 summer_movie_wager/render/templates/index.html.j2      — add a gated nav link to scenarios.html
 ```
@@ -174,12 +176,12 @@ data already in memory.
 The new `scenarios.html.j2` page embeds the scenarios as a JS const (same shape
 the mockup's `DATA` uses: `{standing, win_prob, scenarios}`) and reuses the
 mockup's tab/grid render logic and dark-mode toggle. `page.py` renders it to
-`docs/scenarios.html` on every build. The page is self-contained — to avoid
-fragile partial token-sharing it keeps the mockup's full inline `<style>`
-(the theme tokens are duplicated from the main stylesheet, as they already are in
-the committed mockup; a deliberate `ponytail:` simplification for a static
-generated page). When `forecast_available` is false the page renders the gated
-notice instead of the grid, and `index.html` omits the link to it.
+`docs/scenarios.html` on every build. The light/dark **theme tokens are extracted
+into a shared `static/theme.css`** and inlined into both `index.html` and
+`scenarios.html`, so the palette has a single source of truth; each page keeps
+only its own layout/component CSS. When `forecast_available` is false the page
+renders the gated notice instead of the grid, and `index.html` omits the link to
+it.
 
 ### data.json schema addition
 

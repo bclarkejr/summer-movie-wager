@@ -32,8 +32,10 @@ summer_movie_wager/score/rules.py                  — add score_breakdown(); sc
 summer_movie_wager/types.py                         — add WinningScenario model
 summer_movie_wager/model/simulate.py                — keep per-trial orderings/winners; medoid; build winning_scenarios
 summer_movie_wager/render/build.py                     — thread winning_scenarios into raw dict (+ null branch)
-summer_movie_wager/render/page.py                      — render scenarios.html.j2 → docs/scenarios.html
-summer_movie_wager/render/templates/scenarios.html.j2  — NEW standalone Winning Scenarios page (from the mockup)
+summer_movie_wager/render/page.py                      — inline shared theme.css into both pages; render scenarios.html
+summer_movie_wager/render/static/theme.css             — NEW shared theme tokens (extracted from style.css), used by both pages
+summer_movie_wager/render/static/style.css             — token blocks removed (now in theme.css)
+summer_movie_wager/render/templates/scenarios.html.j2  — NEW standalone Winning Scenarios page (from the mockup), consumes theme.css
 summer_movie_wager/render/templates/index.html.j2      — gated nav link to scenarios.html
 tests/test_score.py                                    — score_breakdown invariants
 tests/test_simulate.py                                 — medoid scenarios: none-when-no-win, structure, consistency
@@ -459,17 +461,19 @@ git commit -m "feat(build): emit winning_scenarios into data.json"
 
 ---
 
-## Task 5: Render a standalone `scenarios.html` page + link it from the leaderboard
+## Task 5: Shared theme stylesheet + standalone `scenarios.html` page
 
 **Files:**
-- Create: `summer_movie_wager/render/templates/scenarios.html.j2` (from the committed mockup)
-- Modify: `summer_movie_wager/render/page.py` (`render`: also render `scenarios.html`)
+- Create: `summer_movie_wager/render/static/theme.css` (shared theme tokens, extracted from `style.css` + scenario tokens)
+- Modify: `summer_movie_wager/render/static/style.css` (remove the token blocks; they move to `theme.css`)
+- Create: `summer_movie_wager/render/templates/scenarios.html.j2` (from the committed mockup, consuming the shared tokens)
+- Modify: `summer_movie_wager/render/page.py` (`render`: inline `theme.css` into both pages; render `scenarios.html`)
 - Modify: `summer_movie_wager/render/templates/index.html.j2` (gated nav link)
 - Test: `tests/test_render_snapshot.py`
 
 **Interfaces:**
 - Consumes: `data.raw_snapshot["winning_scenarios"]`, `data.raw_snapshot["win_prob"]`, `data.forecast_available`.
-- Produces: `out_dir/scenarios.html` containing the grid markup and `const DATA = {...}`; `out_dir/index.html` containing a `href="scenarios.html"` link when `forecast_available`.
+- Produces: `out_dir/scenarios.html` containing the grid markup, the shared theme tokens, and `const DATA = {...}`; `out_dir/index.html` containing the shared theme tokens and a `href="scenarios.html"` link when `forecast_available`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -505,6 +509,15 @@ def _render_pages(tmp_path, forecast_available):
     return (tmp_path / "index.html").read_text(), (tmp_path / "scenarios.html").read_text()
 
 
+def test_shared_theme_tokens_inlined_into_both_pages(tmp_path):
+    index, scenarios = _render_pages(tmp_path, True)
+    # the shared token set (base + scenario tokens) is present on both pages
+    for css in (index, scenarios):
+        assert "--bg-card:" in css       # existing shared token
+        assert "--accent:" in css        # scenario token, now shared
+        assert "--win-bg:" in css
+
+
 def test_scenarios_page_and_link_when_forecast_on(tmp_path):
     index, scenarios = _render_pages(tmp_path, True)
     assert 'id="view"' in scenarios            # grid view markup present
@@ -521,44 +534,99 @@ def test_scenarios_gated_and_unlinked_when_forecast_off(tmp_path):
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `uv run pytest tests/test_render_snapshot.py -k scenarios -v`
+Run: `uv run pytest tests/test_render_snapshot.py -k "scenarios or theme" -v`
 Expected: FAIL — `scenarios.html` is not written (`FileNotFoundError`).
 
-- [ ] **Step 3: Create the standalone page template**
+- [ ] **Step 3: Extract a shared `theme.css`**
 
-Create `summer_movie_wager/render/templates/scenarios.html.j2` as a copy of the committed mockup `docs/previews/winning-scenarios.html` with exactly these edits (everything else — the full `<style>` block with theme tokens, the tab/grid render JS, and the dark-mode toggle — is kept verbatim; the page stays self-contained and does **not** use `inline_css`):
+Create `summer_movie_wager/render/static/theme.css`. Move the three theme-token
+blocks **verbatim** out of `style.css` — the `:root { … }`, the
+`[data-theme="dark"] { … }`, and the
+`@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { … } }`
+blocks (currently `style.css` lines ~1–76). Then add these scenario tokens to
+each block (light values in `:root`; dark values in both the `[data-theme="dark"]`
+block and the `prefers-color-scheme` block):
 
-1. In the `<script>` data block, replace the entire embedded literal
+```css
+/* add to the light :root block */
+  --accent:        #6c3fcf;
+  --accent-soft:   #e0d9ff;
+  --accent-soft-2: #efeaff;
+  --win-bg:        #c9f7e8;
+  --win-color:     #1a7a54;
+  --zero:          #bdbdbd;
+```
+
+```css
+/* add to BOTH dark blocks */
+  --accent:        #c4b0ff;
+  --accent-soft:   #3a2a6a;
+  --accent-soft-2: #2a2150;
+  --win-bg:        #0d3d28;
+  --win-color:     #4ecdc4;
+  --zero:          #4a4266;
+```
+
+- [ ] **Step 4: Trim `style.css` and inline both sheets in `page.py`**
+
+In `summer_movie_wager/render/static/style.css`, **delete** the three token
+blocks now living in `theme.css` (everything above `* { box-sizing: border-box; }`).
+`style.css` now contains only base + component rules that reference the tokens.
+
+In `summer_movie_wager/render/page.py`, change the CSS read so the shared tokens
+are inlined ahead of the component styles (the `index.html.j2` template still
+reads `{{ inline_css | safe }}`, unchanged):
+
+```python
+    theme_css = (_STATIC / "theme.css").read_text()
+    inline_css = theme_css + "\n" + (_STATIC / "style.css").read_text()
+```
+
+- [ ] **Step 5: Create the standalone page template**
+
+Create `summer_movie_wager/render/templates/scenarios.html.j2` from the committed
+mockup `docs/previews/winning-scenarios.html` with exactly these edits (the
+tab/grid render JS and dark-mode toggle are kept verbatim):
+
+1. **Use the shared tokens instead of the mockup's own.** Delete the mockup's
+   three token blocks from its `<style>` (the `:root`, `[data-theme="dark"]`, and
+   `@media (prefers-color-scheme: dark)` blocks). Immediately before the
+   remaining `<style>` (which keeps the base `body` + scenario layout rules:
+   `.tabs`, `.tab`, `.scenario-caption`, `.grid-wrap`, table, `.col-sel`,
+   `tfoot`, `.gated`, `.theme-toggle`, …), add a first style element that inlines
+   the shared tokens:
+   ```jinja
+   <style>{{ theme_css | safe }}</style>
+   ```
+2. In the `<script>` data block, replace the entire embedded literal
    `const DATA = {...};` with:
    ```js
    const DATA = {{ scenario_json | safe }};
    ```
-2. Replace the hardcoded toggle line `const FORECAST_AVAILABLE=true;` with:
+3. Replace the hardcoded toggle line `const FORECAST_AVAILABLE=true;` with:
    ```js
    const FORECAST_AVAILABLE = {{ 'true' if forecast_available else 'false' }};
    ```
-3. In the gated notice `<div class="gated" id="gated">`, append the reason:
+4. In the gated notice `<div class="gated" id="gated">`, append the reason:
    ```jinja
    ⏳ Not enough films are in theaters yet to simulate win probabilities{% if forecast_unavailable_reason %} — {{ forecast_unavailable_reason }}{% endif %}. This view unlocks once the forecast is live.
    ```
-4. Remove the `<span class="mock-flag">mockup</span>` from the `<h1>` and drop the
+5. Remove the `<span class="mock-flag">mockup</span>` from the `<h1>` and drop the
    "Static mockup ·" wording in the `<footer>`, replacing the footer with:
    ```jinja
    <p><a href="index.html">← Back to the leaderboard</a></p>
    Refreshed {{ generated_at }}.
    ```
 
-> The mockup already structures the page exactly this way (`#view` vs `#gated`
-> toggled by `FORECAST_AVAILABLE`, its own dark-mode toggle persisting to
-> `localStorage`), so these are the only changes needed. `ponytail:` the page
-> keeps its own copy of the theme tokens rather than sharing `style.css` — a
-> deliberate simplification for a static page; unify only if the palettes ever
-> drift.
+> The mockup already structures the page this way (`#view` vs `#gated` toggled by
+> `FORECAST_AVAILABLE`, its own `localStorage` dark-mode toggle). With the token
+> blocks removed, both pages now draw their palette from the single shared
+> `theme.css` — no duplicated token values.
 
-- [ ] **Step 4: Render the page in `page.py`**
+- [ ] **Step 6: Render the page in `page.py`**
 
 In `summer_movie_wager/render/page.py`, inside `render`, after `index.html` is
-written, build the payload and render the second page (`env`, `inline_css`, and
+written, build the payload and render the second page (`env`, `theme_css`, and
 `json` are already in scope):
 
 ```python
@@ -569,6 +637,7 @@ written, build the payload and render the second page (`env`, `inline_css`, and
     }
     scenarios_html = env.get_template("scenarios.html.j2").render(
         generated_at = data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
+        theme_css = theme_css,
         scenario_json = json.dumps(scenario_payload, default=str),
         forecast_available = data.forecast_available,
         forecast_unavailable_reason = data.forecast_unavailable_reason,
@@ -579,7 +648,7 @@ written, build the payload and render the second page (`env`, `inline_css`, and
 > The payload shape `{standing, win_prob, scenarios}` is exactly what the mockup
 > JS expects (`DATA.standing`, `DATA.win_prob`, `DATA.scenarios`).
 
-- [ ] **Step 5: Add the gated nav link to the leaderboard**
+- [ ] **Step 7: Add the gated nav link to the leaderboard**
 
 In `summer_movie_wager/render/templates/index.html.j2`, inside the header block
 near the `<p class="meta">Window …</p>` line, add:
@@ -590,21 +659,25 @@ near the `<p class="meta">Window …</p>` line, add:
 {% endif %}
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [ ] **Step 8: Run tests to verify they pass**
 
-Run: `uv run pytest tests/test_render_snapshot.py -k scenarios -v`
+Run: `uv run pytest tests/test_render_snapshot.py -k "scenarios or theme" -v`
 Expected: PASS. If the file keeps a full-page golden snapshot of `index.html`,
-inspect the diff; if the only change is the added link line, update the golden
-fixture per the file's existing update convention. Re-run until green.
+inspect the diff; the only changes should be the added link line and the
+token-block source moving from `style.css` to the inlined `theme.css` (the
+rendered token values are unchanged). Update the golden fixture per the file's
+existing update convention. Re-run until green.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add summer_movie_wager/render/page.py \
+git add summer_movie_wager/render/static/theme.css \
+        summer_movie_wager/render/static/style.css \
+        summer_movie_wager/render/page.py \
         summer_movie_wager/render/templates/scenarios.html.j2 \
         summer_movie_wager/render/templates/index.html.j2 \
         tests/test_render_snapshot.py
-git commit -m "feat(render): add standalone scenarios.html page linked from the leaderboard"
+git commit -m "feat(render): shared theme.css + standalone scenarios.html page"
 ```
 
 ---
@@ -647,7 +720,7 @@ git commit -m "chore: rebuild site with winning-scenarios view"
 
 - **Spec coverage:**
   - "What the view shows" (tabs by likelihood, per-scenario column sort, grayed no-win, gating) → Task 5 (standalone `scenarios.html` from the mockup, reusing `tabOrder` + totals sort) + Task 4/5 gating on `forecast_available` (page shows gated notice; leaderboard link hidden).
-  - "Page" (separate `scenarios.html`, linked from `index.html`, self-contained styles + toggle) → Task 5 (new `scenarios.html.j2`, `page.py` renders it, gated link in `index.html.j2`).
+  - "Page" (separate `scenarios.html`, linked from `index.html`, shared theme tokens + own toggle) → Task 5 (new `theme.css` inlined into both pages, new `scenarios.html.j2`, `page.py` renders it, gated link in `index.html.j2`).
   - Medoid algorithm + footrule/L1 distance + cap + "not nearest-reorder flip" → Task 3 (helper, constant, ponytail comment) + verified real in Task 6 Step 3.
   - `score_breakdown` helper + `score_player` delegation → Task 1.
   - `WinningScenario` model + `SimulationResult` field → Task 2.
