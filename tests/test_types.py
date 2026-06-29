@@ -85,3 +85,18 @@ def test_site_snapshot_holds_picks_and_grosses():
     assert snapshot.players["bclarke"].ranked[0] == "A"
     assert snapshot.cumulative_grosses["A"] == 32_500_000.0
     assert snapshot.site_reported_points["bclarke"] == 3
+
+
+def test_winning_scenario_model():
+    from summer_movie_wager.types import WinningScenario
+
+    s = WinningScenario(
+        films=[f"F{i}" for i in range(10)],
+        grid={"a": [1] * 10, "b": [0] * 10},
+        totals={"a": 10, "b": 0},
+        win_pct=33.6,
+        margin=1,
+    )
+    assert s.films[0] == "F0"
+    assert s.totals["a"] == 10
+    assert s.margin == 1

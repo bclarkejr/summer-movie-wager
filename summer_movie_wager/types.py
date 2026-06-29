@@ -63,6 +63,24 @@ class Projection(BaseModel):
     floor: float = 0.0
 
 
+class WinningScenario(BaseModel):
+    """The most-likely actual top-10 finish in which a given player wins.
+
+    films:  10 actual titles in finish order #1..#10.
+    grid:   username -> per-rank points (len 10) for this finish.
+    totals: username -> total points for this finish.
+    win_pct: the player's overall win probability, as a percent (0..100).
+    margin:  winner total minus runner-up total (>= 1)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    films: list[str]
+    grid: dict[str, list[int]]
+    totals: dict[str, int]
+    win_pct: float
+    margin: int
+
+
 class SiteSnapshot(BaseModel):
     """
     This site snapshot comes from thesummermoviewager.com and is used to validate the pipeline's calculations against the site's reported points.

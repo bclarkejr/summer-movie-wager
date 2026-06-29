@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
 from summer_movie_wager.score import score_player
-from summer_movie_wager.types import PlayerPicks, Projection
+from summer_movie_wager.types import PlayerPicks, Projection, WinningScenario
 
 
 @dataclass(frozen=True)
@@ -17,6 +17,7 @@ class SimulationResult:
     median_final_pts: dict[str, float]
     p10_final_pts: dict[str, float]
     p90_final_pts: dict[str, float]
+    winning_scenarios: dict[str, "WinningScenario | None"] = field(default_factory=dict)
 
 
 def simulate_season(
