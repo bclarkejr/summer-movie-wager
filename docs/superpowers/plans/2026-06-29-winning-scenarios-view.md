@@ -1,0 +1,626 @@
+# Winning Scenarios View — Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Add a tabbed per-player "how you win" grid to the site that shows, for each player, the most-likely actual top-10 finish in which they win the wager — computed from the existing 10k Monte Carlo trials, not from a placeholder reshuffle.
+
+**Architecture:** The simulator already produces, per trial, an actual top-10 ordering (`top_10_indices`) and a winner (`is_top`). We retain those, and for each player take the **medoid** of their strict-win trials (the most representative real winning finish) under an L1/Spearman-footrule rank distance. Each scenario emits the finish order, every player's per-rank point breakdown, totals, win %, and margin. These flow through `build.py` → `data.json` and into the rendered page, where the committed mockup's tab/grid JS drives the view. Gated on the existing `forecast_available` flag.
+
+**Tech Stack:** Python 3, Pydantic v2, NumPy, Jinja2, pytest, `uv`. Front-end is vanilla JS + CSS reusing the existing theme tokens.
+
+**Spec:** `docs/superpowers/specs/2026-06-29-winning-scenarios-view-design.md`
+
+**Design reference (approved mockup):** `docs/previews/winning-scenarios.html` — the target look, tab behavior, and the exact tab/grid render JS to reuse.
+
+## Global Constraints
+
+- Scenario source is the **medoid** of a player's strict-win trials. **Never** the mockup's nearest-reorder flip. The medoid is an actual sampled trial.
+- Rank distance between two top-10 finishes = Spearman footrule with out-of-list rank `11`, which equals the **L1 distance between rank vectors** (movies absent from both contribute 0). Medoid = trial minimizing summed distance to the other win trials; ties break to the **lowest trial index**.
+- `MEDOID_SAMPLE_CAP = 1500`: if a player has more win trials than this, medoid runs over a seeded random subsample of that size (still a real trial). Mark with a `ponytail:` comment naming the cap.
+- `sum(score_breakdown(picks, top)) == score_player(picks, top)` must always hold; `score_player` is refactored to delegate to `score_breakdown`.
+- Strict wins only (a trial counts for a player iff `is_top[player] & (n_winners_per_trial == 1)`) — identical to how `win_prob` is defined.
+- Determinism: fixed `seed` ⇒ identical scenarios. Build runs with `seed=20260907`, `n_trials=10_000`.
+- Forecast gate: scenarios computed only when `forecast_available` (≥ 25 non-zero projections). Otherwise emit `{username: None}` for every player, mirroring the existing null branch for `win_prob`.
+- Run tests with `uv run pytest`; run the pipeline with `uv run python -m summer_movie_wager.render.build --local`.
+
+---
+
+## File Structure
+
+```
+summer_movie_wager/score/rules.py                  — add score_breakdown(); score_player delegates to it
+summer_movie_wager/types.py                         — add WinningScenario model
+summer_movie_wager/model/simulate.py                — keep per-trial orderings/winners; medoid; build winning_scenarios
+summer_movie_wager/render/build.py                  — thread winning_scenarios into raw dict (+ null branch)
+summer_movie_wager/render/page.py                   — pass scenarios JSON + win_prob + standing to template
+summer_movie_wager/render/templates/index.html.j2   — new Winning Scenarios <section> + tab/grid JS
+summer_movie_wager/render/static/style.css          — scenario view styles (lifted from the mockup)
+tests/test_score.py                                 — score_breakdown invariants
+tests/test_simulate.py                              — medoid scenarios: none-when-no-win, structure, consistency
+tests/test_build.py                                 — raw["winning_scenarios"] present/null
+tests/test_render_snapshot.py                       — page contains the section + const
+```
+
+---
+
+## Task 1: `score_breakdown` — per-rank points decomposition
+
+**Files:**
+- Modify: `summer_movie_wager/score/rules.py` (add `score_breakdown`; rewrite `score_player` body, replacing the `# TODO BAC 2026-06-19` block)
+- Test: `tests/test_score.py`
+
+**Interfaces:**
+- Produces: `score_breakdown(picks: PlayerPicks, top_titles: list[str]) -> list[int]` — points each actual finisher contributes for `picks`, indexed by actual position (`len == len(top_titles)`), including the `+1` dark-horse bonus on the rank where a dark horse lands.
+- Produces: `score_player(picks, top_titles) -> int` unchanged signature; now `== sum(score_breakdown(...))`.
+
+- [ ] **Step 1: Write the failing tests**
+
+Add to `tests/test_score.py`:
+
+```python
+from summer_movie_wager.score.rules import score_breakdown, score_player
+from summer_movie_wager.types import PlayerPicks
+
+
+def _picks() -> PlayerPicks:
+    return PlayerPicks(
+        username="t",
+        ranked=[f"R{i}" for i in range(1, 11)],   # R1..R10 predicted #1..#10
+        dark_horses=["D1", "D2", "D3"],
+    )
+
+
+def test_breakdown_sums_to_score_player():
+    picks = _picks()
+    # actual top 10: R1 exact #1, R3 at #2 (off by 1), a dark horse D2 at #5, rest unknowns
+    top = ["R1", "R3", "X", "X4", "D2", "X6", "X7", "X8", "X9", "X10"]
+    b = score_breakdown(picks, top)
+    assert len(b) == len(top)
+    assert sum(b) == score_player(picks, top)
+    assert b[0] == 13          # R1 exact at endpoint #1
+    assert b[1] == 7           # R3 predicted #3, actual #2 -> off by 1
+    assert b[4] == 1           # dark horse D2 landed at #5
+
+
+def test_breakdown_zero_for_absent_picks():
+    picks = _picks()
+    top = ["Z1", "Z2", "Z3", "Z4", "Z5", "Z6", "Z7", "Z8", "Z9", "Z10"]
+    b = score_breakdown(picks, top)
+    assert b == [0] * 10
+    assert score_player(picks, top) == 0
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `uv run pytest tests/test_score.py::test_breakdown_sums_to_score_player -v`
+Expected: FAIL — `ImportError`/`AttributeError`: `score_breakdown` does not exist.
+
+- [ ] **Step 3: Implement `score_breakdown` and delegate `score_player`**
+
+In `summer_movie_wager/score/rules.py`, add `score_breakdown` and replace the body of `score_player` (delete the `# TODO BAC 2026-06-19` block and the manual loop):
+
+```python
+def score_breakdown(picks: PlayerPicks, top_titles: list[str]) -> list[int]:
+    """Points each actual finisher contributes for `picks`, indexed by actual
+    position. len == len(top_titles). Includes the +1 dark-horse bonus on the
+    rank where a dark horse lands. sum(...) == score_player(picks, top_titles)."""
+    if len(top_titles) > 10:
+        raise ValueError(f"top_titles must have at most 10 entries, got {len(top_titles)}")
+    actual_position = {title: i + 1 for i, title in enumerate(top_titles)}
+    breakdown = [0] * len(top_titles)
+    for predicted_index, title in enumerate(picks.ranked, start=1):
+        pos = actual_position.get(title, 0)
+        if pos:
+            breakdown[pos - 1] += ranked_pick_points(predicted_index, pos)
+    for dh in picks.dark_horses:
+        pos = actual_position.get(dh, 0)
+        if pos:
+            breakdown[pos - 1] += 1
+    return breakdown
+
+
+def score_player(picks: PlayerPicks, top_titles: list[str]) -> int:
+    """Total wager points for a player given the (partial or complete) top finalists."""
+    return sum(score_breakdown(picks, top_titles))
+```
+
+> Keep the existing module docstring and `ranked_pick_points` exactly as-is.
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `uv run pytest tests/test_score.py -v`
+Expected: PASS, including any pre-existing `score_player` tests (behavior is unchanged).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add summer_movie_wager/score/rules.py tests/test_score.py
+git commit -m "feat(score): add score_breakdown; score_player delegates to it"
+```
+
+---
+
+## Task 2: `WinningScenario` model + `SimulationResult` field
+
+**Files:**
+- Modify: `summer_movie_wager/types.py` (add `WinningScenario` after `Projection`)
+- Modify: `summer_movie_wager/model/simulate.py` (add field to `SimulationResult` dataclass only)
+- Test: `tests/test_types.py`
+
+**Interfaces:**
+- Produces: `WinningScenario(films: list[str], grid: dict[str, list[int]], totals: dict[str, int], win_pct: float, margin: int)` — frozen Pydantic model.
+- Produces: `SimulationResult.winning_scenarios: dict[str, WinningScenario | None]`.
+
+- [ ] **Step 1: Write the failing test**
+
+Add to `tests/test_types.py`:
+
+```python
+def test_winning_scenario_model():
+    from summer_movie_wager.types import WinningScenario
+    s = WinningScenario(
+        films=[f"F{i}" for i in range(10)],
+        grid={"a": [1] * 10, "b": [0] * 10},
+        totals={"a": 10, "b": 0},
+        win_pct=33.6,
+        margin=1,
+    )
+    assert s.films[0] == "F0"
+    assert s.totals["a"] == 10
+    assert s.margin == 1
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `uv run pytest tests/test_types.py::test_winning_scenario_model -v`
+Expected: FAIL — `ImportError`: cannot import `WinningScenario`.
+
+- [ ] **Step 3: Add the model**
+
+In `summer_movie_wager/types.py`, after the `Projection` class:
+
+```python
+class WinningScenario(BaseModel):
+    """The most-likely actual top-10 finish in which a given player wins.
+
+    films:  10 actual titles in finish order #1..#10.
+    grid:   username -> per-rank points (len 10) for this finish.
+    totals: username -> total points for this finish.
+    win_pct: the player's overall win probability, as a percent (0..100).
+    margin:  winner total minus runner-up total (>= 1)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    films: list[str]
+    grid: dict[str, list[int]]
+    totals: dict[str, int]
+    win_pct: float
+    margin: int
+```
+
+- [ ] **Step 4: Add the field to `SimulationResult`**
+
+In `summer_movie_wager/model/simulate.py`, import the model and extend the dataclass:
+
+```python
+from summer_movie_wager.types import PlayerPicks, Projection, WinningScenario
+```
+
+```python
+@dataclass(frozen=True)
+class SimulationResult:
+    win_prob: dict[str, float]
+    tie_prob: dict[str, float]
+    median_final_pts: dict[str, float]
+    p10_final_pts: dict[str, float]
+    p90_final_pts: dict[str, float]
+    winning_scenarios: dict[str, "WinningScenario | None"]
+```
+
+> Do not yet populate it in `simulate_season` — Task 3 does that. The build does not call `SimulationResult(...)` directly, so no other construction site needs touching until Task 3 fills the field.
+
+- [ ] **Step 5: Run tests**
+
+Run: `uv run pytest tests/test_types.py -v`
+Expected: PASS.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add summer_movie_wager/types.py summer_movie_wager/model/simulate.py tests/test_types.py
+git commit -m "feat(types): add WinningScenario model and SimulationResult field"
+```
+
+---
+
+## Task 3: Compute winning scenarios via medoid of win trials
+
+**Files:**
+- Modify: `summer_movie_wager/model/simulate.py` (keep `top_10_indices`; add `_most_likely_win_trial` helper; populate `winning_scenarios`)
+- Test: `tests/test_simulate.py`
+
+**Interfaces:**
+- Consumes: `score_breakdown` (Task 1), `WinningScenario` (Task 2), and the simulator's existing `top_10_indices` (n_trials × 10 movie indices), `is_top` (n_players × n_trials bool), `n_winners_per_trial`, `score_matrix` (n_players × n_trials).
+- Produces: `SimulationResult.winning_scenarios` populated; `simulate_season` signature unchanged.
+
+- [ ] **Step 1: Write the failing test**
+
+Add to `tests/test_simulate.py`:
+
+```python
+def _ten_projections(seed_offset=0):
+    from summer_movie_wager.types import Projection
+    # Strongly separated medians so the top-10 order is stable across trials.
+    return [
+        Projection(movie_title=f"M{i}", median_in_window_gross=float((20 - i) * 10_000_000), sigma=0.15)
+        for i in range(12)
+    ]
+
+
+def test_winning_scenarios_structure_and_consistency():
+    from summer_movie_wager.model.simulate import simulate_season
+    from summer_movie_wager.types import PlayerPicks, WinningScenario
+
+    titles = [f"M{i}" for i in range(12)]
+    # winner predicts the dominant order exactly; loser predicts it reversed
+    winner = PlayerPicks(username="win", ranked=titles[:10], dark_horses=["M10", "M11", "Mz"])
+    loser = PlayerPicks(username="lose", ranked=titles[:10][::-1], dark_horses=["Mx", "My", "Mz"])
+
+    res = simulate_season([winner, loser], _ten_projections(), n_trials=3_000, seed=42)
+
+    s = res.winning_scenarios["win"]
+    assert isinstance(s, WinningScenario)
+    assert len(s.films) == 10
+    # winner is the strict leader by margin >= 1
+    assert s.totals["win"] == max(s.totals.values())
+    assert s.margin >= 1
+    # grid columns sum to totals
+    for user, col in s.grid.items():
+        assert sum(col) == s.totals[user]
+    # win_pct matches win_prob (percent form)
+    assert abs(s.win_pct - round(res.win_prob["win"] * 100, 1)) < 1e-9
+
+
+def test_no_scenario_when_player_never_wins():
+    from summer_movie_wager.model.simulate import simulate_season
+    from summer_movie_wager.types import PlayerPicks
+
+    titles = [f"M{i}" for i in range(12)]
+    strong = PlayerPicks(username="strong", ranked=titles[:10], dark_horses=["M10", "M11", "Mz"])
+    # 'weak' predicts only films that essentially never reach the top 10
+    weak = PlayerPicks(username="weak", ranked=titles[2:12], dark_horses=["Ma", "Mb", "Mc"])
+
+    res = simulate_season([strong, weak], _ten_projections(), n_trials=3_000, seed=7)
+    # strong dominates; weak should have win_prob 0 and therefore no scenario
+    if res.win_prob["weak"] == 0.0:
+        assert res.winning_scenarios["weak"] is None
+    # strong always has a scenario
+    assert res.winning_scenarios["strong"] is not None
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `uv run pytest tests/test_simulate.py::test_winning_scenarios_structure_and_consistency -v`
+Expected: FAIL — `winning_scenarios` is currently unset/`{}` (or `TypeError` for missing dataclass arg).
+
+- [ ] **Step 3: Add the medoid helper**
+
+In `summer_movie_wager/model/simulate.py`, add a module-level constant and helper:
+
+```python
+MEDOID_SAMPLE_CAP = 1500
+
+
+def _most_likely_win_trial(
+    top_10_indices: np.ndarray,   # (n_trials, 10) movie indices, finish order
+    win_trials: np.ndarray,       # 1-D indices of this player's strict-win trials
+    n_movies: int,
+    rng: np.random.Generator,
+) -> int:
+    """Return the trial index that is the medoid of `win_trials` under the
+    Spearman-footrule (== L1 of rank vectors) distance between top-10 finishes.
+    Movies outside a trial's top-10 are assigned rank 11, so absent-in-both pairs
+    contribute 0 and the footrule equals the L1 distance over all movies."""
+    # ponytail: cap the medoid search at MEDOID_SAMPLE_CAP trials (O(W^2)); the
+    # medoid is still a real winning trial. Lift the cap / vectorize per-column
+    # only if build time becomes a problem.
+    if win_trials.size > MEDOID_SAMPLE_CAP:
+        win_trials = np.sort(rng.choice(win_trials, MEDOID_SAMPLE_CAP, replace=False))
+    if win_trials.size == 1:
+        return int(win_trials[0])
+
+    w = win_trials.size
+    # rank matrix R[k, movie] = position 1..10 in trial win_trials[k], else 11
+    R = np.full((w, n_movies), 11, dtype=np.int32)
+    rows = np.repeat(np.arange(w), 10)
+    cols = top_10_indices[win_trials].reshape(-1)
+    R[rows, cols] = np.tile(np.arange(1, 11), w)
+
+    # summed L1 distance from each trial to all others, accumulated per movie
+    # column to avoid a (w, w, n_movies) temporary.
+    cost = np.zeros(w, dtype=np.float64)
+    for m in range(n_movies):
+        col = R[:, m]
+        cost += np.abs(col[:, None] - col[None, :]).sum(axis=1)
+    return int(win_trials[int(cost.argmin())])  # argmin ties -> lowest index
+```
+
+- [ ] **Step 4: Populate `winning_scenarios` in `simulate_season`**
+
+`top_10_indices` is already computed (`np.argsort(-samples, axis=1)[:, :10]`). Keep it. After the existing per-player aggregation loop (after `win_prob`/`tie_prob`/percentiles are filled), and before `return SimulationResult(...)`, add:
+
+```python
+    from summer_movie_wager.score import score_breakdown
+
+    winning_scenarios: dict[str, "WinningScenario | None"] = {}
+    for i, player in enumerate(players):
+        win_trials = np.nonzero(is_top[i] & (n_winners_per_trial == 1))[0]
+        if win_trials.size == 0:
+            winning_scenarios[player.username] = None
+            continue
+        sub_rng = np.random.default_rng(None if seed is None else seed ^ (i + 1))
+        medoid = _most_likely_win_trial(top_10_indices, win_trials, n_movies, sub_rng)
+        films = [movie_titles[j] for j in top_10_indices[medoid]]
+        grid = {p.username: score_breakdown(p, films) for p in players}
+        totals = {u: sum(col) for u, col in grid.items()}
+        winner_total = totals[player.username]
+        runner_up = max(t for u, t in totals.items() if u != player.username)
+        winning_scenarios[player.username] = WinningScenario(
+            films=films,
+            grid=grid,
+            totals=totals,
+            win_pct=round(win_prob[player.username] * 100, 1),
+            margin=int(winner_total - runner_up),
+        )
+```
+
+Add `winning_scenarios=winning_scenarios` to the `SimulationResult(...)` constructor call.
+
+> Import note: `score_breakdown` is imported from `summer_movie_wager.score` (re-exported there alongside `score_player`). If it is not yet re-exported, add `from summer_movie_wager.score.rules import score_breakdown` and export it in `summer_movie_wager/score/__init__.py` next to `score_player`.
+
+- [ ] **Step 5: Run tests to verify they pass**
+
+Run: `uv run pytest tests/test_simulate.py -v`
+Expected: PASS. Pre-existing simulate tests still pass (they ignore `winning_scenarios`).
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add summer_movie_wager/model/simulate.py summer_movie_wager/score/__init__.py tests/test_simulate.py
+git commit -m "feat(simulate): compute per-player winning scenarios via medoid of win trials"
+```
+
+---
+
+## Task 4: Thread `winning_scenarios` into `data.json`
+
+**Files:**
+- Modify: `summer_movie_wager/render/build.py` (the `raw` dict assembly and its forecast-unavailable null branch, ~lines 123-144)
+- Test: `tests/test_build.py`
+
+**Interfaces:**
+- Consumes: `sim.winning_scenarios` (Task 3).
+- Produces: `raw["winning_scenarios"]`: `{username: WinningScenario-as-dict | None}` when forecast available; `{username: None}` for all players otherwise.
+
+- [ ] **Step 1: Write the failing test**
+
+Add to `tests/test_build.py` (follow the file's existing pattern for invoking the build / inspecting `raw`; if the suite already builds `raw` via a helper, reuse it):
+
+```python
+def test_raw_has_winning_scenarios_when_forecast_available(built_raw_forecast_on):
+    raw = built_raw_forecast_on  # existing fixture or helper producing the raw dict with forecast on
+    assert "winning_scenarios" in raw
+    ws = raw["winning_scenarios"]
+    # every player key present; entries are dict or None
+    for username, entry in ws.items():
+        assert entry is None or {"films", "grid", "totals", "win_pct", "margin"} <= set(entry)
+
+
+def test_raw_winning_scenarios_all_null_when_forecast_off(built_raw_forecast_off):
+    raw = built_raw_forecast_off  # existing fixture/helper with < 25 non-zero projections
+    assert set(raw["winning_scenarios"].values()) == {None}
+```
+
+> If `tests/test_build.py` has no such fixtures, add minimal ones mirroring how the file already constructs `raw` for the existing `win_prob` assertions; the two states differ only by whether ≥ 25 projections are non-zero.
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `uv run pytest tests/test_build.py -k winning_scenarios -v`
+Expected: FAIL — `KeyError: 'winning_scenarios'`.
+
+- [ ] **Step 3: Populate the raw dict**
+
+In `summer_movie_wager/render/build.py`, in the `if forecast_available and sim is not None:` block (after the `p90_final_pts` line):
+
+```python
+        raw["winning_scenarios"] = {
+            u: (s.model_dump() if s is not None else None)
+            for u, s in sim.winning_scenarios.items()
+        }
+```
+
+In the `else:` null branch (after the existing null assignments):
+
+```python
+        raw["winning_scenarios"] = {u: None for u in snapshot.players}
+```
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `uv run pytest tests/test_build.py -k winning_scenarios -v`
+Expected: PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add summer_movie_wager/render/build.py tests/test_build.py
+git commit -m "feat(build): emit winning_scenarios into data.json"
+```
+
+---
+
+## Task 5: Render the Winning Scenarios section
+
+**Files:**
+- Modify: `summer_movie_wager/render/page.py` (`render`: pass scenario data to the template)
+- Modify: `summer_movie_wager/render/templates/index.html.j2` (new `<section>` + JS)
+- Modify: `summer_movie_wager/render/static/style.css` (scenario styles)
+- Test: `tests/test_render_snapshot.py`
+
+**Interfaces:**
+- Consumes: `data.raw_snapshot["winning_scenarios"]` and `data.raw_snapshot["win_prob"]`.
+- Produces: rendered `index.html` containing a `#winning-scenarios` section and a `const SCENARIO_DATA = {...}` script when `forecast_available`.
+
+- [ ] **Step 1: Write the failing test**
+
+Add to `tests/test_render_snapshot.py` (reuse the file's existing render helper that produces the HTML string):
+
+```python
+def test_page_has_winning_scenarios_section(rendered_html_forecast_on):
+    html = rendered_html_forecast_on  # existing helper: rendered index.html with forecast on
+    assert 'id="winning-scenarios"' in html
+    assert "const SCENARIO_DATA" in html
+    # tab order data present
+    assert "winning_scenarios" not in html or "scenarios" in html  # sanity: const embedded
+
+
+def test_page_hides_scenarios_when_forecast_off(rendered_html_forecast_off):
+    html = rendered_html_forecast_off
+    assert 'id="winning-scenarios"' not in html
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `uv run pytest tests/test_render_snapshot.py -k winning_scenarios -v`
+Expected: FAIL — section/const absent.
+
+- [ ] **Step 3: Pass scenario data into the template**
+
+In `summer_movie_wager/render/page.py`, inside `render`, build a compact JS payload from `data.raw_snapshot` and add it to `template.render(...)`:
+
+```python
+    win_prob = data.raw_snapshot.get("win_prob", {})
+    scenario_payload = {
+        "standing": [row.username for row in data.leaderboard],  # current-points order
+        "win_prob": win_prob,
+        "scenarios": data.raw_snapshot.get("winning_scenarios", {}),
+    }
+    scenario_json = json.dumps(scenario_payload, default=str)
+```
+
+Add to the `template.render(...)` call:
+
+```python
+        scenario_json = scenario_json,
+```
+
+> `json` is already imported in `page.py`. The payload shape `{standing, win_prob, scenarios}` is exactly what the mockup's JS expects (`DATA.standing`, `DATA.win_prob`, `DATA.scenarios`).
+
+- [ ] **Step 4: Add the section + JS to the template**
+
+In `summer_movie_wager/render/templates/index.html.j2`, after the `players` section's closing `</section>`, add (only renders when the forecast is available):
+
+```jinja
+{% if forecast_available %}
+<section class="winning-scenarios card" id="winning-scenarios">
+  <h2>🏆 Winning Scenarios</h2>
+  <p class="meta">Pick a player to see the most-likely top-10 finish in which they win the wager.</p>
+  <div class="ws-tabs" id="ws-tabs" role="tablist"></div>
+  <div class="ws-caption" id="ws-caption"></div>
+  <div class="ws-grid-wrap">
+    <table id="ws-grid">
+      <thead><tr id="ws-head"></tr></thead>
+      <tbody id="ws-body"></tbody>
+      <tfoot><tr id="ws-foot"></tr></tfoot>
+    </table>
+  </div>
+</section>
+<script>
+const SCENARIO_DATA = {{ scenario_json | safe }};
+</script>
+<script>
+{{ ws_render_js | safe }}
+</script>
+{% endif %}
+```
+
+To avoid duplicating logic, lift the **tab/grid render JS** verbatim from the committed mockup `docs/previews/winning-scenarios.html` — the block from `const DATA = ...` through the end of the `render()` definition — with these exact substitutions:
+- replace `const DATA = {...big literal...};` with `const DATA = SCENARIO_DATA;`
+- replace element IDs `tabs/head/body/foot/caption` with the prefixed IDs `ws-tabs/ws-head/ws-body/ws-foot/ws-caption`;
+- replace the mockup's class names `tabs/tab/scenario-caption/grid-wrap/...` with the `ws-`-prefixed equivalents used in Step 5 CSS;
+- drop the mockup's standalone `FORECAST_AVAILABLE` toggle and the dark-mode toggle block (the page already owns dark mode); call `render()` once at the end;
+- keep `tabOrder` (sort by `DATA.win_prob` desc) and the per-scenario column sort (`sort by sc.totals` desc) exactly as in the mockup.
+
+Provide this adapted JS to the template via a render kwarg. In `page.py`, read it from a sibling asset file and pass it:
+
+```python
+    ws_render_js = (_STATIC / "winning_scenarios.js").read_text()
+```
+add `ws_render_js = ws_render_js,` to `template.render(...)`, and create `summer_movie_wager/render/static/winning_scenarios.js` containing the adapted JS described above (everything except the embedded data literal, which comes from `SCENARIO_DATA`).
+
+- [ ] **Step 5: Add scenario styles**
+
+Append to `summer_movie_wager/render/static/style.css` the scenario rules from the mockup's `<style>` block (the `.tabs`, `.tab`, `.scenario-caption`, `.grid-wrap`, table, `.col-sel`, `tfoot` rules), each renamed with a `ws-` prefix / scoped under `.winning-scenarios` so they don't collide with existing table styles. Reuse the existing theme CSS variables (`--accent`, `--bg-card`, `--border`, `--win-bg`, etc.) already defined in `style.css`; do not redefine tokens.
+
+- [ ] **Step 6: Run tests; refresh the snapshot**
+
+Run: `uv run pytest tests/test_render_snapshot.py -v`
+Expected: the two new tests PASS. If the file keeps a full-page golden snapshot, inspect the diff; if the only change is the added section + const, update the golden fixture per the file's existing update convention. Re-run until green.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add summer_movie_wager/render/page.py summer_movie_wager/render/templates/index.html.j2 \
+        summer_movie_wager/render/static/style.css summer_movie_wager/render/static/winning_scenarios.js \
+        tests/test_render_snapshot.py
+git commit -m "feat(render): add Winning Scenarios tabbed grid to the page"
+```
+
+---
+
+## Task 6: End-to-end verification
+
+**Files:** No source changes — verification only.
+
+- [ ] **Step 1: Full test suite**
+
+Run: `uv run pytest`
+Expected: all green.
+
+- [ ] **Step 2: Run the pipeline locally**
+
+Run: `uv run python -m summer_movie_wager.render.build --local`
+Expected: exits 0; writes `docs/index.html` and `docs/data.json`.
+
+- [ ] **Step 3: Verify `data.json` scenarios are real**
+
+Inspect `docs/data.json` → `winning_scenarios`:
+- every player with `win_prob > 0` has a non-null entry; `films` has 10 titles; `totals` make that player the strict max with `margin >= 1`; each `grid` column sums to its `totals` value;
+- every player with `win_prob == 0` (currently `radhadr`) is `null`;
+- **finishes differ between players and margins vary** (not a uniform 1-pt flip) — confirming the medoid path, not the mockup heuristic.
+
+- [ ] **Step 4: Verify the rendered view**
+
+Open `docs/index.html`: the Winning Scenarios section renders; tabs are ordered by win % with zero-chance players grayed/disabled; clicking a tab swaps the grid and re-sorts columns so the selected player is the crowned (👑), left-most column. Confirm light/dark toggle and mobile horizontal scroll behave as in the mockup.
+
+- [ ] **Step 5: Commit any artifact churn**
+
+```bash
+git add -A
+git commit -m "chore: rebuild site with winning-scenarios view"
+```
+
+---
+
+## Self-Review
+
+- **Spec coverage:**
+  - "What the view shows" (tabs by likelihood, per-scenario column sort, grayed no-win, gating) → Task 5 (template/JS reuse the mockup's `tabOrder` + totals sort) + Task 4/5 gating on `forecast_available`.
+  - Medoid algorithm + footrule/L1 distance + cap + "not nearest-reorder flip" → Task 3 (helper, constant, ponytail comment) + verified real in Task 6 Step 3.
+  - `score_breakdown` helper + `score_player` delegation → Task 1.
+  - `WinningScenario` model + `SimulationResult` field → Task 2.
+  - `data.json` schema (+ null branch when forecast off) → Task 4.
+  - Edge cases (no win trials → null; ties excluded; single win trial; forecast off) → Task 3 (`win_trials.size == 0`, strict-win mask, `size == 1`) and Task 4 (null branch).
+  - Testing/verification sections → Tasks 1-6 tests + Task 6.
+- **Placeholder scan:** none — every code step gives concrete code; the one "lift verbatim from the mockup" instruction names the exact source file, the exact block, and the exact substitutions (the source is committed in-repo, so this is a real, resolvable reference, not a TODO).
+- **Type consistency:** `score_breakdown(picks, top_titles) -> list[int]` used identically in Tasks 1 and 3; `WinningScenario(films, grid, totals, win_pct, margin)` identical across Tasks 2, 3, 4; `winning_scenarios: dict[str, WinningScenario | None]` consistent across Tasks 2-4; payload shape `{standing, win_prob, scenarios}` matches the mockup JS consumed in Task 5.
