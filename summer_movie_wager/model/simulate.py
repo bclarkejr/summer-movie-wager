@@ -2,12 +2,48 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 
-from summer_movie_wager.score import score_player
+from summer_movie_wager.score import score_breakdown, score_player
 from summer_movie_wager.types import PlayerPicks, Projection, WinningScenario
+
+MEDOID_SAMPLE_CAP = 1500  # ponytail: cap the medoid search (O(W^2)); lift if build time matters
+
+
+def _most_likely_win_trial(
+    top_10_indices: np.ndarray,   # (n_trials, 10) movie indices, finish order
+    win_trials: np.ndarray,       # 1-D indices of this player's strict-win trials
+    n_movies: int,
+    rng: np.random.Generator,
+) -> int:
+    """Return the trial index that is the medoid of `win_trials` under the
+    Spearman-footrule (== L1 of rank vectors) distance between top-10 finishes.
+    Movies outside a trial's top-10 are assigned rank 11, so absent-in-both pairs
+    contribute 0 and the footrule equals the L1 distance over all movies."""
+    # ponytail: cap the medoid search at MEDOID_SAMPLE_CAP trials (O(W^2)); the
+    # medoid is still a real winning trial. Lift the cap / vectorize per-column
+    # only if build time becomes a problem.
+    if win_trials.size > MEDOID_SAMPLE_CAP:
+        win_trials = np.sort(rng.choice(win_trials, MEDOID_SAMPLE_CAP, replace=False))
+    if win_trials.size == 1:
+        return int(win_trials[0])
+
+    w = win_trials.size
+    # rank matrix R[k, movie] = position 1..10 in trial win_trials[k], else 11
+    R = np.full((w, n_movies), 11, dtype=np.int32)
+    rows = np.repeat(np.arange(w), 10)
+    cols = top_10_indices[win_trials].reshape(-1)
+    R[rows, cols] = np.tile(np.arange(1, 11), w)
+
+    # summed L1 distance from each trial to all others, accumulated per movie
+    # column to avoid a (w, w, n_movies) temporary.
+    cost = np.zeros(w, dtype=np.float64)
+    for m in range(n_movies):
+        col = R[:, m]
+        cost += np.abs(col[:, None] - col[None, :]).sum(axis=1)
+    return int(win_trials[int(cost.argmin())])  # argmin ties -> lowest index
 
 
 @dataclass(frozen=True)
@@ -17,7 +53,7 @@ class SimulationResult:
     median_final_pts: dict[str, float]
     p10_final_pts: dict[str, float]
     p90_final_pts: dict[str, float]
-    winning_scenarios: dict[str, "WinningScenario | None"] = field(default_factory=dict)
+    winning_scenarios: dict[str, "WinningScenario | None"]
 
 
 def simulate_season(
@@ -93,10 +129,33 @@ def simulate_season(
         p10_pts[player.username] = float(np.percentile(s, 10))
         p90_pts[player.username] = float(np.percentile(s, 90))
 
+    winning_scenarios: dict[str, "WinningScenario | None"] = {}
+    for i, player in enumerate(players):
+        win_trials = np.nonzero(is_top[i] & (n_winners_per_trial == 1))[0]
+        if win_trials.size == 0:
+            winning_scenarios[player.username] = None
+            continue
+        sub_rng = np.random.default_rng(None if seed is None else seed ^ (i + 1))
+        medoid = _most_likely_win_trial(top_10_indices, win_trials, n_movies, sub_rng)
+        films = [movie_titles[j] for j in top_10_indices[medoid]]
+        grid = {p.username: score_breakdown(p, films) for p in players}
+        totals = {u: sum(col) for u, col in grid.items()}
+        winner_total = totals[player.username]
+        others = [t for u, t in totals.items() if u != player.username]
+        runner_up = max(others) if others else 0
+        winning_scenarios[player.username] = WinningScenario(
+            films=films,
+            grid=grid,
+            totals=totals,
+            win_pct=round(win_prob[player.username] * 100, 1),
+            margin=int(winner_total - runner_up),
+        )
+
     return SimulationResult(
         win_prob=win_prob,
         tie_prob=tie_prob,
         median_final_pts=median_pts,
         p10_final_pts=p10_pts,
         p90_final_pts=p90_pts,
+        winning_scenarios=winning_scenarios,
     )

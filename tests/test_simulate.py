@@ -92,6 +92,56 @@ def test_zero_sigma_movies_make_outcome_deterministic():
     )
 
 
+def _ten_projections(seed_offset=0):
+    from summer_movie_wager.types import Projection
+    # Strongly separated medians so the top-10 order is stable across trials.
+    return [
+        Projection(movie_title=f"M{i}", median_in_window_gross=float((20 - i) * 10_000_000), sigma=0.15)
+        for i in range(12)
+    ]
+
+
+def test_winning_scenarios_structure_and_consistency():
+    from summer_movie_wager.model.simulate import simulate_season
+    from summer_movie_wager.types import PlayerPicks, WinningScenario
+
+    titles = [f"M{i}" for i in range(12)]
+    # winner predicts the dominant order exactly; loser predicts it reversed
+    winner = PlayerPicks(username="win", ranked=titles[:10], dark_horses=["M10", "M11", "Mz"])
+    loser = PlayerPicks(username="lose", ranked=titles[:10][::-1], dark_horses=["Mx", "My", "Mz"])
+
+    res = simulate_season([winner, loser], _ten_projections(), n_trials=3_000, seed=42)
+
+    s = res.winning_scenarios["win"]
+    assert isinstance(s, WinningScenario)
+    assert len(s.films) == 10
+    # winner is the strict leader by margin >= 1
+    assert s.totals["win"] == max(s.totals.values())
+    assert s.margin >= 1
+    # grid columns sum to totals
+    for user, col in s.grid.items():
+        assert sum(col) == s.totals[user]
+    # win_pct matches win_prob (percent form)
+    assert abs(s.win_pct - round(res.win_prob["win"] * 100, 1)) < 1e-9
+
+
+def test_no_scenario_when_player_never_wins():
+    from summer_movie_wager.model.simulate import simulate_season
+    from summer_movie_wager.types import PlayerPicks
+
+    titles = [f"M{i}" for i in range(12)]
+    strong = PlayerPicks(username="strong", ranked=titles[:10], dark_horses=["M10", "M11", "Mz"])
+    # 'weak' predicts only films that essentially never reach the top 10
+    weak = PlayerPicks(username="weak", ranked=titles[2:12], dark_horses=["Ma", "Mb", "Mc"])
+
+    res = simulate_season([strong, weak], _ten_projections(), n_trials=3_000, seed=7)
+    # strong dominates; weak should have win_prob 0 and therefore no scenario
+    if res.win_prob["weak"] == 0.0:
+        assert res.winning_scenarios["weak"] is None
+    # strong always has a scenario
+    assert res.winning_scenarios["strong"] is not None
+
+
 def test_in_theaters_floor_is_never_breached():
     # 10 movies so the simulator's >=10 guard passes; movie 0 is a deep-run film
     # whose banked gross is just below its median. Its final gross must never dip
