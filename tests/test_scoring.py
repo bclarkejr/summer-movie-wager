@@ -1,6 +1,7 @@
 import pytest
 
 from summer_movie_wager.score import score_player
+from summer_movie_wager.score.rules import score_breakdown
 from summer_movie_wager.types import PlayerPicks
 
 
@@ -127,3 +128,31 @@ def test_partial_top_titles_scores_only_present_ranks():
 def test_empty_top_titles_scores_zero():
     picks = make_picks(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"])
     assert score_player(picks, []) == 0
+
+
+def _picks_for_breakdown() -> PlayerPicks:
+    return PlayerPicks(
+        username="t",
+        ranked=[f"R{i}" for i in range(1, 11)],   # R1..R10 predicted #1..#10
+        dark_horses=["D1", "D2", "D3"],
+    )
+
+
+def test_breakdown_sums_to_score_player():
+    picks = _picks_for_breakdown()
+    # actual top 10: R1 exact #1, R3 at #2 (off by 1), a dark horse D2 at #5, rest unknowns
+    top = ["R1", "R3", "X", "X4", "D2", "X6", "X7", "X8", "X9", "X10"]
+    b = score_breakdown(picks, top)
+    assert len(b) == len(top)
+    assert sum(b) == score_player(picks, top)
+    assert b[0] == 13          # R1 exact at endpoint #1
+    assert b[1] == 7           # R3 predicted #3, actual #2 -> off by 1
+    assert b[4] == 1           # dark horse D2 landed at #5
+
+
+def test_breakdown_zero_for_absent_picks():
+    picks = _picks_for_breakdown()
+    top = ["Z1", "Z2", "Z3", "Z4", "Z5", "Z6", "Z7", "Z8", "Z9", "Z10"]
+    b = score_breakdown(picks, top)
+    assert b == [0] * 10
+    assert score_player(picks, top) == 0

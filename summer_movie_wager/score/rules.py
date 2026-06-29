@@ -18,6 +18,25 @@ def ranked_pick_points(predicted_position: int, actual_position: int) -> int:
     return 3  # in top 10 but off by 3+
 
 
+def score_breakdown(picks: PlayerPicks, top_titles: list[str]) -> list[int]:
+    """Points each actual finisher contributes for `picks`, indexed by actual
+    position. len == len(top_titles). Includes the +1 dark-horse bonus on the
+    rank where a dark horse lands. sum(...) == score_player(picks, top_titles)."""
+    if len(top_titles) > 10:
+        raise ValueError(f"top_titles must have at most 10 entries, got {len(top_titles)}")
+    actual_position = {title: i + 1 for i, title in enumerate(top_titles)}
+    breakdown = [0] * len(top_titles)
+    for predicted_index, title in enumerate(picks.ranked, start=1):
+        pos = actual_position.get(title, 0)
+        if pos:
+            breakdown[pos - 1] += ranked_pick_points(predicted_index, pos)
+    for dh in picks.dark_horses:
+        pos = actual_position.get(dh, 0)
+        if pos:
+            breakdown[pos - 1] += 1
+    return breakdown
+
+
 def score_player(picks: PlayerPicks, top_titles: list[str]) -> int:
     """
     Compute the wager points a player earns given the (partial or complete) top finalists.
@@ -26,23 +45,4 @@ def score_player(picks: PlayerPicks, top_titles: list[str]) -> int:
     Lengths above 10 are rejected. Lengths below 10 score every pick whose title matches one of
     the present ranks; absent ranks contribute 0 to the score.
     """
-
-    if len(top_titles) > 10:
-        raise ValueError(f"top_titles must have at most 10 entries, got {len(top_titles)}")
-
-    # TODO BAC 2026-06-19:
-    # This code is a little too cute.
-    # Claude is trying to track the actual position of each movie alongside the predicted position.
-    # This saves in some runtime efficiency (you only need to do one lookup), but it makes the code harder to understand.
-    # It might make sense to just keep an actual_top_ten array separate from the player's picks.
-    # Then we can just loop over the actual_top_ten and use a find command to see if the top ten movie is in the player's
-    # ranked picks.  That would mean we're searching for each movie each time, but definitely would lead to clearer code.
-    actual_position: dict[str, int] = {title: i + 1 for i, title in enumerate(top_titles)}
-
-    total = 0
-    for predicted_index, title in enumerate(picks.ranked, start=1):
-        total += ranked_pick_points(predicted_index, actual_position.get(title, 0))
-    for dh in picks.dark_horses:
-        if dh in actual_position:
-            total += 1
-    return total
+    return sum(score_breakdown(picks, top_titles))
