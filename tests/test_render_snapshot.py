@@ -107,6 +107,16 @@ def _render_pages(tmp_path, forecast_available):
     return (tmp_path / "index.html").read_text(), (tmp_path / "scenarios.html").read_text()
 
 
+def test_nav_on_both_existing_pages(tmp_path):
+    index, scenarios = _render_pages(tmp_path, True)
+    for page in (index, scenarios):
+        assert 'class="site-nav"' in page
+        assert 'href="index.html"' in page
+    assert 'href="scenarios.html"' in index
+    # active pill matches the page
+    assert 'nav-pill is-active" href="index.html"' in index or "is-active" in index
+
+
 def test_shared_theme_tokens_inlined_into_both_pages(tmp_path):
     index, scenarios = _render_pages(tmp_path, True)
     # the shared token set (base + scenario tokens) is present on both pages

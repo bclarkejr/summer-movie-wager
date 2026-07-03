@@ -96,13 +96,15 @@ def render(out_dir: Path, data: RenderInput) -> None:
     )
     template = env.get_template("index.html.j2")
     theme_css = (_STATIC / "theme.css").read_text()
-    inline_css = theme_css + "\n" + (_STATIC / "style.css").read_text()
+    nav_css = (_STATIC / "nav.css").read_text()
+    inline_css = theme_css + "\n" + nav_css + "\n" + (_STATIC / "style.css").read_text()
     html = template.render(
         generated_at = data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
         leaderboard = data.leaderboard,
         movies = data.movies,
         player_details = data.player_details,
         inline_css = inline_css,
+        active = "index",
         forecast_available = data.forecast_available,
         forecast_unavailable_reason = data.forecast_unavailable_reason,
     )
@@ -117,6 +119,8 @@ def render(out_dir: Path, data: RenderInput) -> None:
     scenarios_html = env.get_template("scenarios.html.j2").render(
         generated_at = data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
         theme_css = theme_css,
+        nav_css = nav_css,
+        active = "scenarios",
         scenario_json = _json_for_script(scenario_payload),
         forecast_available = data.forecast_available,
         forecast_unavailable_reason = data.forecast_unavailable_reason,
