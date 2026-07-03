@@ -78,16 +78,20 @@ def render(out_dir: Path, data: RenderInput) -> None:
 
     index.html has three sections:
 
-    1. Leaderboard: A table of all players and their current points, projected points, and win/tie probabilities.
-    2. Movie projections: A table of all movies and their projected gross/points, plus some metadata like release date and status.
-    3. Per-player details: For each player, an expandable section showing their picks and the projected points for each pick.
+    1. Leaderboard: A table of all players and their current points, projected points,
+       and win/tie probabilities.
+    2. Movie projections: A table of all movies and their projected gross/points, plus
+       some metadata like release date and status.
+    3. Per-player details: For each player, an expandable section showing their picks
+       and the projected points for each pick.
 
     scenarios.html shows each player's most-likely winning finish order. whatif.html lets a
     visitor drag the top-15 projected movies into a hypothetical top-10 finish and see every
     player's score update live.
 
-    Note that all sections rely on the arrays to already be sorted appropriately.  We want to show which movies and players are
-    at the top of the leaderboard, but render will not do any sorting itself.
+    Note that all sections rely on the arrays to already be sorted appropriately.  We want
+    to show which movies and players are at the top of the leaderboard, but render will not
+    do any sorting itself.
 
     The HTML is generated from Jinja2 templates. The CSS is inlined into each page for simplicity.
     """
