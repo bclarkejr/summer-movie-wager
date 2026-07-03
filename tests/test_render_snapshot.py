@@ -104,11 +104,15 @@ def _render_pages(tmp_path, forecast_available):
         raw_snapshot=raw, forecast_available=forecast_available,
         forecast_unavailable_reason="" if forecast_available else "only 3 movies projected",
     ))
-    return (tmp_path / "index.html").read_text(), (tmp_path / "scenarios.html").read_text()
+    return (
+        (tmp_path / "index.html").read_text(),
+        (tmp_path / "scenarios.html").read_text(),
+        (tmp_path / "whatif.html").read_text(),
+    )
 
 
 def test_nav_on_both_existing_pages(tmp_path):
-    index, scenarios = _render_pages(tmp_path, True)
+    index, scenarios, whatif = _render_pages(tmp_path, True)
     for page in (index, scenarios):
         assert 'class="site-nav"' in page
         assert 'href="index.html"' in page
@@ -118,7 +122,7 @@ def test_nav_on_both_existing_pages(tmp_path):
 
 
 def test_shared_theme_tokens_inlined_into_both_pages(tmp_path):
-    index, scenarios = _render_pages(tmp_path, True)
+    index, scenarios, whatif = _render_pages(tmp_path, True)
     # the shared token set (base + scenario tokens) is present on both pages
     for css in (index, scenarios):
         assert "--bg-card:" in css       # existing shared token
@@ -127,7 +131,7 @@ def test_shared_theme_tokens_inlined_into_both_pages(tmp_path):
 
 
 def test_scenarios_page_and_link_when_forecast_on(tmp_path):
-    index, scenarios = _render_pages(tmp_path, True)
+    index, scenarios, whatif = _render_pages(tmp_path, True)
     assert 'id="view"' in scenarios            # grid view markup present
     assert "const DATA =" in scenarios          # scenarios embedded
     assert "const FORECAST_AVAILABLE = true" in scenarios
@@ -135,9 +139,61 @@ def test_scenarios_page_and_link_when_forecast_on(tmp_path):
 
 
 def test_scenarios_gated_and_unlinked_when_forecast_off(tmp_path):
-    index, scenarios = _render_pages(tmp_path, False)
+    index, scenarios, whatif = _render_pages(tmp_path, False)
     assert "const FORECAST_AVAILABLE = false" in scenarios  # page shows gated notice
     assert 'href="scenarios.html"' not in index             # link hidden
+
+
+def test_whatif_page_rendered(tmp_path):
+    index, scenarios, whatif = _render_pages(tmp_path, True)
+    assert "const DATA =" in whatif
+    assert 'id="finish"' in whatif
+    assert "Sortable.min.js" in whatif
+    assert 'class="site-nav"' in whatif
+    assert "const FORECAST_AVAILABLE = true" in whatif
+    assert 'href="whatif.html"' in index
+
+
+def test_whatif_gated_when_forecast_off(tmp_path):
+    index, scenarios, whatif = _render_pages(tmp_path, False)
+    assert "const FORECAST_AVAILABLE = false" in whatif
+    assert 'href="whatif.html"' not in index
+
+
+def test_whatif_payload_top15_in_projected_order_with_picks(tmp_path):
+    # 17 movies, one zero-gross → payload holds exactly the first 15 non-zero
+    # titles in RenderInput.movies order (== the index table's projected order),
+    # with no gross figures; player picks present in pick order.
+    from datetime import datetime, timezone
+    from summer_movie_wager.render.page import (LeaderboardRow, MovieRow,
+                                                PickDetail, PlayerDetail,
+                                                RenderInput, render)
+    movies = [MovieRow(title=f"M{i}", release_date="2026-06-01",
+                       status="in_theaters", status_label="in theaters",
+                       median_in_window_gross=float(1000 - i), p10=0, p90=0,
+                       cumulative_to_date=None, source="t") for i in range(16)]
+    movies.append(MovieRow(title="ZeroGross", release_date="2026-06-01",
+                           status="pre_release", status_label="pre-release",
+                           median_in_window_gross=0, p10=0, p90=0,
+                           cumulative_to_date=None, source="t"))
+    player = PlayerDetail(
+        username="a", median_pts=1.0, current_pts=1,
+        ranked=[PickDetail(title=f"M{i}", projected_rank=None,
+                           projected_gross=0, projected_pts=0) for i in range(10)],
+        dark_horses=[PickDetail(title=f"D{i}", projected_rank=None,
+                                projected_gross=0, projected_pts=0) for i in range(3)])
+    render(tmp_path, RenderInput(
+        generated_at=datetime(2026, 7, 3, tzinfo=timezone.utc),
+        leaderboard=[LeaderboardRow(username="a", current_pts=1, median_pts=1.0,
+                                    p10_pts=0.0, p90_pts=2.0, win_prob=1.0, tie_prob=0.0)],
+        movies=movies, player_details=[player],
+        raw_snapshot={"win_prob": {}, "winning_scenarios": {}}))
+    whatif = (tmp_path / "whatif.html").read_text()
+    import json as _json, re
+    payload = _json.loads(re.search(r"const DATA = (.*?);\n", whatif).group(1))
+    assert payload["movies"] == [f"M{i}" for i in range(15)]   # 15, ordered, no M15/ZeroGross
+    assert payload["players"][0]["ranked"] == [f"M{i}" for i in range(10)]
+    assert payload["players"][0]["dark_horses"] == ["D0", "D1", "D2"]
 
 
 def test_scenario_json_script_safe(tmp_path):
