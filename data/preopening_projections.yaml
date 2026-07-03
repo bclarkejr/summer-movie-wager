@@ -1,0 +1,338 @@
+# Hand-curated analyst pre-release box office estimates.
+# Schema per entry:
+#   <movie_title>:
+#     release_date: YYYY-MM-DD
+#     opening_weekend_estimate: <int dollars>
+#     total_domestic_estimate: <int dollars>
+#     confidence: high | med | low
+#     source: "<analyst source + date>"
+#     as_of: YYYY-MM-DD
+#     notes: "<freeform>"
+# Movies missing from this file get projected_in_window_gross=0 and a
+# "no projection" badge per the design's explicit fallback rule.
+#
+# To activate a placeholder below: uncomment the block, replace the TODO
+# numbers with analyst estimates, set confidence (high|med|low), and
+# update source / as_of. Re-run: uv run python -m summer_movie_wager.render.build --local
+
+# These numbers are pulled from https://boxofficetheory.com as they become available.
+# If numbers aren't released on Box Office Theory, then Bruce is just taking a guess.
+
+# ---------------------------------------------------------------------------
+# Already opened movies
+# ---------------------------------------------------------------------------
+
+"The Devil Wears Prada 2":
+  release_date: 2026-05-01
+  opening_weekend_estimate: 79_000_000
+  total_domestic_estimate: 230_000_000
+  confidence: high
+  source: "Box Office Theory"
+  as_of: 2026-04-23
+  notes: ""
+
+"Animal Farm":
+  release_date: 2026-05-01
+  opening_weekend_estimate: 2_500_000
+  total_domestic_estimate: 6_250_000
+  confidence: high
+  source: "Box Office Theory"
+  as_of: 2026-04-23
+  notes: ""
+
+"Hokum":
+  release_date: 2026-05-01
+  opening_weekend_estimate: 4_000_000
+  total_domestic_estimate: 9_500_000
+  confidence: high
+  source: "Box Office Theory"
+  as_of: 2026-04-23
+  notes: ""
+
+"That Time I Got Reincarnated as a Slime the Movie: Tears of the Azure Sea":
+  release_date: 2026-05-01
+  opening_weekend_estimate: 2_000_000
+  total_domestic_estimate: 3_000_000
+  confidence: high
+  source: "Box Office Theory"
+  as_of: 2026-04-23
+  notes: ""
+
+"Deep Water":
+  release_date: 2026-05-01
+  opening_weekend_estimate: 0  # No projections found
+  total_domestic_estimate: 0   # No projections found
+  confidence: low
+  source: "N/A"
+  as_of: 2026-04-23
+  notes: ""
+
+# ---------------------------------------------------------------------------
+# Active entries
+# ---------------------------------------------------------------------------
+
+# May 2026 releases
+
+"Billie Eilish: Hit Me Hard and Soft":
+  release_date: 2026-05-08
+  opening_weekend_estimate: 12_000_000
+  total_domestic_estimate: 20_000_000
+  confidence: med
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-05
+  notes: "Concert film; comps Eras Tour ($93M opening / $180M domestic), Renaissance ($21M opening / $33M domestic)"
+
+"Mortal Kombat II":
+  release_date: 2026-05-08
+  opening_weekend_estimate: 44_500_000
+  total_domestic_estimate: 101_000_000
+  confidence: med
+  source: "Box Office Theory $40-50M opening + $77-104M total (2026-05-04, adjusted down week over week)"
+  as_of: 2026-05-04
+  notes: "Opening midpoint of $40-50M industry tracking; total midpoint of $80-109M projected domestic run"
+
+"The Sheep Detectives":
+  release_date: 2026-05-08
+  opening_weekend_estimate: 16_900_000
+  total_domestic_estimate: 60_000_000
+  confidence: med
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-04
+  notes: "Hugh Jackman family-skewing whodunit; opening from BOP tracking, total TBD"
+
+"Obsession":
+  release_date: 2026-05-15
+  opening_weekend_estimate: 14_500_000
+  total_domestic_estimate: 36_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-15
+  notes: "NEON indie counter-programmer opposite Star Wars; BOP comp was Sorry to Bother You ($17.4M total)"
+
+"Star Wars: The Mandalorian and Grogu":
+  release_date: 2026-05-22
+  opening_weekend_estimate: 90_000_000
+  total_domestic_estimate: 224_000_000
+  confidence: med
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-15
+  notes: "81-96M opening range per BOT; 166-239M total gross per BOT"
+
+"I Love Boosters":
+  release_date: 2026-05-22
+  opening_weekend_estimate: 4_000_000
+  total_domestic_estimate: 11_800_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-15
+  notes: "NEON indie counter-programmer opposite Star Wars; BOP comp was Sorry to Bother You ($17.4M total)"
+
+"Passenger":
+  release_date: 2026-05-22
+  opening_weekend_estimate: 6_000_000
+  total_domestic_estimate: 14_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-15
+  notes: "Paramount supernatural horror, dir. André Øvredal; moved up from May 29 to avoid Backrooms/Scary Movie"
+
+"Backrooms":
+  release_date: 2026-05-29
+  opening_weekend_estimate: 33_000_000
+  total_domestic_estimate: 71_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-22
+  notes: ""
+
+"The Breadwinner":
+  release_date: 2026-05-29
+  opening_weekend_estimate: 18_000_000
+  total_domestic_estimate: 68_000_000
+  confidence: med
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-22
+  notes: ""
+
+# June 2026 releases
+
+"Scary Movie":
+  release_date: 2026-06-05
+  opening_weekend_estimate: 41_000_000
+  total_domestic_estimate: 85_000_000
+  confidence: med
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-22
+  notes: "35-52M opening range per BOT; 73-105M total gross per BOT"
+
+"Masters of the Universe":
+  release_date: 2026-06-05
+  opening_weekend_estimate: 32_500_000
+  total_domestic_estimate: 78_000_000
+  confidence: med
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-22
+  notes: "25-35M opening range per BOT; 55-90M total gross per BOT"
+
+"Disclosure Day":
+  release_date: 2026-06-12
+  opening_weekend_estimate: 50_500_000
+  total_domestic_estimate: 159_000_000
+  confidence: med
+  source: "Box Office Theory forecast"
+  as_of: 2026-06-05
+  notes: "40-55M opening range per BOT; 125-206M total gross per BOT"
+
+"Toy Story 5":
+  release_date: 2026-06-19
+  opening_weekend_estimate: 168_000_000
+  total_domestic_estimate: 559_000_000
+  confidence: med
+  source: "Box Office Theory forecast"
+  as_of: 2026-06-05
+  notes: "145-165M opening range per BOT; 490-602M total gross per BOT"
+
+"Supergirl":
+  release_date: 2026-06-26
+  opening_weekend_estimate: 48_000_000
+  total_domestic_estimate: 105_000_000
+  confidence: med
+  source: "Box Office Theory forecast"
+  as_of: 2026-06-05
+  notes: "47-60M opening range per BOT; 107-167M total gross per BOT"
+
+"Jackass: Best and Last":
+  release_date: 2026-06-26
+  opening_weekend_estimate: 15_000_000
+  total_domestic_estimate: 35_600_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-06-05
+  notes: "14-19M opening range per BOT; 28-46M total gross per BOT"
+
+# July 2026 releases
+
+"Minions & Monsters":
+  release_date: 2026-07-01
+  opening_weekend_estimate: 83_000_000
+  total_domestic_estimate: 239_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-29
+  notes: "53-62M opening range per BOT; 248-291M total gross per BOT"
+
+"Young Washington":
+  release_date: 2026-07-03 
+  opening_weekend_estimate: 28_000_000
+  total_domestic_estimate: 105_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-05-29
+  notes: "23-35M opening range per BOT; 85-145M total gross per BOT"
+
+"Evil Dead Burn":
+  release_date: 2026-07-10
+  opening_weekend_estimate: 28_000_000
+  total_domestic_estimate: 69_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-06-05
+  notes: "21-30M opening range per BOT; 45-75M total gross per BOT"
+
+"Moana":
+  release_date: 2026-07-10
+  opening_weekend_estimate: 62_000_000
+  total_domestic_estimate: 195_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-06-05
+  notes: "80-105M opening range per BOT; 240-305M total gross per BOT"
+
+"The Odyssey":
+  release_date: 2026-07-17
+  opening_weekend_estimate: 118_000_000
+  total_domestic_estimate: 430_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-06-13
+  notes: "97-132M opening range per BOT; 325-475M total gross per BOT"
+
+"Spider-Man: Brand New Day":
+  release_date: 2026-07-31
+  opening_weekend_estimate: 228_000_000
+  total_domestic_estimate: 570_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-06-26
+  notes: "212-255M opening range per BOT; 475-655M total gross per BOT"
+
+# ---------------------------------------------------------------------------
+# Placeholders — uncomment and fill as analyst data arrives
+# ---------------------------------------------------------------------------
+
+"Power Ballad":
+  release_date: 2026-06-05  # TODO confirm
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: ""
+
+# August 2026 releases
+
+"PAW Patrol: The Dino Movie":
+  release_date: 2026-08-14
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Paramount; comp PAW Patrol: The Mighty Movie 2023 ($23M opening / $67M domestic)"
+
+"The End of Oak Street":
+  release_date: 2026-08-14
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: ""
+
+"Insidious: Out of the Further":
+  release_date: 2026-08-21
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Sony/Blumhouse; Amelia Eve as Gemma; comp Insidious: The Red Door 2023 ($32M opening / $84M domestic)"
+
+"Coyote vs. Acme":
+  release_date: 2026-08-28
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Ketchup Entertainment (rescued from WB shelving); trailer hit 25.6M views in 24h (indie record); marketing capacity uncertain"
+
+# Release date unknown or after wager window
+
+"Tom and Jerry: Forbidden Compass":
+  release_date: 2026-09-09
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: "Animated family"
+
+# "Finding Emily":
+#   release_date: 2026-09-01  # TODO confirm
+#   opening_weekend_estimate: 0  # TODO
+#   total_domestic_estimate: 0  # TODO
+#   confidence: low
+#   source: ""
+#   as_of: 2026-05-04
+#   notes: ""

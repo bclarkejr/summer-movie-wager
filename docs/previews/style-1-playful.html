@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Summer Movie Wager 2026 — Style 1: Playful</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── Theme tokens ── */
+:root {
+  --bg:        #f9f7ff;
+  --bg-card:   #ffffff;
+  --bg-hover:  #f9f7ff;
+  --bg-row-alt: transparent;
+  --bg-summary: #f9f7ff;
+  --text:      #2d2d3a;
+  --text-muted: #999;
+  --text-source: #aaa;
+  --border:    #f0eeff;
+  --border-row: #f3f3f3;
+  --th-color:  #555;
+  --shadow:    rgba(0,0,0,0.07);
+  --badge-np-bg: #eee;
+  --badge-np-color: #888;
+  --forecast-bg: #fff8e0;
+  --forecast-border: #ffe66d;
+  --forecast-color: #7a6200;
+  --footer-color: #aaa;
+}
+
+[data-theme="dark"] {
+  --bg:        #12101f;
+  --bg-card:   #1e1830;
+  --bg-hover:  #271f3d;
+  --bg-row-alt: #1a1428;
+  --bg-summary: #1e1830;
+  --text:      #f0eeff;
+  --text-muted: #8878bb;
+  --text-source: #6a5a99;
+  --border:    #2e2550;
+  --border-row: #261e3d;
+  --th-color:  #9988cc;
+  --shadow:    rgba(0,0,0,0.35);
+  --badge-np-bg: #231c3a;
+  --badge-np-color: #6a5a99;
+  --forecast-bg: #1e1a10;
+  --forecast-border: #7a6200;
+  --forecast-color: #d4a820;
+  --footer-color: #6a5a99;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:        #12101f;
+    --bg-card:   #1e1830;
+    --bg-hover:  #271f3d;
+    --bg-row-alt: #1a1428;
+    --bg-summary: #1e1830;
+    --text:      #f0eeff;
+    --text-muted: #8878bb;
+    --text-source: #6a5a99;
+    --border:    #2e2550;
+    --border-row: #261e3d;
+    --th-color:  #9988cc;
+    --shadow:    rgba(0,0,0,0.35);
+    --badge-np-bg: #231c3a;
+    --badge-np-color: #6a5a99;
+    --forecast-bg: #1e1a10;
+    --forecast-border: #7a6200;
+    --forecast-color: #d4a820;
+    --footer-color: #6a5a99;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1.5em 1.2em 3em;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.25s, color 0.25s;
+}
+
+/* ── Dark mode toggle ── */
+.theme-toggle {
+  position: fixed;
+  top: 1em;
+  right: 1em;
+  z-index: 100;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 50px;
+  padding: 0.35em 0.9em;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85em;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: 0 2px 12px var(--shadow);
+  transition: background 0.25s, border-color 0.25s, color 0.25s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+.theme-toggle:hover { transform: scale(1.05); }
+.theme-toggle .icon { font-size: 1.1em; }
+
+header {
+  text-align: center;
+  padding: 2em 0 1.5em;
+}
+
+h1 {
+  font-size: 2.4em;
+  font-weight: 800;
+  margin: 0 0 0.2em;
+  background: linear-gradient(135deg, #ff6b6b, #f7c59f, #ffe66d, #4ecdc4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+h2 {
+  font-size: 1.2em;
+  font-weight: 800;
+  margin: 0 0 0.8em;
+  color: #4ecdc4;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.meta {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 1.5em;
+  margin-bottom: 1.5em;
+  box-shadow: 0 4px 20px var(--shadow);
+  transition: background 0.25s, box-shadow 0.25s;
+}
+
+.leaderboard h2 { color: #ff6b6b; }
+.players h2 { color: #a855f7; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+thead tr {
+  background: linear-gradient(90deg, #ff6b6b22, #4ecdc422);
+}
+
+.leaderboard thead tr { background: linear-gradient(90deg, #ff6b6b22, #f7c59f22); }
+.movies thead tr { background: linear-gradient(90deg, #4ecdc422, #ffe66d22); }
+
+th {
+  font-weight: 700;
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.7em 0.8em;
+  color: var(--th-color);
+  border-bottom: 2px solid var(--border);
+}
+
+td {
+  padding: 0.55em 0.8em;
+  border-bottom: 1px solid var(--border-row);
+}
+
+td:first-child { font-weight: 700; }
+
+tbody tr:nth-child(even) { background: var(--bg-row-alt); }
+tbody tr:hover { background: var(--bg-hover); }
+tbody tr:last-child td { border-bottom: none; }
+
+/* Leaderboard rank highlight */
+.player-row:first-child td:first-child::before { content: "🥇 "; }
+.player-row:nth-child(2) td:first-child::before { content: "🥈 "; }
+.player-row:nth-child(3) td:first-child::before { content: "🥉 "; }
+
+.badge {
+  font-size: 0.75em;
+  font-weight: 700;
+  padding: 0.2em 0.7em;
+  border-radius: 20px;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.badge-pre_release { background: #e0d9ff; color: #6c3fcf; }
+.badge-in_theaters { background: #c9f7e8; color: #1a7a54; }
+[data-theme="dark"] .badge-pre_release { background: #3a2a6a; color: #c4b0ff; }
+[data-theme="dark"] .badge-in_theaters { background: #0d3d28; color: #4ecdc4; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .badge-pre_release { background: #3a2a6a; color: #c4b0ff; }
+  :root:not([data-theme="light"]) .badge-in_theaters { background: #0d3d28; color: #4ecdc4; }
+}
+.badge-closed, .badge-wont_score, .badge-no_projection {
+  background: var(--badge-np-bg);
+  color: var(--badge-np-color);
+}
+
+.muted { color: var(--text-muted); font-size: 0.88em; }
+.source { font-size: 0.82em; color: var(--text-source); }
+
+details {
+  margin: 0.5em 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  transition: border-color 0.2s, background 0.25s;
+}
+details[open] { border-color: #a855f7; }
+
+summary {
+  cursor: pointer;
+  padding: 0.75em 1em;
+  font-weight: 700;
+  font-size: 1em;
+  background: var(--bg-summary);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  transition: background 0.25s;
+}
+summary::before { content: "▶"; font-size: 0.7em; color: #a855f7; transition: transform 0.2s; }
+details[open] summary::before { transform: rotate(90deg); }
+summary::-webkit-details-marker { display: none; }
+
+.ranked-picks, .dark-horses {
+  margin: 0.5em 0 0.5em 1em;
+  padding: 0 1em;
+}
+.ranked-picks li, .dark-horses li { padding: 0.3em 0; }
+
+.dark-horse-label {
+  font-weight: 800;
+  margin: 0.8em 1em 0.2em;
+  font-size: 0.9em;
+  color: #ff6b6b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+footer {
+  text-align: center;
+  margin-top: 2em;
+  color: var(--footer-color);
+  font-size: 0.85em;
+}
+footer a { color: #4ecdc4; }
+
+.forecast-unavailable {
+  background: var(--forecast-bg);
+  border: 2px solid var(--forecast-border);
+  border-radius: 10px;
+  padding: 0.6em 1em;
+  margin-bottom: 1em;
+  font-size: 0.88em;
+  color: var(--forecast-color);
+}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle dark mode">
+  <span class="icon" id="themeIcon">🌙</span>
+  <span id="themeLabel">Dark mode</span>
+</button>
+
+<script>
+(function() {
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const saved = localStorage.getItem('smw-theme');
+  const isDark = saved ? saved === 'dark' : prefersDark;
+  if (isDark) applyDark();
+
+  function applyDark() {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    if (icon) icon.textContent = '☀️';
+    if (label) label.textContent = 'Light mode';
+  }
+
+  window.toggleTheme = function() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const goingDark = current !== 'dark';
+    document.documentElement.setAttribute('data-theme', goingDark ? 'dark' : 'light');
+    document.getElementById('themeIcon').textContent = goingDark ? '☀️' : '🌙';
+    document.getElementById('themeLabel').textContent = goingDark ? 'Light mode' : 'Dark mode';
+    localStorage.setItem('smw-theme', goingDark ? 'dark' : 'light');
+  };
+})();
+</script>
+
+<header>
+  <h1>🎬 Summer Movie Wager 2026</h1>
+  <p class="meta">Window 2026-04-30 → 2026-09-07 · refreshed 2026-06-19 19:16 UTC</p>
+</header>
+
+<section class="leaderboard card">
+  <h2>🏆 Leaderboard</h2>
+  <p class="meta forecast-unavailable">Forecast unavailable — only 25 movie(s) have non-zero projections (need 30 for an honest top-10 ranking). Showing current points only.</p>
+  <table>
+    <thead>
+      <tr><th>Player</th><th>Current</th><th>Projected median</th><th>80% range</th><th>Win odds</th></tr>
+    </thead>
+    <tbody>
+      <tr data-player="vivrad" class="player-row"><td>vivrad</td><td>24</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr data-player="brettfern" class="player-row"><td>brettfern</td><td>21</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr data-player="bclarke" class="player-row"><td>bclarke</td><td>18</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr data-player="carleigh" class="player-row"><td>carleigh</td><td>18</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr data-player="emsullivan" class="player-row"><td>emsullivan</td><td>18</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr data-player="mhartje" class="player-row"><td>mhartje</td><td>17</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr data-player="zmeister" class="player-row"><td>zmeister</td><td>13</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr data-player="radhadr" class="player-row"><td>radhadr</td><td>11</td><td>—</td><td>—</td><td>—</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="movies card">
+  <h2>🎥 Movies (projected window gross)</h2>
+  <table>
+    <thead>
+      <tr><th>Movie</th><th>Released</th><th>Status</th><th>Projected median</th><th>80% range</th><th>Cumulative</th><th>Source</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Toy Story 5</td><td>2026-06-19</td><td><span class="badge badge-pre_release">pre-release</span></td><td>$549,921,890</td><td>[$374M – $808M]</td><td>—</td><td class="source">analyst est.</td></tr>
+      <tr><td>The Odyssey</td><td>2026-07-17</td><td><span class="badge badge-pre_release">pre-release</span></td><td>$391,611,906</td><td>[$220M – $697M]</td><td>—</td><td class="source">analyst est.</td></tr>
+      <tr><td>Obsession</td><td>2026-05-15</td><td><span class="badge badge-in_theaters">in theaters</span></td><td>$337,747,953</td><td>[$285M – $401M]</td><td>$198,654,815</td><td class="source">decay model</td></tr>
+      <tr><td>Moana</td><td>2026-07-10</td><td><span class="badge badge-pre_release">pre-release</span></td><td>$250,619,257</td><td>[$141M – $446M]</td><td>—</td><td class="source">analyst est.</td></tr>
+      <tr><td>Minions &amp; Monsters</td><td>2026-07-01</td><td><span class="badge badge-pre_release">pre-release</span></td><td>$242,528,397</td><td>[$136M – $432M]</td><td>—</td><td class="source">analyst est.</td></tr>
+      <tr><td>The Devil Wears Prada 2</td><td>2026-05-01</td><td><span class="badge badge-in_theaters">in theaters</span></td><td>$221,267,753</td><td>[$195M – $252M]</td><td>$218,526,350</td><td class="source">decay model</td></tr>
+      <tr><td>Backrooms</td><td>2026-05-29</td><td><span class="badge badge-in_theaters">in theaters</span></td><td>$185,595,325</td><td>[$144M – $240M]</td><td>$160,295,784</td><td class="source">decay model</td></tr>
+      <tr><td>Star Wars: The Mandalorian and Grogu</td><td>2026-05-22</td><td><span class="badge badge-in_theaters">in theaters</span></td><td>$180,028,702</td><td>[$145M – $223M]</td><td>$167,325,286</td><td class="source">decay model</td></tr>
+      <tr><td>Disclosure Day</td><td>2026-06-12</td><td><span class="badge badge-in_theaters">in theaters</span></td><td>$129,589,850</td><td>[$92M – $182M]</td><td>$58,351,520</td><td class="source">decay model</td></tr>
+      <tr><td>Scary Movie</td><td>2026-06-05</td><td><span class="badge badge-in_theaters">in theaters</span></td><td>$128,355,283</td><td>[$95M – $173M]</td><td>$89,558,273</td><td class="source">decay model</td></tr>
+      <tr><td>Supergirl</td><td>2026-06-26</td><td><span class="badge badge-pre_release">pre-release</span></td><td>$104,827,592</td><td>[$71M – $154M]</td><td>—</td><td class="source">analyst est.</td></tr>
+      <tr><td>Young Washington</td><td>2026-07-03</td><td><span class="badge badge-pre_release">pre-release</span></td><td>$99,541,129</td><td>[$56M – $177M]</td><td>—</td><td class="source">analyst est.</td></tr>
+      <tr><td>Mortal Kombat II</td><td>2026-05-08</td><td><span class="badge badge-in_theaters">in theaters</span></td><td>$79,746,183</td><td>[$70M – $91M]</td><td>$79,579,103</td><td class="source">decay model</td></tr>
+      <tr><td>Masters of the Universe</td><td>2026-06-05</td><td><span class="badge badge-in_theaters">in theaters</span></td><td>$72,305,549</td><td>[$54M – $98M]</td><td>$50,450,281</td><td class="source">decay model</td></tr>
+      <tr><td>The Sheep Detectives</td><td>2026-05-08</td><td><span class="badge badge-in_theaters">in theaters</span></td><td>$69,437,401</td><td>[$61M – $79M]</td><td>$63,309,712</td><td class="source">decay model</td></tr>
+      <tr><td>Evil Dead Burn</td><td>2026-07-10</td><td><span class="badge badge-pre_release">pre-release</span></td><td>$67,768,325</td><td>[$38M – $121M]</td><td>—</td><td class="source">analyst est.</td></tr>
+      <tr><td>The Amazing Digital Circus: The Last Act</td><td>2026-06-19</td><td><span class="badge badge-in_theaters">in theaters</span></td><td>$52,016,240</td><td>[$35M – $76M]</td><td>$23,421,793</td><td class="source">decay model</td></tr>
+      <tr><td>Jackass: Best and Last</td><td>2026-06-26</td><td><span class="badge badge-pre_release">pre-release</span></td><td>$35,486,238</td><td>[$20M – $63M]</td><td>—</td><td class="source">analyst est.</td></tr>
+      <tr><td>The Breadwinner</td><td>2026-05-29</td><td><span class="badge badge-in_theaters">in theaters</span></td><td>$22,068,146</td><td>[$17M – $29M]</td><td>$18,290,159</td><td class="source">decay model</td></tr>
+      <tr><td>Billie Eilish: Hit Me Hard and Soft</td><td>2026-05-08</td><td><span class="badge badge-pre_release">pre-release</span></td><td>$19,999,998</td><td>[$14M – $29M]</td><td>—</td><td class="source">analyst est.</td></tr>
+      <tr><td>Passenger</td><td>2026-05-22</td><td><span class="badge badge-in_theaters">in theaters</span></td><td>$18,561,425</td><td>[$15M – $23M]</td><td>$18,027,541</td><td class="source">decay model</td></tr>
+      <tr><td>Hokum</td><td>2026-05-01</td><td><span class="badge badge-in_theaters">in theaters</span></td><td>$17,017,311</td><td>[$15M – $19M]</td><td>$17,000,014</td><td class="source">decay model</td></tr>
+      <tr><td>I Love Boosters</td><td>2026-05-22</td><td><span class="badge badge-pre_release">pre-release</span></td><td>$11,780,877</td><td>[$7M – $21M]</td><td>—</td><td class="source">analyst est.</td></tr>
+      <tr><td>Animal Farm</td><td>2026-05-01</td><td><span class="badge badge-pre_release">pre-release</span></td><td>$6,249,510</td><td>[$5M – $8M]</td><td>—</td><td class="source">analyst est.</td></tr>
+      <tr><td>That Time I Got Reincarnated as a Slime the Movie</td><td>2026-05-01</td><td><span class="badge badge-pre_release">pre-release</span></td><td>$3,000,000</td><td>[$2M – $4M]</td><td>—</td><td class="source">analyst est.</td></tr>
+      <tr><td>Deep Water</td><td>2026-05-01</td><td><span class="badge badge-no_projection">no projection</span></td><td>—</td><td>—</td><td>—</td><td class="source">no analyst entry</td></tr>
+      <tr><td>Power Ballad</td><td>2026-06-05</td><td><span class="badge badge-no_projection">no projection</span></td><td>—</td><td>—</td><td>—</td><td class="source">no analyst entry</td></tr>
+      <tr><td>Spider-Man: Brand New Day</td><td>2026-07-31</td><td><span class="badge badge-no_projection">no projection</span></td><td>—</td><td>—</td><td>—</td><td class="source">no analyst entry</td></tr>
+      <tr><td>PAW Patrol: The Dino Movie</td><td>2026-08-14</td><td><span class="badge badge-no_projection">no projection</span></td><td>—</td><td>—</td><td>—</td><td class="source">no analyst entry</td></tr>
+      <tr><td>The End of Oak Street</td><td>2026-08-14</td><td><span class="badge badge-no_projection">no projection</span></td><td>—</td><td>—</td><td>—</td><td class="source">no analyst entry</td></tr>
+      <tr><td>Insidious: Out of the Further</td><td>2026-08-21</td><td><span class="badge badge-no_projection">no projection</span></td><td>—</td><td>—</td><td>—</td><td class="source">no analyst entry</td></tr>
+      <tr><td>Coyote vs. Acme</td><td>2026-08-28</td><td><span class="badge badge-no_projection">no projection</span></td><td>—</td><td>—</td><td>—</td><td class="source">no analyst entry</td></tr>
+      <tr><td>Finding Emily</td><td>2026-09-07</td><td><span class="badge badge-no_projection">no projection</span></td><td>—</td><td>—</td><td>—</td><td class="source">no analyst entry</td></tr>
+      <tr><td>Tom and Jerry: Forbidden Compass</td><td>2026-09-09</td><td><span class="badge badge-wont_score">won't score</span></td><td>—</td><td>—</td><td>—</td><td class="source">release after window</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="players card">
+  <h2>🎭 Per-player detail</h2>
+
+  <details data-player="vivrad">
+    <summary>🥇 vivrad — current 24 pts</summary>
+    <ol class="ranked-picks">
+      <li><strong>Spider-Man: Brand New Day</strong> <span class="muted">→ #— · $0 · 0 pts</span></li>
+      <li><strong>Toy Story 5</strong> <span class="muted">→ #1 · $549,921,890 · 7 pts</span></li>
+      <li><strong>The Odyssey</strong> <span class="muted">→ #2 · $391,611,906 · 7 pts</span></li>
+      <li><strong>Minions &amp; Monsters</strong> <span class="muted">→ #5 · $242,528,397 · 7 pts</span></li>
+      <li><strong>Star Wars: The Mandalorian and Grogu</strong> <span class="muted">→ #8 · $180,028,702 · 3 pts</span></li>
+      <li><strong>Moana</strong> <span class="muted">→ #4 · $250,619,257 · 5 pts</span></li>
+      <li><strong>Disclosure Day</strong> <span class="muted">→ #9 · $129,589,850 · 5 pts</span></li>
+      <li><strong>Supergirl</strong> <span class="muted">→ #— · $104,827,592 · 0 pts</span></li>
+      <li><strong>The Devil Wears Prada 2</strong> <span class="muted">→ #6 · $221,267,753 · 3 pts</span></li>
+      <li><strong>Masters of the Universe</strong> <span class="muted">→ #— · $72,305,549 · 0 pts</span></li>
+    </ol>
+    <p class="dark-horse-label">🐴 Dark horses</p>
+    <ul class="dark-horses">
+      <li>Scary Movie <span class="muted">→ #10 · 1 pt</span></li>
+      <li>Mortal Kombat II <span class="muted">→ #— · 0 pt</span></li>
+      <li>Billie Eilish: Hit Me Hard and Soft <span class="muted">→ #— · 0 pt</span></li>
+    </ul>
+  </details>
+
+  <details data-player="brettfern">
+    <summary>🥈 brettfern — current 21 pts</summary>
+    <ol class="ranked-picks">
+      <li><strong>Spider-Man: Brand New Day</strong> <span class="muted">→ #— · $0 · 0 pts</span></li>
+      <li><strong>Toy Story 5</strong> <span class="muted">→ #1 · $549,921,890 · 7 pts</span></li>
+      <li><strong>The Odyssey</strong> <span class="muted">→ #2 · $391,611,906 · 7 pts</span></li>
+      <li><strong>Moana</strong> <span class="muted">→ #4 · $250,619,257 · 10 pts</span></li>
+      <li><strong>Minions &amp; Monsters</strong> <span class="muted">→ #5 · $242,528,397 · 10 pts</span></li>
+      <li><strong>The Devil Wears Prada 2</strong> <span class="muted">→ #6 · $221,267,753 · 10 pts</span></li>
+      <li><strong>Star Wars: The Mandalorian and Grogu</strong> <span class="muted">→ #8 · $180,028,702 · 7 pts</span></li>
+      <li><strong>Disclosure Day</strong> <span class="muted">→ #9 · $129,589,850 · 7 pts</span></li>
+      <li><strong>Supergirl</strong> <span class="muted">→ #— · $104,827,592 · 0 pts</span></li>
+      <li><strong>Scary Movie</strong> <span class="muted">→ #10 · $128,355,283 · 13 pts</span></li>
+    </ol>
+    <p class="dark-horse-label">🐴 Dark horses</p>
+    <ul class="dark-horses">
+      <li>Coyote vs. Acme <span class="muted">→ #— · 0 pt</span></li>
+      <li>Mortal Kombat II <span class="muted">→ #— · 0 pt</span></li>
+      <li>Masters of the Universe <span class="muted">→ #— · 0 pt</span></li>
+    </ul>
+  </details>
+
+  <details data-player="bclarke">
+    <summary>🥉 bclarke — current 18 pts</summary>
+    <ol class="ranked-picks">
+      <li><strong>Toy Story 5</strong> <span class="muted">→ #1 · $549,921,890 · 13 pts</span></li>
+      <li><strong>Spider-Man: Brand New Day</strong> <span class="muted">→ #— · $0 · 0 pts</span></li>
+      <li><strong>Minions &amp; Monsters</strong> <span class="muted">→ #5 · $242,528,397 · 5 pts</span></li>
+      <li><strong>The Devil Wears Prada 2</strong> <span class="muted">→ #6 · $221,267,753 · 5 pts</span></li>
+      <li><strong>The Odyssey</strong> <span class="muted">→ #2 · $391,611,906 · 3 pts</span></li>
+      <li><strong>Moana</strong> <span class="muted">→ #4 · $250,619,257 · 5 pts</span></li>
+      <li><strong>Star Wars: The Mandalorian and Grogu</strong> <span class="muted">→ #8 · $180,028,702 · 7 pts</span></li>
+      <li><strong>Supergirl</strong> <span class="muted">→ #— · $104,827,592 · 0 pts</span></li>
+      <li><strong>Disclosure Day</strong> <span class="muted">→ #9 · $129,589,850 · 10 pts</span></li>
+      <li><strong>Mortal Kombat II</strong> <span class="muted">→ #— · $79,746,183 · 0 pts</span></li>
+    </ol>
+    <p class="dark-horse-label">🐴 Dark horses</p>
+    <ul class="dark-horses">
+      <li>Backrooms <span class="muted">→ #7 · 1 pt</span></li>
+      <li>Scary Movie <span class="muted">→ #10 · 1 pt</span></li>
+      <li>Evil Dead Burn <span class="muted">→ #— · 0 pt</span></li>
+    </ul>
+  </details>
+
+  <details data-player="carleigh">
+    <summary>carleigh — current 18 pts</summary>
+    <ol class="ranked-picks">
+      <li><strong>Spider-Man: Brand New Day</strong> <span class="muted">→ #— · $0 · 0 pts</span></li>
+      <li><strong>Toy Story 5</strong> <span class="muted">→ #1 · $549,921,890 · 7 pts</span></li>
+      <li><strong>Moana</strong> <span class="muted">→ #4 · $250,619,257 · 7 pts</span></li>
+      <li><strong>Minions &amp; Monsters</strong> <span class="muted">→ #5 · $242,528,397 · 7 pts</span></li>
+      <li><strong>The Odyssey</strong> <span class="muted">→ #2 · $391,611,906 · 3 pts</span></li>
+      <li><strong>The Devil Wears Prada 2</strong> <span class="muted">→ #6 · $221,267,753 · 10 pts</span></li>
+      <li><strong>Star Wars: The Mandalorian and Grogu</strong> <span class="muted">→ #8 · $180,028,702 · 7 pts</span></li>
+      <li><strong>Supergirl</strong> <span class="muted">→ #— · $104,827,592 · 0 pts</span></li>
+      <li><strong>Disclosure Day</strong> <span class="muted">→ #9 · $129,589,850 · 10 pts</span></li>
+      <li><strong>Backrooms</strong> <span class="muted">→ #7 · $185,595,325 · 3 pts</span></li>
+    </ol>
+    <p class="dark-horse-label">🐴 Dark horses</p>
+    <ul class="dark-horses">
+      <li>Mortal Kombat II <span class="muted">→ #— · 0 pt</span></li>
+      <li>The End of Oak Street <span class="muted">→ #— · 0 pt</span></li>
+      <li>Scary Movie <span class="muted">→ #10 · 1 pt</span></li>
+    </ul>
+  </details>
+
+  <details data-player="emsullivan">
+    <summary>emsullivan — current 18 pts</summary>
+    <ol class="ranked-picks">
+      <li><strong>Toy Story 5</strong> <span class="muted">→ #1 · $549,921,890 · 13 pts</span></li>
+      <li><strong>The Odyssey</strong> <span class="muted">→ #2 · $391,611,906 · 10 pts</span></li>
+      <li><strong>Spider-Man: Brand New Day</strong> <span class="muted">→ #— · $0 · 0 pts</span></li>
+      <li><strong>Moana</strong> <span class="muted">→ #4 · $250,619,257 · 10 pts</span></li>
+      <li><strong>The Devil Wears Prada 2</strong> <span class="muted">→ #6 · $221,267,753 · 7 pts</span></li>
+      <li><strong>Young Washington</strong> <span class="muted">→ #— · $99,541,129 · 0 pts</span></li>
+      <li><strong>Minions &amp; Monsters</strong> <span class="muted">→ #5 · $242,528,397 · 5 pts</span></li>
+      <li><strong>Star Wars: The Mandalorian and Grogu</strong> <span class="muted">→ #8 · $180,028,702 · 10 pts</span></li>
+      <li><strong>Disclosure Day</strong> <span class="muted">→ #9 · $129,589,850 · 10 pts</span></li>
+      <li><strong>Backrooms</strong> <span class="muted">→ #7 · $185,595,325 · 3 pts</span></li>
+    </ol>
+    <p class="dark-horse-label">🐴 Dark horses</p>
+    <ul class="dark-horses">
+      <li>Mortal Kombat II <span class="muted">→ #— · 0 pt</span></li>
+      <li>Scary Movie <span class="muted">→ #10 · 1 pt</span></li>
+      <li>Supergirl <span class="muted">→ #— · 0 pt</span></li>
+    </ul>
+  </details>
+
+  <details data-player="mhartje">
+    <summary>mhartje — current 17 pts</summary>
+    <ol class="ranked-picks">
+      <li><strong>Moana</strong> <span class="muted">→ #4 · $250,619,257 · 3 pts</span></li>
+      <li><strong>Toy Story 5</strong> <span class="muted">→ #1 · $549,921,890 · 7 pts</span></li>
+      <li><strong>Supergirl</strong> <span class="muted">→ #— · $104,827,592 · 0 pts</span></li>
+      <li><strong>Spider-Man: Brand New Day</strong> <span class="muted">→ #— · $0 · 0 pts</span></li>
+      <li><strong>The Odyssey</strong> <span class="muted">→ #2 · $391,611,906 · 3 pts</span></li>
+      <li><strong>Star Wars: The Mandalorian and Grogu</strong> <span class="muted">→ #8 · $180,028,702 · 5 pts</span></li>
+      <li><strong>The Devil Wears Prada 2</strong> <span class="muted">→ #6 · $221,267,753 · 7 pts</span></li>
+      <li><strong>Minions &amp; Monsters</strong> <span class="muted">→ #5 · $242,528,397 · 3 pts</span></li>
+      <li><strong>Disclosure Day</strong> <span class="muted">→ #9 · $129,589,850 · 10 pts</span></li>
+      <li><strong>Scary Movie</strong> <span class="muted">→ #10 · $128,355,283 · 13 pts</span></li>
+    </ol>
+    <p class="dark-horse-label">🐴 Dark horses</p>
+    <ul class="dark-horses">
+      <li>Power Ballad <span class="muted">→ #— · 0 pt</span></li>
+      <li>I Love Boosters <span class="muted">→ #— · 0 pt</span></li>
+      <li>The Sheep Detectives <span class="muted">→ #— · 0 pt</span></li>
+    </ul>
+  </details>
+
+  <details data-player="zmeister">
+    <summary>zmeister — current 13 pts</summary>
+    <ol class="ranked-picks">
+      <li><strong>Spider-Man: Brand New Day</strong> <span class="muted">→ #— · $0 · 0 pts</span></li>
+      <li><strong>Supergirl</strong> <span class="muted">→ #— · $104,827,592 · 0 pts</span></li>
+      <li><strong>Toy Story 5</strong> <span class="muted">→ #1 · $549,921,890 · 5 pts</span></li>
+      <li><strong>Moana</strong> <span class="muted">→ #4 · $250,619,257 · 10 pts</span></li>
+      <li><strong>Star Wars: The Mandalorian and Grogu</strong> <span class="muted">→ #8 · $180,028,702 · 3 pts</span></li>
+      <li><strong>The Odyssey</strong> <span class="muted">→ #2 · $391,611,906 · 3 pts</span></li>
+      <li><strong>Minions &amp; Monsters</strong> <span class="muted">→ #5 · $242,528,397 · 5 pts</span></li>
+      <li><strong>The Devil Wears Prada 2</strong> <span class="muted">→ #6 · $221,267,753 · 5 pts</span></li>
+      <li><strong>Scary Movie</strong> <span class="muted">→ #10 · $128,355,283 · 7 pts</span></li>
+      <li><strong>Insidious: Out of the Further</strong> <span class="muted">→ #— · $0 · 0 pts</span></li>
+    </ol>
+    <p class="dark-horse-label">🐴 Dark horses</p>
+    <ul class="dark-horses">
+      <li>Masters of the Universe <span class="muted">→ #— · 0 pt</span></li>
+      <li>Mortal Kombat II <span class="muted">→ #— · 0 pt</span></li>
+      <li>Coyote vs. Acme <span class="muted">→ #— · 0 pt</span></li>
+    </ul>
+  </details>
+
+  <details data-player="radhadr">
+    <summary>radhadr — current 11 pts</summary>
+    <ol class="ranked-picks">
+      <li><strong>Spider-Man: Brand New Day</strong> <span class="muted">→ #— · $0 · 0 pts</span></li>
+      <li><strong>Moana</strong> <span class="muted">→ #4 · $250,619,257 · 5 pts</span></li>
+      <li><strong>Supergirl</strong> <span class="muted">→ #— · $104,827,592 · 0 pts</span></li>
+      <li><strong>Star Wars: The Mandalorian and Grogu</strong> <span class="muted">→ #8 · $180,028,702 · 3 pts</span></li>
+      <li><strong>Animal Farm</strong> <span class="muted">→ #— · $6,249,510 · 0 pts</span></li>
+      <li><strong>The Devil Wears Prada 2</strong> <span class="muted">→ #6 · $221,267,753 · 10 pts</span></li>
+      <li><strong>The Breadwinner</strong> <span class="muted">→ #— · $22,068,146 · 0 pts</span></li>
+      <li><strong>PAW Patrol: The Dino Movie</strong> <span class="muted">→ #— · $0 · 0 pts</span></li>
+      <li><strong>Tom and Jerry: Forbidden Compass</strong> <span class="muted">→ #— · $0 · 0 pts</span></li>
+      <li><strong>Passenger</strong> <span class="muted">→ #— · $18,561,425 · 0 pts</span></li>
+    </ol>
+    <p class="dark-horse-label">🐴 Dark horses</p>
+    <ul class="dark-horses">
+      <li>The Sheep Detectives <span class="muted">→ #— · 0 pt</span></li>
+      <li>Toy Story 5 <span class="muted">→ #1 · 1 pt</span></li>
+      <li>Finding Emily <span class="muted">→ #— · 0 pt</span></li>
+    </ul>
+  </details>
+</section>
+
+<footer>
+  <p>Source: <a href="https://thesummermoviewager.com/help.php">Summer Movie Wager rules</a> · <a href="../data.json">data.json</a></p>
+</footer>
+</body>
+</html>
