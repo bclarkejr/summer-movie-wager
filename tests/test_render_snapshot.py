@@ -130,6 +130,30 @@ def test_scenarios_gated_and_unlinked_when_forecast_off(tmp_path):
     assert 'href="scenarios.html"' not in index             # link hidden
 
 
+def test_scenario_json_script_safe(tmp_path):
+    from datetime import datetime, timezone
+    from summer_movie_wager.render.page import LeaderboardRow, RenderInput, render
+
+    hostile = "</script><script>alert(1)</script>"
+    raw = {
+        "win_prob": {"a": 1.0},
+        "winning_scenarios": {
+            "a": {"films": [hostile] + [f"F{i}" for i in range(9)],
+                  "grid": {"a": [1] * 10}, "totals": {"a": 10},
+                  "win_pct": 100.0, "margin": 10},
+        },
+    }
+    render(tmp_path, RenderInput(
+        generated_at=datetime(2026, 7, 3, tzinfo=timezone.utc),
+        leaderboard=[LeaderboardRow(username="a", current_pts=1, median_pts=1.0,
+                                    p10_pts=0.0, p90_pts=2.0, win_prob=1.0, tie_prob=0.0)],
+        movies=[], player_details=[], raw_snapshot=raw,
+    ))
+    scenarios = (tmp_path / "scenarios.html").read_text()
+    assert hostile not in scenarios          # literal </script> must not appear in the payload
+    assert "\\u003c/script" in scenarios     # escaped form does
+
+
 def test_render_escapes_html_in_scraped_fields(tmp_path: Path):
     # Movie titles/sources are externally-scraped strings. Autoescape must escape
     # any embedded HTML; otherwise a hostile feed could inject script tags.

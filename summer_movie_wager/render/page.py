@@ -14,6 +14,12 @@ _TEMPLATES = Path(__file__).parent / "templates"
 _STATIC = Path(__file__).parent / "static"
 
 
+def _json_for_script(obj: Any) -> str:
+    """JSON for embedding inside a <script> tag: \\u003c-escape '<' so a hostile
+    '</script>' in scraped data can't close the tag."""
+    return json.dumps(obj, default=str).replace("<", "\\u003c")
+
+
 @dataclass(frozen=True)
 class LeaderboardRow:
     username: str
@@ -111,7 +117,7 @@ def render(out_dir: Path, data: RenderInput) -> None:
     scenarios_html = env.get_template("scenarios.html.j2").render(
         generated_at = data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
         theme_css = theme_css,
-        scenario_json = json.dumps(scenario_payload, default=str),
+        scenario_json = _json_for_script(scenario_payload),
         forecast_available = data.forecast_available,
         forecast_unavailable_reason = data.forecast_unavailable_reason,
     )
