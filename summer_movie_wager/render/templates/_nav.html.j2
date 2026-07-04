@@ -1,0 +1,12 @@
+<nav class="site-nav" aria-label="Site pages">
+  {% for href, label, key in [("index.html", "🏆 Leaderboard", "index"),
+                              ("scenarios.html", "🔮 Winning Scenarios", "scenarios"),
+                              ("whatif.html", "🎬 What If?", "whatif")] %}
+    {% if key == "index" or forecast_available %}
+      <a class="nav-pill{{ ' is-active' if active == key }}" href="{{ href }}"
+         {% if active == key %}aria-current="page"{% endif %}>{{ label }}</a>
+    {% else %}
+      <span class="nav-pill is-disabled" title="Unlocks once the forecast is live">{{ label }}</span>
+    {% endif %}
+  {% endfor %}
+</nav>

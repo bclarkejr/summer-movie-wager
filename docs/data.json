@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-06-29",
+  "captured_at": "2026-07-03",
   "site_reported_points": {
     "vivrad": 45,
     "bclarke": 37,
@@ -24,188 +24,32 @@
   "non_zero_projections": 26,
   "projections": [
     {
-      "movie_title": "Masters of the Universe",
-      "median_in_window_gross": 72980045.89168021,
-      "sigma": 0.19999999999999996,
-      "floor": 62026510.0
-    },
-    {
-      "movie_title": "Power Ballad",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "Passenger",
-      "median_in_window_gross": 13997609.091536188,
-      "sigma": 0.45,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "The Odyssey",
-      "median_in_window_gross": 391611906.2442299,
-      "sigma": 0.45,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "The Breadwinner",
-      "median_in_window_gross": 21495226.605475664,
-      "sigma": 0.16666666666666666,
-      "floor": 20100990.0
-    },
-    {
-      "movie_title": "PAW Patrol: The Dino Movie",
+      "movie_title": "Finding Emily",
       "median_in_window_gross": 0.0,
       "sigma": 0.0,
       "floor": 0.0
     },
     {
       "movie_title": "Supergirl",
-      "median_in_window_gross": 117543379.80316079,
-      "sigma": 0.3,
-      "floor": 37102018.0
+      "median_in_window_gross": 103277523.53304234,
+      "sigma": 0.26666666666666666,
+      "floor": 46570096.0
     },
     {
-      "movie_title": "Coyote vs. Acme",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "Scary Movie",
-      "median_in_window_gross": 115105595.75054483,
-      "sigma": 0.19999999999999996,
-      "floor": 103588615.0
-    },
-    {
-      "movie_title": "Evil Dead Burn",
-      "median_in_window_gross": 67768325.10692354,
-      "sigma": 0.45,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "Billie Eilish: Hit Me Hard and Soft",
-      "median_in_window_gross": 19999997.742074337,
-      "sigma": 0.3,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "The Sheep Detectives",
-      "median_in_window_gross": 69616366.66580962,
+      "movie_title": "Mortal Kombat II",
+      "median_in_window_gross": 79743170.9744908,
       "sigma": 0.1,
-      "floor": 65559249.0
+      "floor": 79719161.0
     },
     {
-      "movie_title": "Hokum",
-      "median_in_window_gross": 9499614.79062002,
-      "sigma": 0.2,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "Spider-Man: Brand New Day",
-      "median_in_window_gross": 535807817.14285713,
-      "sigma": 0.45,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "Disclosure Day",
-      "median_in_window_gross": 124998489.08375652,
-      "sigma": 0.23333333333333334,
-      "floor": 94537235.0
-    },
-    {
-      "movie_title": "Star Wars: The Mandalorian and Grogu",
-      "median_in_window_gross": 183534324.0736426,
+      "movie_title": "The Breadwinner",
+      "median_in_window_gross": 20920040.661731955,
       "sigma": 0.13333333333333333,
-      "floor": 175407277.0
+      "floor": 20211911.0
     },
     {
       "movie_title": "I Love Boosters",
       "median_in_window_gross": 11780876.599526696,
-      "sigma": 0.45,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "Toy Story 5",
-      "median_in_window_gross": 535426726.24059093,
-      "sigma": 0.26666666666666666,
-      "floor": 298070670.0
-    },
-    {
-      "movie_title": "Tom and Jerry: Forbidden Compass",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "Minions & Monsters",
-      "median_in_window_gross": 235390225.24599674,
-      "sigma": 0.45,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "Mortal Kombat II",
-      "median_in_window_gross": 79757596.10876903,
-      "sigma": 0.1,
-      "floor": 79708388.0
-    },
-    {
-      "movie_title": "The Amazing Digital Circus: The Last Act",
-      "median_in_window_gross": 51975919.00510488,
-      "sigma": 0.3,
-      "floor": 23421793.0
-    },
-    {
-      "movie_title": "Moana",
-      "median_in_window_gross": 244380212.94409236,
-      "sigma": 0.45,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "The End of Oak Street",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.0,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "Obsession",
-      "median_in_window_gross": 362521772.6110362,
-      "sigma": 0.1,
-      "floor": 233804250.0
-    },
-    {
-      "movie_title": "Animal Farm",
-      "median_in_window_gross": 6249510.335923205,
-      "sigma": 0.2,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "Deep Water",
-      "median_in_window_gross": 0.0,
-      "sigma": 0.45,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "Backrooms",
-      "median_in_window_gross": 196954442.92024377,
-      "sigma": 0.16666666666666666,
-      "floor": 184185938.0
-    },
-    {
-      "movie_title": "Jackass: Best and Last",
-      "median_in_window_gross": 35486238.49837343,
-      "sigma": 0.45,
-      "floor": 0.0
-    },
-    {
-      "movie_title": "The Devil Wears Prada 2",
-      "median_in_window_gross": 221052853.95838043,
-      "sigma": 0.1,
-      "floor": 219981840.0
-    },
-    {
-      "movie_title": "Young Washington",
-      "median_in_window_gross": 99541128.87347013,
       "sigma": 0.45,
       "floor": 0.0
     },
@@ -216,7 +60,133 @@
       "floor": 0.0
     },
     {
-      "movie_title": "Finding Emily",
+      "movie_title": "The Sheep Detectives",
+      "median_in_window_gross": 67422635.44820595,
+      "sigma": 0.1,
+      "floor": 65715487.0
+    },
+    {
+      "movie_title": "Tom and Jerry: Forbidden Compass",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "Spider-Man: Brand New Day",
+      "median_in_window_gross": 535807817.14285713,
+      "sigma": 0.45,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "Minions & Monsters",
+      "median_in_window_gross": 235390225.24599674,
+      "sigma": 0.45,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "Obsession",
+      "median_in_window_gross": 318131196.39820534,
+      "sigma": 0.1,
+      "floor": 238437905.0
+    },
+    {
+      "movie_title": "Power Ballad",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "Deep Water",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.45,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "Evil Dead Burn",
+      "median_in_window_gross": 68176328.57905784,
+      "sigma": 0.45,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "The Amazing Digital Circus: The Last Act",
+      "median_in_window_gross": 51942018.28021884,
+      "sigma": 0.3,
+      "floor": 23421793.0
+    },
+    {
+      "movie_title": "Animal Farm",
+      "median_in_window_gross": 6249510.335923205,
+      "sigma": 0.2,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "PAW Patrol: The Dino Movie",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "Hokum",
+      "median_in_window_gross": 9499614.79062002,
+      "sigma": 0.2,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "Masters of the Universe",
+      "median_in_window_gross": 68081048.89440636,
+      "sigma": 0.16666666666666666,
+      "floor": 62917326.0
+    },
+    {
+      "movie_title": "Toy Story 5",
+      "median_in_window_gross": 467921932.6420156,
+      "sigma": 0.23333333333333334,
+      "floor": 326742954.0
+    },
+    {
+      "movie_title": "Billie Eilish: Hit Me Hard and Soft",
+      "median_in_window_gross": 19999997.742074337,
+      "sigma": 0.3,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "Backrooms",
+      "median_in_window_gross": 194144038.47547582,
+      "sigma": 0.13333333333333333,
+      "floor": 184185938.0
+    },
+    {
+      "movie_title": "Disclosure Day",
+      "median_in_window_gross": 113021928.25722162,
+      "sigma": 0.19999999999999996,
+      "floor": 98008560.0
+    },
+    {
+      "movie_title": "Star Wars: The Mandalorian and Grogu",
+      "median_in_window_gross": 180661868.04127827,
+      "sigma": 0.1,
+      "floor": 176043104.0
+    },
+    {
+      "movie_title": "Passenger",
+      "median_in_window_gross": 13997609.091536188,
+      "sigma": 0.45,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "Scary Movie",
+      "median_in_window_gross": 111512482.50016259,
+      "sigma": 0.16666666666666666,
+      "floor": 104772451.0
+    },
+    {
+      "movie_title": "The End of Oak Street",
+      "median_in_window_gross": 0.0,
+      "sigma": 0.0,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "Coyote vs. Acme",
       "median_in_window_gross": 0.0,
       "sigma": 0.0,
       "floor": 0.0
@@ -226,57 +196,87 @@
       "median_in_window_gross": 2999999.9952063905,
       "sigma": 0.2,
       "floor": 0.0
+    },
+    {
+      "movie_title": "Young Washington",
+      "median_in_window_gross": 99541128.87347013,
+      "sigma": 0.45,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "Moana",
+      "median_in_window_gross": 187527062.157691,
+      "sigma": 0.45,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "Jackass: Best and Last",
+      "median_in_window_gross": 35486238.49837343,
+      "sigma": 0.45,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "The Odyssey",
+      "median_in_window_gross": 391611906.2442299,
+      "sigma": 0.45,
+      "floor": 0.0
+    },
+    {
+      "movie_title": "The Devil Wears Prada 2",
+      "median_in_window_gross": 220695042.21823344,
+      "sigma": 0.1,
+      "floor": 220095574.0
     }
   ],
   "win_prob": {
-    "vivrad": 0.0087,
-    "bclarke": 0.0625,
-    "emsullivan": 0.3928,
-    "brettfern": 0.2028,
-    "mhartje": 0.0175,
-    "carleigh": 0.251,
-    "zmeister": 0.0007,
+    "vivrad": 0.0097,
+    "bclarke": 0.042,
+    "emsullivan": 0.3443,
+    "brettfern": 0.2883,
+    "mhartje": 0.0142,
+    "carleigh": 0.2352,
+    "zmeister": 0.0011,
     "radhadr": 0.0
   },
   "tie_prob": {
-    "vivrad": 0.0039,
-    "bclarke": 0.0122,
-    "emsullivan": 0.0327,
-    "brettfern": 0.0382,
-    "mhartje": 0.0035,
-    "carleigh": 0.042,
+    "vivrad": 0.0025,
+    "bclarke": 0.0076,
+    "emsullivan": 0.0311,
+    "brettfern": 0.0461,
+    "mhartje": 0.0038,
+    "carleigh": 0.0442,
     "zmeister": 0.0004,
     "radhadr": 0.0
   },
   "median_final_pts": {
-    "vivrad": 43.0,
-    "bclarke": 48.0,
-    "emsullivan": 55.0,
-    "brettfern": 53.0,
-    "mhartje": 42.0,
-    "carleigh": 55.0,
-    "zmeister": 39.0,
-    "radhadr": 26.0
+    "vivrad": 44.0,
+    "bclarke": 46.0,
+    "emsullivan": 53.0,
+    "brettfern": 54.0,
+    "mhartje": 41.0,
+    "carleigh": 54.0,
+    "zmeister": 40.0,
+    "radhadr": 27.0
   },
   "p10_final_pts": {
-    "vivrad": 35.0,
-    "bclarke": 39.0,
-    "emsullivan": 46.0,
-    "brettfern": 44.0,
-    "mhartje": 36.0,
-    "carleigh": 45.0,
+    "vivrad": 34.0,
+    "bclarke": 38.0,
+    "emsullivan": 45.0,
+    "brettfern": 43.0,
+    "mhartje": 34.0,
+    "carleigh": 44.0,
     "zmeister": 30.0,
     "radhadr": 19.0
   },
   "p90_final_pts": {
-    "vivrad": 54.0,
-    "bclarke": 58.0,
-    "emsullivan": 64.0,
-    "brettfern": 65.0,
-    "mhartje": 51.0,
-    "carleigh": 65.0,
+    "vivrad": 53.0,
+    "bclarke": 55.0,
+    "emsullivan": 62.0,
+    "brettfern": 66.0,
+    "mhartje": 52.0,
+    "carleigh": 64.10000000000036,
     "zmeister": 49.0,
-    "radhadr": 32.0
+    "radhadr": 30.0
   },
   "winning_scenarios": {
     "vivrad": {
@@ -290,7 +290,7 @@
         "The Devil Wears Prada 2",
         "Backrooms",
         "Star Wars: The Mandalorian and Grogu",
-        "Supergirl"
+        "Young Washington"
       ],
       "grid": {
         "vivrad": [
@@ -303,7 +303,7 @@
           5,
           0,
           3,
-          5
+          0
         ],
         "bclarke": [
           7,
@@ -315,7 +315,7 @@
           3,
           1,
           5,
-          5
+          0
         ],
         "emsullivan": [
           5,
@@ -327,7 +327,7 @@
           5,
           5,
           7,
-          1
+          3
         ],
         "brettfern": [
           13,
@@ -339,7 +339,7 @@
           7,
           0,
           5,
-          7
+          0
         ],
         "mhartje": [
           3,
@@ -351,7 +351,7 @@
           10,
           0,
           3,
-          3
+          0
         ],
         "carleigh": [
           13,
@@ -363,7 +363,7 @@
           7,
           5,
           5,
-          5
+          0
         ],
         "zmeister": [
           13,
@@ -375,7 +375,7 @@
           7,
           0,
           3,
-          3
+          0
         ],
         "radhadr": [
           13,
@@ -387,21 +387,21 @@
           7,
           0,
           3,
-          3
+          0
         ]
       },
       "totals": {
-        "vivrad": 66,
-        "bclarke": 50,
-        "emsullivan": 45,
-        "brettfern": 64,
-        "mhartje": 40,
-        "carleigh": 63,
-        "zmeister": 44,
-        "radhadr": 30
+        "vivrad": 61,
+        "bclarke": 45,
+        "emsullivan": 47,
+        "brettfern": 57,
+        "mhartje": 37,
+        "carleigh": 58,
+        "zmeister": 41,
+        "radhadr": 27
       },
-      "win_pct": 0.9,
-      "margin": 2
+      "win_pct": 1.0,
+      "margin": 3
     },
     "bclarke": {
       "films": [
@@ -414,242 +414,242 @@
         "Backrooms",
         "Moana",
         "Star Wars: The Mandalorian and Grogu",
-        "Supergirl"
-      ],
-      "grid": {
-        "vivrad": [
-          7,
-          7,
-          0,
-          10,
-          5,
-          3,
-          0,
-          5,
-          3,
-          5
-        ],
-        "bclarke": [
-          13,
-          10,
-          0,
-          7,
-          10,
-          5,
-          1,
-          5,
-          5,
-          5
-        ],
-        "emsullivan": [
-          13,
-          7,
-          0,
-          3,
-          3,
-          7,
-          3,
-          3,
-          7,
-          1
-        ],
-        "brettfern": [
-          7,
-          7,
-          0,
-          7,
-          5,
-          10,
-          0,
-          3,
-          5,
-          7
-        ],
-        "mhartje": [
-          7,
-          5,
-          0,
-          3,
-          10,
-          7,
-          0,
-          3,
-          3,
-          3
-        ],
-        "carleigh": [
-          7,
-          7,
-          0,
-          10,
-          10,
-          10,
-          3,
-          3,
-          5,
-          5
-        ],
-        "zmeister": [
-          5,
-          7,
-          0,
-          3,
-          7,
-          5,
-          0,
-          3,
-          3,
-          3
-        ],
-        "radhadr": [
-          1,
-          7,
-          0,
-          0,
-          0,
-          10,
-          0,
-          3,
-          3,
-          3
-        ]
-      },
-      "totals": {
-        "vivrad": 45,
-        "bclarke": 61,
-        "emsullivan": 47,
-        "brettfern": 51,
-        "mhartje": 41,
-        "carleigh": 60,
-        "zmeister": 36,
-        "radhadr": 27
-      },
-      "win_pct": 6.2,
-      "margin": 1
-    },
-    "emsullivan": {
-      "films": [
-        "Toy Story 5",
-        "The Odyssey",
-        "Spider-Man: Brand New Day",
-        "Obsession",
-        "Moana",
-        "The Devil Wears Prada 2",
-        "Minions & Monsters",
-        "Backrooms",
-        "Star Wars: The Mandalorian and Grogu",
         "Disclosure Day"
       ],
       "grid": {
         "vivrad": [
           7,
           7,
+          0,
+          10,
           5,
-          0,
-          7,
-          3,
           3,
           0,
+          5,
           3,
           3
         ],
         "bclarke": [
           13,
-          3,
-          7,
+          10,
           0,
           7,
+          10,
           5,
-          3,
           1,
+          5,
           5,
           7
         ],
         "emsullivan": [
           13,
-          10,
-          10,
+          7,
           0,
+          3,
+          3,
           7,
-          7,
-          10,
-          5,
+          3,
+          3,
           7,
           7
         ],
         "brettfern": [
           7,
           7,
-          5,
           0,
           7,
-          10,
           5,
+          10,
           0,
+          3,
           5,
           5
         ],
         "mhartje": [
           7,
+          5,
+          0,
           3,
+          10,
           7,
           0,
           3,
-          7,
-          7,
-          0,
           3,
           7
         ],
         "carleigh": [
           7,
-          3,
-          5,
+          7,
           0,
-          5,
+          10,
+          10,
           10,
           3,
-          5,
+          3,
           5,
           7
         ],
         "zmeister": [
           5,
-          3,
-          5,
+          7,
           0,
+          3,
           7,
           5,
-          10,
           0,
+          3,
           3,
           0
         ],
         "radhadr": [
           1,
+          7,
           0,
-          5,
           0,
-          3,
+          0,
           10,
           0,
-          0,
+          3,
           3,
           0
         ]
       },
       "totals": {
-        "vivrad": 38,
-        "bclarke": 51,
-        "emsullivan": 76,
-        "brettfern": 51,
-        "mhartje": 44,
-        "carleigh": 50,
-        "zmeister": 38,
-        "radhadr": 22
+        "vivrad": 43,
+        "bclarke": 63,
+        "emsullivan": 53,
+        "brettfern": 49,
+        "mhartje": 45,
+        "carleigh": 62,
+        "zmeister": 33,
+        "radhadr": 24
       },
-      "win_pct": 39.3,
-      "margin": 25
+      "win_pct": 4.2,
+      "margin": 1
+    },
+    "emsullivan": {
+      "films": [
+        "The Odyssey",
+        "Toy Story 5",
+        "Spider-Man: Brand New Day",
+        "Obsession",
+        "The Devil Wears Prada 2",
+        "Minions & Monsters",
+        "Backrooms",
+        "Star Wars: The Mandalorian and Grogu",
+        "Moana",
+        "Young Washington"
+      ],
+      "grid": {
+        "vivrad": [
+          5,
+          10,
+          5,
+          0,
+          3,
+          5,
+          0,
+          3,
+          3,
+          0
+        ],
+        "bclarke": [
+          3,
+          7,
+          7,
+          0,
+          7,
+          3,
+          1,
+          7,
+          3,
+          0
+        ],
+        "emsullivan": [
+          7,
+          7,
+          10,
+          0,
+          10,
+          7,
+          3,
+          10,
+          3,
+          3
+        ],
+        "brettfern": [
+          5,
+          10,
+          5,
+          0,
+          7,
+          7,
+          0,
+          7,
+          3,
+          0
+        ],
+        "mhartje": [
+          3,
+          10,
+          7,
+          0,
+          5,
+          5,
+          0,
+          5,
+          3,
+          0
+        ],
+        "carleigh": [
+          3,
+          10,
+          5,
+          0,
+          7,
+          5,
+          3,
+          7,
+          3,
+          0
+        ],
+        "zmeister": [
+          3,
+          7,
+          5,
+          0,
+          3,
+          7,
+          0,
+          3,
+          3,
+          0
+        ],
+        "radhadr": [
+          0,
+          1,
+          5,
+          0,
+          7,
+          0,
+          0,
+          3,
+          3,
+          0
+        ]
+      },
+      "totals": {
+        "vivrad": 34,
+        "bclarke": 38,
+        "emsullivan": 60,
+        "brettfern": 44,
+        "mhartje": 38,
+        "carleigh": 43,
+        "zmeister": 31,
+        "radhadr": 19
+      },
+      "win_pct": 34.4,
+      "margin": 16
     },
     "brettfern": {
       "films": [
@@ -659,10 +659,10 @@
         "Obsession",
         "Minions & Monsters",
         "The Devil Wears Prada 2",
-        "Moana",
         "Backrooms",
         "Star Wars: The Mandalorian and Grogu",
-        "Supergirl"
+        "Moana",
+        "Scary Movie"
       ],
       "grid": {
         "vivrad": [
@@ -672,10 +672,10 @@
           0,
           7,
           3,
-          7,
           0,
           3,
-          5
+          3,
+          1
         ],
         "bclarke": [
           7,
@@ -684,10 +684,10 @@
           0,
           5,
           5,
-          7,
           1,
-          5,
-          5
+          7,
+          3,
+          1
         ],
         "emsullivan": [
           5,
@@ -697,8 +697,8 @@
           5,
           7,
           3,
-          5,
-          7,
+          10,
+          3,
           1
         ],
         "brettfern": [
@@ -708,10 +708,10 @@
           0,
           10,
           10,
-          3,
           0,
-          5,
-          7
+          7,
+          3,
+          13
         ],
         "mhartje": [
           3,
@@ -720,10 +720,10 @@
           0,
           3,
           7,
-          3,
           0,
+          5,
           3,
-          3
+          13
         ],
         "carleigh": [
           13,
@@ -733,9 +733,9 @@
           7,
           10,
           3,
-          5,
-          5,
-          5
+          7,
+          3,
+          1
         ],
         "zmeister": [
           13,
@@ -744,10 +744,10 @@
           0,
           5,
           5,
-          3,
           0,
           3,
-          3
+          3,
+          7
         ],
         "radhadr": [
           13,
@@ -756,24 +756,24 @@
           0,
           0,
           10,
-          3,
           0,
           3,
-          3
+          3,
+          0
         ]
       },
       "totals": {
-        "vivrad": 58,
-        "bclarke": 47,
-        "emsullivan": 47,
-        "brettfern": 68,
-        "mhartje": 37,
-        "carleigh": 63,
-        "zmeister": 42,
-        "radhadr": 33
+        "vivrad": 50,
+        "bclarke": 41,
+        "emsullivan": 48,
+        "brettfern": 76,
+        "mhartje": 49,
+        "carleigh": 59,
+        "zmeister": 46,
+        "radhadr": 30
       },
-      "win_pct": 20.3,
-      "margin": 5
+      "win_pct": 28.8,
+      "margin": 17
     },
     "mhartje": {
       "films": [
@@ -782,11 +782,11 @@
         "Spider-Man: Brand New Day",
         "Obsession",
         "The Odyssey",
-        "Minions & Monsters",
         "The Devil Wears Prada 2",
         "Backrooms",
         "Star Wars: The Mandalorian and Grogu",
-        "Disclosure Day"
+        "Minions & Monsters",
+        "Scary Movie"
       ],
       "grid": {
         "vivrad": [
@@ -795,11 +795,11 @@
           5,
           0,
           5,
-          5,
-          5,
+          3,
           0,
           3,
-          3
+          3,
+          1
         ],
         "bclarke": [
           3,
@@ -807,11 +807,11 @@
           7,
           0,
           10,
-          3,
-          3,
-          1,
           5,
-          7
+          1,
+          7,
+          3,
+          1
         ],
         "emsullivan": [
           3,
@@ -820,10 +820,10 @@
           0,
           3,
           7,
+          3,
+          10,
           5,
-          5,
-          7,
-          7
+          1
         ],
         "brettfern": [
           3,
@@ -831,11 +831,11 @@
           5,
           0,
           5,
-          7,
-          7,
+          10,
           0,
-          5,
-          5
+          7,
+          3,
+          13
         ],
         "mhartje": [
           13,
@@ -843,11 +843,11 @@
           7,
           0,
           10,
-          5,
-          10,
+          7,
           0,
-          3,
-          7
+          5,
+          7,
+          13
         ],
         "carleigh": [
           5,
@@ -855,11 +855,11 @@
           5,
           0,
           10,
-          5,
+          10,
+          3,
           7,
-          5,
-          5,
-          7
+          3,
+          1
         ],
         "zmeister": [
           3,
@@ -867,11 +867,11 @@
           5,
           0,
           7,
-          7,
-          7,
+          5,
           0,
           3,
-          0
+          5,
+          7
         ],
         "radhadr": [
           7,
@@ -879,25 +879,25 @@
           5,
           0,
           0,
-          0,
-          7,
+          10,
           0,
           3,
+          0,
           0
         ]
       },
       "totals": {
-        "vivrad": 39,
-        "bclarke": 46,
-        "emsullivan": 54,
-        "brettfern": 47,
-        "mhartje": 65,
-        "carleigh": 59,
-        "zmeister": 39,
-        "radhadr": 23
+        "vivrad": 33,
+        "bclarke": 44,
+        "emsullivan": 49,
+        "brettfern": 56,
+        "mhartje": 72,
+        "carleigh": 54,
+        "zmeister": 42,
+        "radhadr": 26
       },
-      "win_pct": 1.8,
-      "margin": 6
+      "win_pct": 1.4,
+      "margin": 16
     },
     "carleigh": {
       "films": [
@@ -907,9 +907,9 @@
         "Minions & Monsters",
         "The Odyssey",
         "The Devil Wears Prada 2",
-        "Moana",
         "Backrooms",
         "Star Wars: The Mandalorian and Grogu",
+        "Moana",
         "Disclosure Day"
       ],
       "grid": {
@@ -920,8 +920,8 @@
           10,
           5,
           3,
-          7,
           0,
+          3,
           3,
           3
         ],
@@ -932,9 +932,9 @@
           7,
           10,
           5,
-          7,
           1,
-          5,
+          7,
+          3,
           7
         ],
         "emsullivan": [
@@ -945,8 +945,8 @@
           3,
           7,
           3,
-          5,
-          7,
+          10,
+          3,
           7
         ],
         "brettfern": [
@@ -956,9 +956,9 @@
           7,
           5,
           10,
-          3,
           0,
-          5,
+          7,
+          3,
           5
         ],
         "mhartje": [
@@ -968,8 +968,8 @@
           3,
           10,
           7,
-          3,
           0,
+          5,
           3,
           7
         ],
@@ -981,8 +981,8 @@
           10,
           10,
           3,
-          5,
-          5,
+          7,
+          3,
           7
         ],
         "zmeister": [
@@ -992,8 +992,8 @@
           3,
           7,
           5,
-          3,
           0,
+          3,
           3,
           0
         ],
@@ -1004,24 +1004,24 @@
           0,
           0,
           10,
-          3,
           0,
+          3,
           3,
           0
         ]
       },
       "totals": {
-        "vivrad": 54,
-        "bclarke": 56,
-        "emsullivan": 47,
-        "brettfern": 58,
-        "mhartje": 46,
+        "vivrad": 50,
+        "bclarke": 54,
+        "emsullivan": 48,
+        "brettfern": 60,
+        "mhartje": 48,
         "carleigh": 73,
         "zmeister": 41,
         "radhadr": 30
       },
-      "win_pct": 25.1,
-      "margin": 15
+      "win_pct": 23.5,
+      "margin": 13
     },
     "zmeister": {
       "films": [

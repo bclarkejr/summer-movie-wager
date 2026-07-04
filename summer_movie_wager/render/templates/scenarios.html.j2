@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>{{ theme_css | safe }}</style>
+<style>{{ nav_css | safe }}</style>
 <style>
 * { box-sizing:border-box; }
 body {
@@ -99,6 +100,7 @@ footer { margin-top:2em; color:var(--footer-color); font-size:.82em; }
 </head>
 <body>
 <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙 Dark</button>
+{% include "_nav.html.j2" %}
 
 <h1>🏆 Winning Scenarios</h1>
 <p class="subtitle">
@@ -124,7 +126,6 @@ footer { margin-top:2em; color:var(--footer-color); font-size:.82em; }
 </div>
 
 <footer>
-  <p><a href="index.html">← Back to the leaderboard</a></p>
   Refreshed {{ generated_at }}.
 </footer>
 

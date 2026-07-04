@@ -103,6 +103,27 @@
   }
 }
 </style>
+<style>/* ── Site nav pills ── */
+.site-nav {
+  display:flex; flex-wrap:wrap; gap:.5em; margin:0 0 1em;
+}
+.nav-pill {
+  font-family:'Nunito',sans-serif; font-size:.95em; font-weight:700;
+  text-decoration:none; color:var(--text); background:var(--bg-card);
+  border:2px solid var(--border); border-radius:50px;
+  padding:.4em 1em; cursor:pointer; transition:background .15s,border-color .15s,transform .1s;
+  display:inline-block;
+}
+.nav-pill:hover:not(.is-disabled) { background:var(--bg-hover); }
+.nav-pill:active:not(.is-disabled) { transform:scale(.96); }
+.nav-pill.is-active {
+  background:var(--accent-soft); border-color:var(--accent); color:var(--accent);
+}
+.nav-pill.is-disabled {
+  color:var(--zero); border-color:var(--border); background:transparent;
+  cursor:not-allowed; opacity:.55;
+}
+</style>
 <style>
 * { box-sizing:border-box; }
 body {
@@ -194,6 +215,24 @@ footer { margin-top:2em; color:var(--footer-color); font-size:.82em; }
 </head>
 <body>
 <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙 Dark</button>
+<nav class="site-nav" aria-label="Site pages">
+  
+    
+      <a class="nav-pill" href="index.html"
+         >🏆 Leaderboard</a>
+    
+  
+    
+      <a class="nav-pill is-active" href="scenarios.html"
+         aria-current="page">🔮 Winning Scenarios</a>
+    
+  
+    
+      <a class="nav-pill" href="whatif.html"
+         >🎬 What If?</a>
+    
+  
+</nav>
 
 <h1>🏆 Winning Scenarios</h1>
 <p class="subtitle">
@@ -219,12 +258,11 @@ footer { margin-top:2em; color:var(--footer-color); font-size:.82em; }
 </div>
 
 <footer>
-  <p><a href="index.html">← Back to the leaderboard</a></p>
-  Refreshed 2026-06-29 23:40 UTC.
+  Refreshed 2026-07-03 20:52 UTC.
 </footer>
 
 <script>
-const DATA = {"standing": ["emsullivan", "carleigh", "brettfern", "bclarke", "vivrad", "mhartje", "zmeister", "radhadr"], "win_prob": {"vivrad": 0.0087, "bclarke": 0.0625, "emsullivan": 0.3928, "brettfern": 0.2028, "mhartje": 0.0175, "carleigh": 0.251, "zmeister": 0.0007, "radhadr": 0.0}, "scenarios": {"vivrad": {"films": ["Spider-Man: Brand New Day", "Toy Story 5", "The Odyssey", "Minions & Monsters", "Obsession", "Moana", "The Devil Wears Prada 2", "Backrooms", "Star Wars: The Mandalorian and Grogu", "Supergirl"], "grid": {"vivrad": [13, 10, 10, 10, 0, 10, 5, 0, 3, 5], "bclarke": [7, 7, 5, 7, 0, 10, 3, 1, 5, 5], "emsullivan": [5, 7, 7, 3, 0, 5, 5, 5, 7, 1], "brettfern": [13, 10, 10, 7, 0, 5, 7, 0, 5, 7], "mhartje": [3, 10, 5, 3, 0, 3, 10, 0, 3, 3], "carleigh": [13, 10, 5, 10, 0, 3, 7, 5, 5, 5], "zmeister": [13, 7, 3, 3, 0, 5, 7, 0, 3, 3], "radhadr": [13, 1, 0, 0, 0, 3, 7, 0, 3, 3]}, "totals": {"vivrad": 66, "bclarke": 50, "emsullivan": 45, "brettfern": 64, "mhartje": 40, "carleigh": 63, "zmeister": 44, "radhadr": 30}, "win_pct": 0.9, "margin": 2}, "bclarke": {"films": ["Toy Story 5", "Spider-Man: Brand New Day", "Obsession", "Minions & Monsters", "The Odyssey", "The Devil Wears Prada 2", "Backrooms", "Moana", "Star Wars: The Mandalorian and Grogu", "Supergirl"], "grid": {"vivrad": [7, 7, 0, 10, 5, 3, 0, 5, 3, 5], "bclarke": [13, 10, 0, 7, 10, 5, 1, 5, 5, 5], "emsullivan": [13, 7, 0, 3, 3, 7, 3, 3, 7, 1], "brettfern": [7, 7, 0, 7, 5, 10, 0, 3, 5, 7], "mhartje": [7, 5, 0, 3, 10, 7, 0, 3, 3, 3], "carleigh": [7, 7, 0, 10, 10, 10, 3, 3, 5, 5], "zmeister": [5, 7, 0, 3, 7, 5, 0, 3, 3, 3], "radhadr": [1, 7, 0, 0, 0, 10, 0, 3, 3, 3]}, "totals": {"vivrad": 45, "bclarke": 61, "emsullivan": 47, "brettfern": 51, "mhartje": 41, "carleigh": 60, "zmeister": 36, "radhadr": 27}, "win_pct": 6.2, "margin": 1}, "emsullivan": {"films": ["Toy Story 5", "The Odyssey", "Spider-Man: Brand New Day", "Obsession", "Moana", "The Devil Wears Prada 2", "Minions & Monsters", "Backrooms", "Star Wars: The Mandalorian and Grogu", "Disclosure Day"], "grid": {"vivrad": [7, 7, 5, 0, 7, 3, 3, 0, 3, 3], "bclarke": [13, 3, 7, 0, 7, 5, 3, 1, 5, 7], "emsullivan": [13, 10, 10, 0, 7, 7, 10, 5, 7, 7], "brettfern": [7, 7, 5, 0, 7, 10, 5, 0, 5, 5], "mhartje": [7, 3, 7, 0, 3, 7, 7, 0, 3, 7], "carleigh": [7, 3, 5, 0, 5, 10, 3, 5, 5, 7], "zmeister": [5, 3, 5, 0, 7, 5, 10, 0, 3, 0], "radhadr": [1, 0, 5, 0, 3, 10, 0, 0, 3, 0]}, "totals": {"vivrad": 38, "bclarke": 51, "emsullivan": 76, "brettfern": 51, "mhartje": 44, "carleigh": 50, "zmeister": 38, "radhadr": 22}, "win_pct": 39.3, "margin": 25}, "brettfern": {"films": ["Spider-Man: Brand New Day", "Toy Story 5", "The Odyssey", "Obsession", "Minions & Monsters", "The Devil Wears Prada 2", "Moana", "Backrooms", "Star Wars: The Mandalorian and Grogu", "Supergirl"], "grid": {"vivrad": [13, 10, 10, 0, 7, 3, 7, 0, 3, 5], "bclarke": [7, 7, 5, 0, 5, 5, 7, 1, 5, 5], "emsullivan": [5, 7, 7, 0, 5, 7, 3, 5, 7, 1], "brettfern": [13, 10, 10, 0, 10, 10, 3, 0, 5, 7], "mhartje": [3, 10, 5, 0, 3, 7, 3, 0, 3, 3], "carleigh": [13, 10, 5, 0, 7, 10, 3, 5, 5, 5], "zmeister": [13, 7, 3, 0, 5, 5, 3, 0, 3, 3], "radhadr": [13, 1, 0, 0, 0, 10, 3, 0, 3, 3]}, "totals": {"vivrad": 58, "bclarke": 47, "emsullivan": 47, "brettfern": 68, "mhartje": 37, "carleigh": 63, "zmeister": 42, "radhadr": 33}, "win_pct": 20.3, "margin": 5}, "mhartje": {"films": ["Moana", "Toy Story 5", "Spider-Man: Brand New Day", "Obsession", "The Odyssey", "Minions & Monsters", "The Devil Wears Prada 2", "Backrooms", "Star Wars: The Mandalorian and Grogu", "Disclosure Day"], "grid": {"vivrad": [3, 10, 5, 0, 5, 5, 5, 0, 3, 3], "bclarke": [3, 7, 7, 0, 10, 3, 3, 1, 5, 7], "emsullivan": [3, 7, 10, 0, 3, 7, 5, 5, 7, 7], "brettfern": [3, 10, 5, 0, 5, 7, 7, 0, 5, 5], "mhartje": [13, 10, 7, 0, 10, 5, 10, 0, 3, 7], "carleigh": [5, 10, 5, 0, 10, 5, 7, 5, 5, 7], "zmeister": [3, 7, 5, 0, 7, 7, 7, 0, 3, 0], "radhadr": [7, 1, 5, 0, 0, 0, 7, 0, 3, 0]}, "totals": {"vivrad": 39, "bclarke": 46, "emsullivan": 54, "brettfern": 47, "mhartje": 65, "carleigh": 59, "zmeister": 39, "radhadr": 23}, "win_pct": 1.8, "margin": 6}, "carleigh": {"films": ["Spider-Man: Brand New Day", "Toy Story 5", "Obsession", "Minions & Monsters", "The Odyssey", "The Devil Wears Prada 2", "Moana", "Backrooms", "Star Wars: The Mandalorian and Grogu", "Disclosure Day"], "grid": {"vivrad": [13, 10, 0, 10, 5, 3, 7, 0, 3, 3], "bclarke": [7, 7, 0, 7, 10, 5, 7, 1, 5, 7], "emsullivan": [5, 7, 0, 3, 3, 7, 3, 5, 7, 7], "brettfern": [13, 10, 0, 7, 5, 10, 3, 0, 5, 5], "mhartje": [3, 10, 0, 3, 10, 7, 3, 0, 3, 7], "carleigh": [13, 10, 0, 10, 10, 10, 3, 5, 5, 7], "zmeister": [13, 7, 0, 3, 7, 5, 3, 0, 3, 0], "radhadr": [13, 1, 0, 0, 0, 10, 3, 0, 3, 0]}, "totals": {"vivrad": 54, "bclarke": 56, "emsullivan": 47, "brettfern": 58, "mhartje": 46, "carleigh": 73, "zmeister": 41, "radhadr": 30}, "win_pct": 25.1, "margin": 15}, "zmeister": {"films": ["Spider-Man: Brand New Day", "Minions & Monsters", "Toy Story 5", "Obsession", "Moana", "The Odyssey", "The Devil Wears Prada 2", "Backrooms", "Star Wars: The Mandalorian and Grogu", "Scary Movie"], "grid": {"vivrad": [13, 5, 7, 0, 7, 3, 5, 0, 3, 1], "bclarke": [7, 7, 5, 0, 7, 7, 3, 1, 5, 1], "emsullivan": [5, 3, 5, 0, 7, 3, 5, 5, 7, 1], "brettfern": [13, 3, 7, 0, 7, 3, 7, 0, 5, 13], "mhartje": [3, 3, 7, 0, 3, 7, 10, 0, 3, 13], "carleigh": [13, 5, 7, 0, 5, 7, 7, 5, 5, 1], "zmeister": [13, 3, 10, 0, 7, 10, 7, 0, 3, 7], "radhadr": [13, 0, 1, 0, 3, 0, 7, 0, 3, 0]}, "totals": {"vivrad": 44, "bclarke": 43, "emsullivan": 41, "brettfern": 58, "mhartje": 49, "carleigh": 55, "zmeister": 60, "radhadr": 27}, "win_pct": 0.1, "margin": 2}, "radhadr": null}};
+const DATA = {"standing": ["brettfern", "carleigh", "emsullivan", "bclarke", "vivrad", "mhartje", "zmeister", "radhadr"], "win_prob": {"vivrad": 0.0097, "bclarke": 0.042, "emsullivan": 0.3443, "brettfern": 0.2883, "mhartje": 0.0142, "carleigh": 0.2352, "zmeister": 0.0011, "radhadr": 0.0}, "scenarios": {"vivrad": {"films": ["Spider-Man: Brand New Day", "Toy Story 5", "The Odyssey", "Minions & Monsters", "Obsession", "Moana", "The Devil Wears Prada 2", "Backrooms", "Star Wars: The Mandalorian and Grogu", "Young Washington"], "grid": {"vivrad": [13, 10, 10, 10, 0, 10, 5, 0, 3, 0], "bclarke": [7, 7, 5, 7, 0, 10, 3, 1, 5, 0], "emsullivan": [5, 7, 7, 3, 0, 5, 5, 5, 7, 3], "brettfern": [13, 10, 10, 7, 0, 5, 7, 0, 5, 0], "mhartje": [3, 10, 5, 3, 0, 3, 10, 0, 3, 0], "carleigh": [13, 10, 5, 10, 0, 3, 7, 5, 5, 0], "zmeister": [13, 7, 3, 3, 0, 5, 7, 0, 3, 0], "radhadr": [13, 1, 0, 0, 0, 3, 7, 0, 3, 0]}, "totals": {"vivrad": 61, "bclarke": 45, "emsullivan": 47, "brettfern": 57, "mhartje": 37, "carleigh": 58, "zmeister": 41, "radhadr": 27}, "win_pct": 1.0, "margin": 3}, "bclarke": {"films": ["Toy Story 5", "Spider-Man: Brand New Day", "Obsession", "Minions & Monsters", "The Odyssey", "The Devil Wears Prada 2", "Backrooms", "Moana", "Star Wars: The Mandalorian and Grogu", "Disclosure Day"], "grid": {"vivrad": [7, 7, 0, 10, 5, 3, 0, 5, 3, 3], "bclarke": [13, 10, 0, 7, 10, 5, 1, 5, 5, 7], "emsullivan": [13, 7, 0, 3, 3, 7, 3, 3, 7, 7], "brettfern": [7, 7, 0, 7, 5, 10, 0, 3, 5, 5], "mhartje": [7, 5, 0, 3, 10, 7, 0, 3, 3, 7], "carleigh": [7, 7, 0, 10, 10, 10, 3, 3, 5, 7], "zmeister": [5, 7, 0, 3, 7, 5, 0, 3, 3, 0], "radhadr": [1, 7, 0, 0, 0, 10, 0, 3, 3, 0]}, "totals": {"vivrad": 43, "bclarke": 63, "emsullivan": 53, "brettfern": 49, "mhartje": 45, "carleigh": 62, "zmeister": 33, "radhadr": 24}, "win_pct": 4.2, "margin": 1}, "emsullivan": {"films": ["The Odyssey", "Toy Story 5", "Spider-Man: Brand New Day", "Obsession", "The Devil Wears Prada 2", "Minions & Monsters", "Backrooms", "Star Wars: The Mandalorian and Grogu", "Moana", "Young Washington"], "grid": {"vivrad": [5, 10, 5, 0, 3, 5, 0, 3, 3, 0], "bclarke": [3, 7, 7, 0, 7, 3, 1, 7, 3, 0], "emsullivan": [7, 7, 10, 0, 10, 7, 3, 10, 3, 3], "brettfern": [5, 10, 5, 0, 7, 7, 0, 7, 3, 0], "mhartje": [3, 10, 7, 0, 5, 5, 0, 5, 3, 0], "carleigh": [3, 10, 5, 0, 7, 5, 3, 7, 3, 0], "zmeister": [3, 7, 5, 0, 3, 7, 0, 3, 3, 0], "radhadr": [0, 1, 5, 0, 7, 0, 0, 3, 3, 0]}, "totals": {"vivrad": 34, "bclarke": 38, "emsullivan": 60, "brettfern": 44, "mhartje": 38, "carleigh": 43, "zmeister": 31, "radhadr": 19}, "win_pct": 34.4, "margin": 16}, "brettfern": {"films": ["Spider-Man: Brand New Day", "Toy Story 5", "The Odyssey", "Obsession", "Minions & Monsters", "The Devil Wears Prada 2", "Backrooms", "Star Wars: The Mandalorian and Grogu", "Moana", "Scary Movie"], "grid": {"vivrad": [13, 10, 10, 0, 7, 3, 0, 3, 3, 1], "bclarke": [7, 7, 5, 0, 5, 5, 1, 7, 3, 1], "emsullivan": [5, 7, 7, 0, 5, 7, 3, 10, 3, 1], "brettfern": [13, 10, 10, 0, 10, 10, 0, 7, 3, 13], "mhartje": [3, 10, 5, 0, 3, 7, 0, 5, 3, 13], "carleigh": [13, 10, 5, 0, 7, 10, 3, 7, 3, 1], "zmeister": [13, 7, 3, 0, 5, 5, 0, 3, 3, 7], "radhadr": [13, 1, 0, 0, 0, 10, 0, 3, 3, 0]}, "totals": {"vivrad": 50, "bclarke": 41, "emsullivan": 48, "brettfern": 76, "mhartje": 49, "carleigh": 59, "zmeister": 46, "radhadr": 30}, "win_pct": 28.8, "margin": 17}, "mhartje": {"films": ["Moana", "Toy Story 5", "Spider-Man: Brand New Day", "Obsession", "The Odyssey", "The Devil Wears Prada 2", "Backrooms", "Star Wars: The Mandalorian and Grogu", "Minions & Monsters", "Scary Movie"], "grid": {"vivrad": [3, 10, 5, 0, 5, 3, 0, 3, 3, 1], "bclarke": [3, 7, 7, 0, 10, 5, 1, 7, 3, 1], "emsullivan": [3, 7, 10, 0, 3, 7, 3, 10, 5, 1], "brettfern": [3, 10, 5, 0, 5, 10, 0, 7, 3, 13], "mhartje": [13, 10, 7, 0, 10, 7, 0, 5, 7, 13], "carleigh": [5, 10, 5, 0, 10, 10, 3, 7, 3, 1], "zmeister": [3, 7, 5, 0, 7, 5, 0, 3, 5, 7], "radhadr": [7, 1, 5, 0, 0, 10, 0, 3, 0, 0]}, "totals": {"vivrad": 33, "bclarke": 44, "emsullivan": 49, "brettfern": 56, "mhartje": 72, "carleigh": 54, "zmeister": 42, "radhadr": 26}, "win_pct": 1.4, "margin": 16}, "carleigh": {"films": ["Spider-Man: Brand New Day", "Toy Story 5", "Obsession", "Minions & Monsters", "The Odyssey", "The Devil Wears Prada 2", "Backrooms", "Star Wars: The Mandalorian and Grogu", "Moana", "Disclosure Day"], "grid": {"vivrad": [13, 10, 0, 10, 5, 3, 0, 3, 3, 3], "bclarke": [7, 7, 0, 7, 10, 5, 1, 7, 3, 7], "emsullivan": [5, 7, 0, 3, 3, 7, 3, 10, 3, 7], "brettfern": [13, 10, 0, 7, 5, 10, 0, 7, 3, 5], "mhartje": [3, 10, 0, 3, 10, 7, 0, 5, 3, 7], "carleigh": [13, 10, 0, 10, 10, 10, 3, 7, 3, 7], "zmeister": [13, 7, 0, 3, 7, 5, 0, 3, 3, 0], "radhadr": [13, 1, 0, 0, 0, 10, 0, 3, 3, 0]}, "totals": {"vivrad": 50, "bclarke": 54, "emsullivan": 48, "brettfern": 60, "mhartje": 48, "carleigh": 73, "zmeister": 41, "radhadr": 30}, "win_pct": 23.5, "margin": 13}, "zmeister": {"films": ["Spider-Man: Brand New Day", "Minions & Monsters", "Toy Story 5", "Obsession", "Moana", "The Odyssey", "The Devil Wears Prada 2", "Backrooms", "Star Wars: The Mandalorian and Grogu", "Scary Movie"], "grid": {"vivrad": [13, 5, 7, 0, 7, 3, 5, 0, 3, 1], "bclarke": [7, 7, 5, 0, 7, 7, 3, 1, 5, 1], "emsullivan": [5, 3, 5, 0, 7, 3, 5, 5, 7, 1], "brettfern": [13, 3, 7, 0, 7, 3, 7, 0, 5, 13], "mhartje": [3, 3, 7, 0, 3, 7, 10, 0, 3, 13], "carleigh": [13, 5, 7, 0, 5, 7, 7, 5, 5, 1], "zmeister": [13, 3, 10, 0, 7, 10, 7, 0, 3, 7], "radhadr": [13, 0, 1, 0, 3, 0, 7, 0, 3, 0]}, "totals": {"vivrad": 44, "bclarke": 43, "emsullivan": 41, "brettfern": 58, "mhartje": 49, "carleigh": 55, "zmeister": 60, "radhadr": 27}, "win_pct": 0.1, "margin": 2}, "radhadr": null}};
 
 const NICE = Object.fromEntries(DATA.standing.map(p => [p, p]));
 

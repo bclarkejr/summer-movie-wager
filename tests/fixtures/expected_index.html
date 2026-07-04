@@ -103,6 +103,27 @@
   }
 }
 
+/* ── Site nav pills ── */
+.site-nav {
+  display:flex; flex-wrap:wrap; gap:.5em; margin:0 0 1em;
+}
+.nav-pill {
+  font-family:'Nunito',sans-serif; font-size:.95em; font-weight:700;
+  text-decoration:none; color:var(--text); background:var(--bg-card);
+  border:2px solid var(--border); border-radius:50px;
+  padding:.4em 1em; cursor:pointer; transition:background .15s,border-color .15s,transform .1s;
+  display:inline-block;
+}
+.nav-pill:hover:not(.is-disabled) { background:var(--bg-hover); }
+.nav-pill:active:not(.is-disabled) { transform:scale(.96); }
+.nav-pill.is-active {
+  background:var(--accent-soft); border-color:var(--accent); color:var(--accent);
+}
+.nav-pill.is-disabled {
+  color:var(--zero); border-color:var(--border); background:transparent;
+  cursor:not-allowed; opacity:.55;
+}
+
 * { box-sizing: border-box; }
 
 body {
@@ -337,11 +358,26 @@ footer a { color: #4ecdc4; }
 })();
 </script>
 <header>
+  <nav class="site-nav" aria-label="Site pages">
+  
+    
+      <a class="nav-pill is-active" href="index.html"
+         aria-current="page">🏆 Leaderboard</a>
+    
+  
+    
+      <a class="nav-pill" href="scenarios.html"
+         >🔮 Winning Scenarios</a>
+    
+  
+    
+      <a class="nav-pill" href="whatif.html"
+         >🎬 What If?</a>
+    
+  
+</nav>
   <h1>Summer Movie Wager 2026</h1>
   <p class="meta">Window 2026-04-30 → 2026-09-07 · refreshed 2026-05-03 14:22 UTC</p>
-
-<p class="meta"><a class="scenarios-link" href="scenarios.html">🏆 See each player's winning scenarios →</a></p>
-
 </header>
 
 <section class="leaderboard card">

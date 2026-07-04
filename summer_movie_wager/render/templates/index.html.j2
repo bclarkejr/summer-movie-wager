@@ -34,11 +34,9 @@
 })();
 </script>
 <header>
+  {% include "_nav.html.j2" %}
   <h1>Summer Movie Wager 2026</h1>
   <p class="meta">Window 2026-04-30 → 2026-09-07 · refreshed {{ generated_at }}</p>
-{% if forecast_available %}
-<p class="meta"><a class="scenarios-link" href="scenarios.html">🏆 See each player's winning scenarios →</a></p>
-{% endif %}
 </header>
 
 <section class="leaderboard card">
