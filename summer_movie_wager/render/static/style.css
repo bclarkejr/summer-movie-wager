@@ -34,7 +34,6 @@ body {
   gap: 0.4em;
 }
 .theme-toggle:hover { transform: scale(1.05); }
-.theme-toggle .icon { font-size: 1.1em; }
 
 header {
   text-align: center;

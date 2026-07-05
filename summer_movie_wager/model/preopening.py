@@ -40,12 +40,15 @@ def project_preopening(
         return 0.0, sigma
 
     # TODO BAC 2026-06-20:
-    # This math isn't quite right. It assumes that the movie is playing for an infinite number of weeks.
-    # While that's mostly fine for a guesstimate, a movie is only playing for ~8 weeks. Anything beyond that
+    # This math isn't quite right. It assumes that the movie is playing for an infinite number of
+    # weeks.
+    # While that's mostly fine for a guesstimate, a movie is only playing for ~8 weeks. Anything
+    # beyond that
     # adds essentially zero gross.
-    # Maybe that's worth considering here? Effectively, find the decay rate to go from the opening weekend
+    # Maybe that's worth considering here? Effectively, find the decay rate to go from the opening
+    # weekend
     # to the total domestic in 8 weeks time.
-    # 
+    #
     # Derive implied week-over-week multiplier so the infinite geometric series
     # sums to total_domestic_estimate when week_1 = opening_weekend_estimate.
     implied_wow = 1.0 - (opening_weekend_estimate / total_domestic_estimate)
@@ -54,10 +57,10 @@ def project_preopening(
 
     week_1_gross = opening_weekend_estimate
     in_window = _sum_weekly(
-        week_1_gross = week_1_gross,
-        wow = implied_wow,
-        start = release_date,
-        end = WINDOW_END,
+        week_1_gross=week_1_gross,
+        wow=implied_wow,
+        start=release_date,
+        end=WINDOW_END,
     )
     in_window = min(in_window, total_domestic_estimate)
 

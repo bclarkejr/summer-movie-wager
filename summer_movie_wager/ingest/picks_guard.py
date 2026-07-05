@@ -15,7 +15,8 @@ def bootstrap_or_validate(
     scraped: dict[str, PlayerPicks],
     snapshot_path: Path,
 ) -> None:
-    """If snapshot file exists, validate scraped picks match it. Otherwise persist scraped as new snapshot."""
+    """If snapshot file exists, validate scraped picks match it. Otherwise persist scraped as new
+    snapshot."""
 
     if not snapshot_path.exists():
         snapshot_path.parent.mkdir(parents=True, exist_ok=True)
@@ -54,9 +55,9 @@ def _read(path: Path) -> dict[str, PlayerPicks]:
     raw = yaml.safe_load(path.read_text()) or {}
     return {
         username: PlayerPicks(
-            username = username,
-            ranked = entry["ranked"],
-            dark_horses = entry["dark_horses"],
+            username=username,
+            ranked=entry["ranked"],
+            dark_horses=entry["dark_horses"],
         )
         for username, entry in raw.items()
     }

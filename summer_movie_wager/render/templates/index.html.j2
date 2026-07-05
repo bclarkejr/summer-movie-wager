@@ -10,29 +10,7 @@
 <style>{{ inline_css | safe }}</style>
 </head>
 <body>
-<button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">
-  <span class="icon" id="themeIcon">🌙</span>
-  <span id="themeLabel">Dark mode</span>
-</button>
-<script>
-(function() {
-  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  var saved = localStorage.getItem('smw-theme');
-  var isDark = saved ? saved === 'dark' : prefersDark;
-  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-  if (isDark) {
-    document.getElementById('themeIcon').textContent = '☀️';
-    document.getElementById('themeLabel').textContent = 'Light mode';
-  }
-  window.toggleTheme = function() {
-    var goingDark = document.documentElement.getAttribute('data-theme') !== 'dark';
-    document.documentElement.setAttribute('data-theme', goingDark ? 'dark' : 'light');
-    document.getElementById('themeIcon').textContent = goingDark ? '☀️' : '🌙';
-    document.getElementById('themeLabel').textContent = goingDark ? 'Light mode' : 'Dark mode';
-    localStorage.setItem('smw-theme', goingDark ? 'dark' : 'light');
-  };
-})();
-</script>
+{% include "_theme.html.j2" %}
 <header>
   {% include "_nav.html.j2" %}
   <h1>Summer Movie Wager 2026</h1>

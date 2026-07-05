@@ -2,16 +2,21 @@ from datetime import date
 
 import pytest
 
-from summer_movie_wager.model.decay import project_decay, _week1_fraction_earned, _calibrate_week_1, _sum_weekly_remaining
+from summer_movie_wager.model.decay import (
+    _calibrate_week_1,
+    _sum_weekly_remaining,
+    _week1_fraction_earned,
+    project_decay,
+)
 from summer_movie_wager.types import Category
 
 
 def test_just_opened_uses_default_wow_and_high_sigma():
     # Movie opened 6 days ago (Monday Apr 27) with $50M earned.
-    # DOW weights for Mon–Sat = 0.79 → week_1_gross ≈ 63.3M.
+    # DOW weights for Mon-Sat = 0.79 → week_1_gross ≈ 63.3M.
     # Remaining of week 1 (Sunday = 0.21): +13.3M.
     # ~17 weeks remaining at wow=0.55: 63.3M * 1.22 ≈ 77.2M.
-    # Total ≈ 140.5M → assertion window 120M–165M.
+    # Total ≈ 140.5M → assertion window 120M-165M.
     gross, sigma = project_decay(
         release_date=date(2026, 4, 27),
         today=date(2026, 5, 3),
@@ -52,11 +57,11 @@ def test_observed_history_pulls_wow_toward_observed():
     # Movie observed dropping 30% week-over-week (wow=0.70) for 6 snapshots.
     # Default is 0.55. Blended fully observed (n=6 → weight 1.0) → wow=0.70.
     history = [
-        (date(2026, 5, 8), 60_000_000),   # week 1 cumulative
+        (date(2026, 5, 8), 60_000_000),  # week 1 cumulative
         (date(2026, 5, 15), 102_000_000),  # +42M (week 2)
         (date(2026, 5, 22), 131_400_000),  # +29.4M (week 3)
         (date(2026, 5, 29), 152_000_000),  # +20.6M (week 4)
-        (date(2026, 6, 5), 166_400_000),   # +14.4M (week 5)
+        (date(2026, 6, 5), 166_400_000),  # +14.4M (week 5)
         (date(2026, 6, 12), 176_500_000),  # +10.1M (week 6)
     ]
     gross_observed, _ = project_decay(
@@ -135,7 +140,7 @@ def test_release_date_defaults_to_today_projects_forward():
 
 
 def test_week1_fraction_earned_thursday_open_four_days():
-    # Mandalorian scenario: opened Thursday May 21, 4 days elapsed (Thu–Sun)
+    # Mandalorian scenario: opened Thursday May 21, 4 days elapsed (Thu-Sun)
     # Thu=0.06, Fri=0.22, Sat=0.26, Sun=0.22 → 0.76
     frac = _week1_fraction_earned(date(2026, 5, 21), 4)
     assert frac == pytest.approx(0.76, abs=0.001)
@@ -165,7 +170,7 @@ def test_week1_fraction_earned_monday_open_four_days():
 
 
 def test_calibrate_week1_friday_open_four_days():
-    # Fri May 22, 4 days elapsed (Fri–Mon, Memorial Day weekend)
+    # Fri May 22, 4 days elapsed (Fri-Mon, Memorial Day weekend)
     # Fri=0.22, Sat=0.26, Sun=0.22, Mon=0.07 → 0.77
     # week_1_gross should be 102M / 0.77 ≈ 132.5M
     w1 = _calibrate_week_1(
@@ -203,10 +208,10 @@ def test_calibrate_week1_second_week_partial_uses_uniform():
 
 
 def test_projection_friday_open_not_inflated():
-    # Mandalorian scenario: Fri May 22 open, 4 days in (Fri–Mon), $102M, WIDE.
+    # Mandalorian scenario: Fri May 22 open, 4 days in (Fri-Mon), $102M, WIDE.
     # Measuring "through Monday" = Tuesday date (4-day difference).
     # At wow=0.55 default, corrected DOW weights give ~$298M (vs ~$529M pre-fix).
-    # The 280M–310M window guards against regression to the inflated pre-fix output.
+    # The 280M-310M window guards against regression to the inflated pre-fix output.
     gross, sigma = project_decay(
         release_date=date(2026, 5, 22),
         today=date(2026, 5, 26),  # Tuesday: 4 days after Friday
@@ -214,7 +219,9 @@ def test_projection_friday_open_not_inflated():
         category=Category.WIDE,
         observed_history=[],
     )
-    assert 280_000_000 < gross < 310_000_000, f"Projection {gross/1e6:.0f}M is outside expected range"
+    assert 280_000_000 < gross < 310_000_000, (
+        f"Projection {gross / 1e6:.0f}M is outside expected range"
+    )
     assert gross > 102_000_000, "Projection must exceed current gross"
     assert sigma == pytest.approx(0.30)
 

@@ -160,7 +160,6 @@ body {
   gap: 0.4em;
 }
 .theme-toggle:hover { transform: scale(1.05); }
-.theme-toggle .icon { font-size: 1.1em; }
 
 header {
   text-align: center;
@@ -334,26 +333,20 @@ footer a { color: #4ecdc4; }
 </style>
 </head>
 <body>
-<button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">
-  <span class="icon" id="themeIcon">🌙</span>
-  <span id="themeLabel">Dark mode</span>
-</button>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙 Dark</button>
 <script>
-(function() {
-  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  var saved = localStorage.getItem('smw-theme');
-  var isDark = saved ? saved === 'dark' : prefersDark;
-  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-  if (isDark) {
-    document.getElementById('themeIcon').textContent = '☀️';
-    document.getElementById('themeLabel').textContent = 'Light mode';
+(function(){
+  const tgl = document.getElementById("themeToggle");
+  function apply(t){
+    document.documentElement.setAttribute("data-theme", t);
+    tgl.textContent = t === "dark" ? "☀️ Light" : "🌙 Dark";
   }
-  window.toggleTheme = function() {
-    var goingDark = document.documentElement.getAttribute('data-theme') !== 'dark';
-    document.documentElement.setAttribute('data-theme', goingDark ? 'dark' : 'light');
-    document.getElementById('themeIcon').textContent = goingDark ? '☀️' : '🌙';
-    document.getElementById('themeLabel').textContent = goingDark ? 'Light mode' : 'Dark mode';
-    localStorage.setItem('smw-theme', goingDark ? 'dark' : 'light');
+  apply(localStorage.getItem("smw-theme")
+        || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+  tgl.onclick = () => {
+    const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    localStorage.setItem("smw-theme", next);
+    apply(next);
   };
 })();
 </script>

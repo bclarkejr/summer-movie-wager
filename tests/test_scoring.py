@@ -96,7 +96,7 @@ def test_combined_realistic_scenario():
         dark_horses=["DARK_HIT", "DH2", "DH3"],
     )
     top_10 = [
-        "PERFECT_1",   # picked #1, actual #1 → 13
+        "PERFECT_1",  # picked #1, actual #1 → 13
         "TOP10_BUT_FAR",  # picked #6, actual #2 → in top 10 off by 4 → 3
         "A3",
         "A4",
@@ -133,7 +133,7 @@ def test_empty_top_titles_scores_zero():
 def _picks_for_breakdown() -> PlayerPicks:
     return PlayerPicks(
         username="t",
-        ranked=[f"R{i}" for i in range(1, 11)],   # R1..R10 predicted #1..#10
+        ranked=[f"R{i}" for i in range(1, 11)],  # R1..R10 predicted #1..#10
         dark_horses=["D1", "D2", "D3"],
     )
 
@@ -145,9 +145,9 @@ def test_breakdown_sums_to_score_player():
     b = score_breakdown(picks, top)
     assert len(b) == len(top)
     assert sum(b) == score_player(picks, top)
-    assert b[0] == 13          # R1 exact at endpoint #1
-    assert b[1] == 7           # R3 predicted #3, actual #2 -> off by 1
-    assert b[4] == 1           # dark horse D2 landed at #5
+    assert b[0] == 13  # R1 exact at endpoint #1
+    assert b[1] == 7  # R3 predicted #3, actual #2 -> off by 1
+    assert b[4] == 1  # dark horse D2 landed at #5
 
 
 def test_breakdown_zero_for_absent_picks():

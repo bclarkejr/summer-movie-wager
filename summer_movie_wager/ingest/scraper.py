@@ -21,14 +21,20 @@ PLAYALONG_URL = (
 # Canonical lowercase usernames for the wager group. The site sometimes returns
 # the display-cased version (e.g. "RadhaDR") in id attributes; we normalize to lowercase.
 _GROUP_USERNAMES = {
-    "bclarke", "vivrad", "zmeister", "brettfern",
-    "carleigh", "radhadr", "emsullivan", "mhartje",
+    "bclarke",
+    "vivrad",
+    "zmeister",
+    "brettfern",
+    "carleigh",
+    "radhadr",
+    "emsullivan",
+    "mhartje",
 }
 
 
 def fetch_snapshot(*, captured_at: date | None = None, timeout: float = 30.0) -> SiteSnapshot:
     """Fetch and parse the live play-along page."""
-    
+
     if captured_at is None:
         captured_at = date.today()
     response = httpx.get(PLAYALONG_URL, timeout=timeout, follow_redirects=True)
@@ -59,10 +65,10 @@ def parse_snapshot(html_text: str, *, captured_at: date) -> SiteSnapshot:
     cumulative = _parse_cumulative_grosses(tree)
     site_points = _parse_site_reported_points(tree)
     return SiteSnapshot(
-        captured_at = captured_at,
-        players = players,
-        cumulative_grosses = cumulative,
-        site_reported_points = site_points,
+        captured_at=captured_at,
+        players=players,
+        cumulative_grosses=cumulative,
+        site_reported_points=site_points,
     )
 
 
@@ -83,7 +89,7 @@ def _parse_players(tree: HTMLParser) -> dict[str, PlayerPicks]:
         table_id = table.attributes.get("id", "") or ""
         if not table_id.startswith("scTable_"):
             continue
-        username = table_id[len("scTable_"):]
+        username = table_id[len("scTable_") :]
         norm = username.lower()
         if norm not in _GROUP_USERNAMES:
             continue
@@ -91,9 +97,9 @@ def _parse_players(tree: HTMLParser) -> dict[str, PlayerPicks]:
         if len(ranked) != 10 or len(dark_horses) != 3:
             continue
         players[norm] = PlayerPicks(
-            username = norm,
-            ranked = ranked,
-            dark_horses = dark_horses,
+            username=norm,
+            ranked=ranked,
+            dark_horses=dark_horses,
         )
     return players
 
@@ -138,7 +144,8 @@ def _extract_picks_from_table(table: Node) -> tuple[list[str], list[str]]:
 
 
 def _parse_cumulative_grosses(tree: HTMLParser) -> dict[str, float]:
-    """Read the top-N gross table: `<td class="mw name">TITLE</td><td class="mw result">$AMOUNT</td>`."""
+    """Read the top-N gross table: `<td class="mw name">TITLE</td><td class="mw
+    result">$AMOUNT</td>`."""
 
     grosses: dict[str, float] = {}
     table = tree.css_first("table.toptengross, table.mw.toptengross")
@@ -184,7 +191,8 @@ def _parse_dollar_amount(text: str) -> float | None:
 def _parse_site_reported_points(tree: HTMLParser) -> dict[str, int]:
     """Read standings from `<table class="mw totalscoretable">`.
 
-    Each row: `<td class="mw pos">N.</td><td class="mw name">USERNAME</td>...<td class="mw result">SCORE</td>`.
+    Each row: `<td class="mw pos">N.</td><td class="mw name">USERNAME</td>...<td class="mw
+    result">SCORE</td>`.
     """
 
     found: dict[str, int] = {}

@@ -6,7 +6,7 @@ import argparse
 import json
 import math
 import sys
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -55,8 +55,7 @@ def _build_raw_sim_fields(
         raw["p10_final_pts"] = sim.p10_final_pts
         raw["p90_final_pts"] = sim.p90_final_pts
         raw["winning_scenarios"] = {
-            u: (s.model_dump() if s is not None else None)
-            for u, s in sim.winning_scenarios.items()
+            u: (s.model_dump() if s is not None else None) for u, s in sim.winning_scenarios.items()
         }
     else:
         raw["forecast_unavailable_reason"] = forecast_unavailable_reason
@@ -73,20 +72,29 @@ def main(argv: list[str] | None = None) -> int:
     """
     Run the full pipeline to refresh the site.  There are 8 steps to the pipeline:
 
-    1. fetch_snapshot:  Scrape thesummermoviewager.com to get the current state of the game (picks, cumulative grosses, and reported points).
-    2. bootstrap_or_validate:  Validate that the picks we have in data/picks_snapshot_2026.yaml match what we scraped from the site.
+    1. fetch_snapshot:  Scrape thesummermoviewager.com to get the current state of the game (picks,
+    cumulative grosses, and reported points).
+    2. bootstrap_or_validate:  Validate that the picks we have in data/picks_snapshot_2026.yaml
+    match what we scraped from the site.
     3. _normalize_movies:  Normalize the movie data from the snapshot, overrides,
-         and preopening projections into a single dictionary of movies with their release dates, status, category, and cumulative gross.
-    4. _project_all:  For each movie, project its in-window gross and uncertainty (sigma) based on its status and available data.
-         For IN_THEATERS movies, use the decay model.  For PRE_RELEASE movies with an analyst entry, use the preopening projection model.
+         and preopening projections into a single dictionary of movies with their release dates,
+         status, category, and cumulative gross.
+    4. _project_all:  For each movie, project its in-window gross and uncertainty (sigma) based on
+    its status and available data.
+         For IN_THEATERS movies, use the decay model.  For PRE_RELEASE movies with an analyst entry,
+         use the preopening projection model.
          For other PRE_RELEASE movies, project zero gross.
-    5. simulate_season:  If there are at least 25 movies with non-zero projections, simulate the season 10,000 times to estimate each player's win probability and final points distribution.
-    6. _validate_against_site:  Compare our computed current points against the site's reported points to ensure our scoring engine is correct.
+    5. simulate_season:  If there are at least 25 movies with non-zero projections, simulate the
+    season 10,000 times to estimate each player's win probability and final points distribution.
+    6. _validate_against_site:  Compare our computed current points against the site's reported
+    points to ensure our scoring engine is correct.
     7. render:  Render the HTML page using the leaderboard, movie rows, and player details.
-    8. _append_box_office_history and _append_forecast_history:  Append the current box office and forecast data to history files for future reference.
+    8. _append_box_office_history and _append_forecast_history:  Append the current box office and
+    forecast data to history files for future reference.
     """
 
-    # If --local is passed, we don't append to history files.  This is useful for testing the pipeline without causing issues with our decay model.
+    # If --local is passed, we don't append to history files.  This is useful for testing the
+    # pipeline without causing issues with our decay model.
     parser = argparse.ArgumentParser(description="Refresh the Summer Movie Wager site")
     parser.add_argument(
         "--local",
@@ -95,7 +103,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    # Code hits thesummermoviewager.com to scrape the current state of the game.  This is used to validate our scoring engine and to get the current cumulative grosses for each movie.
+    # Code hits thesummermoviewager.com to scrape the current state of the game.  This is used to
+    # validate our scoring engine and to get the current cumulative grosses for each movie.
     today = date.today()
     print(f"[build] fetching site snapshot ({today})", file=sys.stderr)
     snapshot = fetch_snapshot(captured_at=today)
@@ -104,8 +113,11 @@ def main(argv: list[str] | None = None) -> int:
     print("[build] validating picks against snapshot", file=sys.stderr)
     bootstrap_or_validate(snapshot.players, DATA_DIR / "picks_snapshot_2026.yaml")
 
-    # This is the real value-add of the pipeline.  Using the week-over-week decay model and preopening projections, we can start to guess what each film will gross in the wager window.
-    # Once we have 25 projections (i.e., once we have an industry projection for Spider-Man: Brand New Day), we simulate the season and estimate each player's win probability and final points distribution.
+    # This is the real value-add of the pipeline.  Using the week-over-week decay model and
+    # preopening projections, we can start to guess what each film will gross in the wager window.
+    # Once we have 25 projections (i.e., once we have an industry projection for Spider-Man: Brand
+    # New Day), we simulate the season and estimate each player's win probability and final points
+    # distribution.
     overrides = _load_yaml(DATA_DIR / "movies_overrides.yaml")
     preopening_raw = _load_yaml(DATA_DIR / "preopening_projections.yaml")
     preopening = _parse_preopening(preopening_raw)
@@ -123,8 +135,8 @@ def main(argv: list[str] | None = None) -> int:
         sim = simulate_season(
             list(snapshot.players.values()),
             projections,
-            n_trials = 10_000,
-            seed = 20260907,
+            n_trials=10_000,
+            seed=20260907,
         )
     else:
         forecast_unavailable_reason = (
@@ -136,11 +148,11 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
 
-    # Calculate the current points for each player based on the current top 10 movies and validate against thesummermoviewager.com reported points.
+    # Calculate the current points for each player based on the current top 10 movies and validate
+    # against thesummermoviewager.com reported points.
     current_top10 = _current_top_10(snapshot.cumulative_grosses)
     current_pts = {
-        username: score_player(picks, current_top10)
-        for username, picks in snapshot.players.items()
+        username: score_player(picks, current_top10) for username, picks in snapshot.players.items()
     }
     _validate_against_site(current_pts, snapshot.site_reported_points)
 
@@ -157,12 +169,14 @@ def main(argv: list[str] | None = None) -> int:
         "non_zero_projections": non_zero,
         "projections": [p.model_dump() for p in projections],
     }
-    _build_raw_sim_fields(raw, sim, snapshot.players, forecast_available, forecast_unavailable_reason)
+    _build_raw_sim_fields(
+        raw, sim, snapshot.players, forecast_available, forecast_unavailable_reason
+    )
 
     render(
         DOCS_DIR,
         RenderInput(
-            generated_at=datetime.now(timezone.utc),
+            generated_at=datetime.now(UTC),
             leaderboard=leaderboard,
             movies=movie_rows,
             player_details=player_details,
@@ -172,7 +186,8 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
 
-    # Last step: append the current box office and forecast data to history files for future reference.
+    # Last step: append the current box office and forecast data to history files for future
+    # reference.
     # This ensures our decay model has historical information to see week-over-week trends.
     # It is skipped if --local is passed.
     if not args.local:
@@ -192,10 +207,11 @@ def _load_yaml(path: Path) -> dict[str, Any]:
 
 def _parse_preopening(raw: dict[str, Any]) -> dict[str, PreopeningEntry]:
     """
-    After parsing the `preopening_projections.yaml` file, we need to convert the raw dictionary into a dictionary of PreopeningEntry objects.
+    After parsing the `preopening_projections.yaml` file, we need to convert the raw dictionary into
+    a dictionary of PreopeningEntry objects.
     This function handles the conversion and validation of the data.
     """
-    
+
     out: dict[str, PreopeningEntry] = {}
     for title, entry in raw.items():
         ow = entry.get("opening_weekend_estimate")
@@ -204,13 +220,13 @@ def _parse_preopening(raw: dict[str, Any]) -> dict[str, PreopeningEntry]:
         src = entry.get("source")
         as_of = entry.get("as_of")
         out[title] = PreopeningEntry(
-            release_date = date.fromisoformat(str(entry["release_date"])),
-            opening_weekend_estimate = float(ow) if ow is not None else None,
-            total_domestic_estimate = float(td) if td is not None else None,
-            confidence = Confidence(conf) if conf is not None else None,
-            source = str(src) if src is not None else None,
-            as_of = date.fromisoformat(str(as_of)) if as_of is not None else None,
-            notes = str(entry.get("notes", "")),
+            release_date=date.fromisoformat(str(entry["release_date"])),
+            opening_weekend_estimate=float(ow) if ow is not None else None,
+            total_domestic_estimate=float(td) if td is not None else None,
+            confidence=Confidence(conf) if conf is not None else None,
+            source=str(src) if src is not None else None,
+            as_of=date.fromisoformat(str(as_of)) if as_of is not None else None,
+            notes=str(entry.get("notes", "")),
         )
     return out
 
@@ -223,14 +239,20 @@ def _normalize_movies(
     today: date,
 ) -> dict[str, dict[str, Any]]:
     """
-    Given three sources of movie data (snapshot, overrides, and preopening projections), insert all distinct movies into a single dictionary of movies.
-    The dictionary is then populated with their canonical title, release date, status, category, and cumulative gross.
-    Cumulative gross is taken from the snapshot.  The cumulative gross will be zero for movies that have not yet been released or have no reported gross.
+    Given three sources of movie data (snapshot, overrides, and preopening projections), insert all
+    distinct movies into a single dictionary of movies.
+    The dictionary is then populated with their canonical title, release date, status, category, and
+    cumulative gross.
+    Cumulative gross is taken from the snapshot.  The cumulative gross will be zero for movies that
+    have not yet been released or have no reported gross.
     """
 
-    # Build a set of all "candidate movie titles" from the snapshot, preopening projections, and overrides.
-    # Candidates are any movie that is either picked by a player, has a preopening projection, or has a cumulative gross reported by the site.
-    # Candidates are not all movies that have been released, just movies that are relevant to the wager.
+    # Build a set of all "candidate movie titles" from the snapshot, preopening projections, and
+    # overrides.
+    # Candidates are any movie that is either picked by a player, has a preopening projection, or
+    # has a cumulative gross reported by the site.
+    # Candidates are not all movies that have been released, just movies that are relevant to the
+    # wager.
     movies: dict[str, dict[str, Any]] = {}
     candidates: set[str] = set()
     for picks in snapshot.players.values():
@@ -238,7 +260,8 @@ def _normalize_movies(
     candidates.update(preopening.keys())
     candidates.update(snapshot.cumulative_grosses.keys())
 
-    # For each movie that might score, determine its canonical title, release date, status, category, and (most importantly) cumulative gross.
+    # For each movie that might score, determine its canonical title, release date, status,
+    # category, and (most importantly) cumulative gross.
     for title in candidates:
         ov = overrides.get(title, {}) or {}
         canonical = ov.get("alias_of", title)
@@ -273,6 +296,16 @@ def _normalize_movies(
     return movies
 
 
+def _has_complete_estimate(entry: PreopeningEntry) -> bool:
+    """All three model inputs must be present to project; a partial entry (e.g. a
+    placeholder with only an opening estimate) is treated as no projection."""
+    return (
+        entry.opening_weekend_estimate is not None
+        and entry.total_domestic_estimate is not None
+        and entry.confidence is not None
+    )
+
+
 def _project_all(
     movies: dict[str, dict[str, Any]],
     preopening: dict[str, PreopeningEntry],
@@ -285,16 +318,16 @@ def _project_all(
         if m["status"] == MovieStatus.IN_THEATERS:
             obs = history.get(title, [])
             gross, sigma = project_decay(
-                release_date = m["release_date"],
-                today = today,
-                cumulative_gross_to_date = m["cumulative"],
-                category = m["category"],
-                observed_history = obs,
+                release_date=m["release_date"],
+                today=today,
+                cumulative_gross_to_date=m["cumulative"],
+                category=m["category"],
+                observed_history=obs,
             )
         elif (
             m["status"] == MovieStatus.PRE_RELEASE
             and title in preopening
-            and preopening[title].opening_weekend_estimate is not None
+            and _has_complete_estimate(preopening[title])
         ):
             entry = preopening[title]
             gross, sigma = project_preopening(
@@ -333,7 +366,7 @@ def _warn_missing_projections(
     for title, m in movies.items():
         if m["status"] != MovieStatus.PRE_RELEASE:
             continue
-        if title in preopening and preopening[title].opening_weekend_estimate is not None:
+        if title in preopening and _has_complete_estimate(preopening[title]):
             continue
         if m["release_date"] > WINDOW_END:
             # Legitimately won't score — no analyst entry needed.
@@ -350,18 +383,22 @@ def _warn_missing_projections(
 
 def _load_history() -> dict[str, list[tuple[date, float]]]:
     """
-    To keep the decay model honest, we need to maintain a history of cumulative grosses for each movie.  This allows the decay model to see week-over-week trends and adjust its projections accordingly.
-    We store the history weekly in `data/box_office_history.jsonl`.  This function loads the history from `data/box_office_history.jsonl`.
+    To keep the decay model honest, we need to maintain a history of cumulative grosses for each
+    movie.  This allows the decay model to see week-over-week trends and adjust its projections
+    accordingly.
+    We store the history weekly in `data/box_office_history.jsonl`.  This function loads the history
+    from `data/box_office_history.jsonl`.
     """
 
     path = DATA_DIR / "box_office_history.jsonl"
     if not path.exists():
         print(
-            f"[build] WARNING: Unable to load history file at {path}.  The decay model will not have historical data to inform its projections.",
+            f"[build] WARNING: Unable to load history file at {path}.  "
+            "The decay model will not have historical data to inform its projections.",
             file=sys.stderr,
         )
         return {}
-    
+
     history: dict[str, list[tuple[date, float]]] = {}
     for line in path.read_text().splitlines():
         if not line.strip():
@@ -390,7 +427,8 @@ def _validate_against_site(
     computed: dict[str, int],
     site: dict[str, int],
 ) -> None:
-    """Compare our computed current points against thesummermoviewager.com reported points to ensure our scoring engine is correct."""
+    """Compare our computed current points against thesummermoviewager.com reported points to ensure
+    our scoring engine is correct."""
 
     diffs = []
     for username, site_score in site.items():
@@ -411,7 +449,8 @@ def _build_leaderboard(
     current_pts: dict[str, int],
 ) -> list[LeaderboardRow]:
     """
-    Build the leaderboard rows for rendering the HTML page.  If a simulation is available, use the median points from the simulation to rank and sort players.
+    Build the leaderboard rows for rendering the HTML page.  If a simulation is available, use the
+    median points from the simulation to rank and sort players.
     If no simulation is available, fall back to the current points.
     """
 
@@ -441,7 +480,7 @@ def _build_leaderboard(
                     tie_prob=sim.tie_prob[username],
                 )
             )
-            
+
     if sim is None:
         # No forecast → fall back to current points order.
         rows.sort(key=lambda r: r.current_pts, reverse=True)
@@ -464,15 +503,18 @@ def _build_movie_rows(
     projections: list[Projection],
 ) -> list[MovieRow]:
     """
-    Build the movie rows for rendering the HTML page.  Each row contains the movie title, release date, status, projected gross (median, p10, p90), cumulative gross to date, and source of the projection.
-    Movies are ordered by their projected gross (highest first), then by release date (earliest first).  Movies with no projection (median=0) will be sorted by release date.
+    Build the movie rows for rendering the HTML page.  Each row contains the movie title, release
+    date, status, projected gross (median, p10, p90), cumulative gross to date, and source of the
+    projection.
+    Movies are ordered by their projected gross (highest first), then by release date (earliest
+    first).  Movies with no projection (median=0) will be sorted by release date.
     """
 
     proj_by_title = {p.movie_title: p for p in projections}
     rows: list[MovieRow] = []
     for title, m in movies.items():
         proj = proj_by_title.get(title)
-        
+
         # If no projection, then just add the movie and continue
         if proj is None or proj.median_in_window_gross == 0:
             if m["status"] == MovieStatus.PRE_RELEASE and m["release_date"] > WINDOW_END:
@@ -519,8 +561,9 @@ def _build_movie_rows(
                 source=src,
             )
         )
-    
-    # The second sort takes precedence, so movies are primarily sorted by projected gross (highest first) and secondarily by release date (soonest first).
+
+    # The second sort takes precedence, so movies are primarily sorted by projected gross (highest
+    # first) and secondarily by release date (soonest first).
     rows.sort(key=lambda r: r.release_date)
     rows.sort(key=lambda r: r.median_in_window_gross, reverse=True)
     return rows
@@ -533,10 +576,14 @@ def _build_player_details(
     sim: Any | None,
 ) -> list[PlayerDetail]:
     """
-    Each player detail contains the player's username, their ranked picks with projection details, and their dark horse picks with projection details.
-    If a simulation is available, then the player's median points from the simulation is included.  If no simulation is available, median points is None.
-    The player's ranked and dark horse picks include the pick's projected rank and projected gross, and the user's projected points for the pick.
-    Players are ordered by their median points if a simulation is available, otherwise by their current points.
+    Each player detail contains the player's username, their ranked picks with projection details,
+    and their dark horse picks with projection details.
+    If a simulation is available, then the player's median points from the simulation is included.
+    If no simulation is available, median points is None.
+    The player's ranked and dark horse picks include the pick's projected rank and projected gross,
+    and the user's projected points for the pick.
+    Players are ordered by their median points if a simulation is available, otherwise by their
+    current points.
     """
 
     proj_by_title = {p.movie_title: p for p in projections}
@@ -592,11 +639,13 @@ def _pick_detail(
 
     proj = proj_by_title.get(title)
 
-    # This is the key.  Based on the picks projected gross (and all other movies' projected grosses), we can determine the pick's projected rank and projected points.
-    # This allows us to project the points for each pick and by extension, the player's total projected points at the end of the wager.
+    # This is the key.  Based on the picks projected gross (and all other movies' projected
+    # grosses), we can determine the pick's projected rank and projected points.
+    # This allows us to project the points for each pick and by extension, the player's total
+    # projected points at the end of the wager.
     median_gross = proj.median_in_window_gross if proj else 0.0
     actual_rank = median_position.get(title, 0)
-    
+
     if kind == "ranked" and actual_rank > 0 and predicted_rank is not None:
         pts = ranked_pick_points(predicted_rank, actual_rank)
     elif kind == "dark_horse" and actual_rank > 0:
@@ -613,7 +662,8 @@ def _pick_detail(
 
 def _append_box_office_history(snapshot: SiteSnapshot, *, today: date) -> None:
     """
-    Append the current box office data to history files for future reference.  This ensures our decay model has historical information to see week-over-week trends.
+    Append the current box office data to history files for future reference.  This ensures our
+    decay model has historical information to see week-over-week trends.
     It is skipped if --local is passed.
     """
 
@@ -634,7 +684,9 @@ def _append_box_office_history(snapshot: SiteSnapshot, *, today: date) -> None:
 
 def _append_forecast_history(snapshot: SiteSnapshot, sim: Any, *, today: date) -> None:
     """
-    Append the current forecast data to history files for future reference.  This allows us to see how our forecasts have changed over time and who was predicted to win at any given point in the season.
+    Append the current forecast data to history files for future reference.  This allows us to see
+    how our forecasts have changed over time and who was predicted to win at any given point in the
+    season.
     It is skipped if --local is passed.
     """
 

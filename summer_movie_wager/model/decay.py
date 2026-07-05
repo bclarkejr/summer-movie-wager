@@ -1,5 +1,6 @@
 """In-theaters projection (Mode A) — weekly decay model with optional history blending."""
 
+import math
 from datetime import date
 
 from summer_movie_wager.model.preopening import WINDOW_END
@@ -90,26 +91,36 @@ def project_decay(
 
 def _resolve_wow(category: Category, history: list[tuple[date, float]]) -> float:
     """
-    Given a movie's category and optional observed history, this will attempt to resolve the week-over-week decay rate (WoW) for the movie.
-    For movies with only one or no weeks of history, the default week-over-week decay rate for the movie's category is used (animated films decay slower).
-    For movies with at least two weeks of history, the function will calculate every week-over-week hold for the movie and use the geometric mean of those
-    holds to estimate the movie's decay rate.
-    The geometric mean is blended with the default decay rate based on how many weeks of history are available.  Once we have 5 or more weeks of history,
-    the geometric mean is used exclusively.
+    Given a movie's category and optional observed history, this will attempt to resolve the
+    week-over-week decay rate (WoW) for the movie.
+    For movies with fewer than three history snapshots, the default week-over-week decay rate
+    for the movie's category is used (animated films decay slower) — a hold ratio needs two
+    consecutive weekly increments, which takes three snapshots.
+    With three or more snapshots, the function calculates every week-over-week hold for the
+    movie and uses the geometric mean of those holds to estimate the movie's decay rate.
+    The geometric mean is blended with the default decay rate based on how many snapshots are
+    available.  At 6 or more snapshots, the geometric mean is used exclusively.
     """
     default = _DEFAULT_WOW[category]
     if len(history) < 2:
         return default
-    
-    # If we have two or more weeks of history, then we'll calculate the weekly gross (i.e., the deltas)
-    # and then use that weekly gross to determine the week-over-week holds.
+
+    # If we have two or more weeks of history, then we'll calculate the weekly gross
+    # (i.e., the deltas) and then use that weekly gross to determine the week-over-week holds.
     sorted_history = sorted(history, key=lambda row: row[0])
     deltas = [
-        sorted_history[i + 1][1] - sorted_history[i][1]
-        for i in range(len(sorted_history) - 1)
+        sorted_history[i + 1][1] - sorted_history[i][1] for i in range(len(sorted_history) - 1)
     ]
 
-    # WoW estimated as geometric mean of consecutive delta ratios
+    # ponytail: this estimator assumes snapshots land ~weekly (Monday refreshes).
+    # When no deltas are filtered, the geometric mean below telescopes to
+    # (last_delta / first_delta) ** (1/(n-1)) — interior cadence wobbles cancel, but
+    # the FIRST and LAST intervals pass straight through. Known ceilings:
+    #   - an off-cadence endpoint refresh (e.g. 2-day or 14-day gap) skews the estimate;
+    #   - duplicate same-day rows break the telescoping and inflate `weight` below;
+    #   - no clamp: a geo mean > 1 would compound a *growing* series to window end.
+    # Upgrade path if cadence ever gets sloppy: dedupe history by (movie, date),
+    # only form ratios from 6-8 day interval pairs, clamp the blend to ~[0.2, 0.9].
     ratios = [
         deltas[i + 1] / deltas[i]
         for i in range(len(deltas) - 1)
@@ -117,13 +128,10 @@ def _resolve_wow(category: Category, history: list[tuple[date, float]]) -> float
     ]
     if not ratios:
         return default
-    
+
     # For those not familiar with geometric mean: https://en.wikipedia.org/wiki/Geometric_mean
     # geo_mean(r1, r2, ..., rn) = (r1 * r2 * ... * rn)^(1/n)
-    geo_mean = 1.0
-    for r in ratios:
-        geo_mean *= r
-    geo_mean = geo_mean ** (1.0 / len(ratios))
+    geo_mean = math.prod(ratios) ** (1.0 / len(ratios))
 
     # Blend the geometric mean with the default based on how many weeks of history we have,
     # so that we don't overfit to a noisy estimate when we have limited history.
@@ -134,7 +142,8 @@ def _resolve_wow(category: Category, history: list[tuple[date, float]]) -> float
 def _sigma_from_weeks(weeks_observed: int) -> float:
     """
     The more weeks we observe, the more confident we are in the projection.
-    This function returns a sigma value (i.e., our uncertainty in the projection) that decreases as the number of weeks observed increases.
+    This function returns a sigma value (i.e., our uncertainty in the projection) that decreases as
+    the number of weeks observed increases.
     """
     if weeks_observed >= 6:
         return 0.10
@@ -159,7 +168,11 @@ def _calibrate_week_1(
 
     geo_full = sum(wow**k for k in range(full_weeks))
     if partial_days > 0:
-        partial_frac = _week1_fraction_earned(release_date, partial_days) if full_weeks == 0 else partial_days / 7.0
+        partial_frac = (
+            _week1_fraction_earned(release_date, partial_days)
+            if full_weeks == 0
+            else partial_days / 7.0
+        )
         partial_term = (wow**full_weeks) * partial_frac
     else:
         partial_term = 0.0
@@ -200,7 +213,10 @@ def _sum_weekly_remaining(
             earned_so_far = _week1_fraction_earned(release_date, days_already_in_current_week)
             if chunk_days < days_left_in_current_week:
                 # Window ends before week 1 is done — only count the DOW weight of those days
-                remaining_frac = _week1_fraction_earned(release_date, days_already_in_current_week + chunk_days) - earned_so_far
+                remaining_frac = (
+                    _week1_fraction_earned(release_date, days_already_in_current_week + chunk_days)
+                    - earned_so_far
+                )
             else:
                 remaining_frac = 1.0 - earned_so_far
             total += week_1_gross * remaining_frac

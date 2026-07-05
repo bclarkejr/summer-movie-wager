@@ -3,9 +3,7 @@ from datetime import date
 import pytest
 
 from summer_movie_wager.types import (
-    Category,
     Confidence,
-    MovieStatus,
     PlayerPicks,
     Projection,
     SiteSnapshot,

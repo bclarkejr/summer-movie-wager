@@ -1,0 +1,17 @@
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙 Dark</button>
+<script>
+(function(){
+  const tgl = document.getElementById("themeToggle");
+  function apply(t){
+    document.documentElement.setAttribute("data-theme", t);
+    tgl.textContent = t === "dark" ? "☀️ Light" : "🌙 Dark";
+  }
+  apply(localStorage.getItem("smw-theme")
+        || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+  tgl.onclick = () => {
+    const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    localStorage.setItem("smw-theme", next);
+    apply(next);
+  };
+})();
+</script>

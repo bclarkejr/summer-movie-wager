@@ -13,8 +13,8 @@ MEDOID_SAMPLE_CAP = 1500  # ponytail: cap the medoid search (O(W^2)); lift if bu
 
 
 def _most_likely_win_trial(
-    top_10_indices: np.ndarray,   # (n_trials, 10) movie indices, finish order
-    win_trials: np.ndarray,       # 1-D indices of this player's strict-win trials
+    top_10_indices: np.ndarray,  # (n_trials, 10) movie indices, finish order
+    win_trials: np.ndarray,  # 1-D indices of this player's strict-win trials
     n_movies: int,
     rng: np.random.Generator,
 ) -> int:
@@ -53,7 +53,7 @@ class SimulationResult:
     median_final_pts: dict[str, float]
     p10_final_pts: dict[str, float]
     p90_final_pts: dict[str, float]
-    winning_scenarios: dict[str, "WinningScenario | None"]
+    winning_scenarios: dict[str, WinningScenario | None]
 
 
 def simulate_season(
@@ -104,11 +104,14 @@ def simulate_season(
         pts_per_player[player.username] = scores
 
     # Aggregate outcomes per player
-    # Effectively each row is a player and each column is a trial.  We want to know for each player how many trials they won, tied, and their score percentiles.
-    # It's a 2D array / matrix that we can then quickly figure out how many trials each player won, tied, and their score percentiles.
+    # Effectively each row is a player and each column is a trial.  We want to know for each player
+    # how many trials they won, tied, and their score percentiles.
+    # It's a 2D array / matrix that we can then quickly figure out how many trials each player won,
+    # tied, and their score percentiles.
     score_matrix = np.stack([pts_per_player[p.username] for p in players])  # (n_players, n_trials)
     max_per_trial = score_matrix.max(axis=0)
-    # When comparing arrays, this produces a boolean array of the same shape as score_matrix, where each element is True if that player's score equals the max score for that trial.
+    # When comparing arrays, this produces a boolean array of the same shape as score_matrix, where
+    # each element is True if that player's score equals the max score for that trial.
     is_top = score_matrix == max_per_trial
     n_winners_per_trial = is_top.sum(axis=0)
 
@@ -129,7 +132,7 @@ def simulate_season(
         p10_pts[player.username] = float(np.percentile(s, 10))
         p90_pts[player.username] = float(np.percentile(s, 90))
 
-    winning_scenarios: dict[str, "WinningScenario | None"] = {}
+    winning_scenarios: dict[str, WinningScenario | None] = {}
     for i, player in enumerate(players):
         win_trials = np.nonzero(is_top[i] & (n_winners_per_trial == 1))[0]
         if win_trials.size == 0:

@@ -87,16 +87,20 @@ def test_zero_sigma_movies_make_outcome_deterministic():
     result = simulate_season(players, projections, n_trials=500, seed=3)
     # Either a wins all or b wins all (depending on actual scoring) — but no variance.
     assert (
-        result.win_prob["a"] in (0.0, 1.0) or result.win_prob["b"] in (0.0, 1.0)
+        result.win_prob["a"] in (0.0, 1.0)
+        or result.win_prob["b"] in (0.0, 1.0)
         or abs(result.win_prob["a"] - result.win_prob["b"]) > 0.5
     )
 
 
 def _ten_projections(seed_offset=0):
     from summer_movie_wager.types import Projection
+
     # Strongly separated medians so the top-10 order is stable across trials.
     return [
-        Projection(movie_title=f"M{i}", median_in_window_gross=float((20 - i) * 10_000_000), sigma=0.15)
+        Projection(
+            movie_title=f"M{i}", median_in_window_gross=float((20 - i) * 10_000_000), sigma=0.15
+        )
         for i in range(12)
     ]
 
@@ -132,7 +136,11 @@ def test_no_scenario_when_player_never_wins():
     titles = [f"M{i}" for i in range(12)]
     strong = PlayerPicks(username="strong", ranked=titles[:10], dark_horses=["M10", "M11", "Mz"])
     # 'weak' predicts only films that essentially never reach the top 10
-    weak = PlayerPicks(username="weak", ranked=["M10", "M11", "Mx", "My", "Mz", "Ma", "Mb", "Mc", "Md", "Me"], dark_horses=["Mf", "Mg", "Mh"])
+    weak = PlayerPicks(
+        username="weak",
+        ranked=["M10", "M11", "Mx", "My", "Mz", "Ma", "Mb", "Mc", "Md", "Me"],
+        dark_horses=["Mf", "Mg", "Mh"],
+    )
 
     res = simulate_season([strong, weak], _ten_projections(), n_trials=3_000, seed=7)
     # strong dominates; weak should have win_prob 0 and therefore no scenario
@@ -147,6 +155,7 @@ def test_in_theaters_floor_is_never_breached():
     # whose banked gross is just below its median. Its final gross must never dip
     # below the floor, and its 80% band must stay tight around it.
     import numpy as np
+
     from summer_movie_wager.model.simulate import simulate_season
     from summer_movie_wager.types import PlayerPicks, Projection
 
@@ -172,8 +181,6 @@ def test_in_theaters_floor_is_never_breached():
     assert np.percentile(samples, 90) <= floor + 10_000_000  # within $10M of banked
 
     # And the public API still runs end-to-end with a floored projection present.
-    players = [
-        PlayerPicks(username="u", ranked=titles, dark_horses=["dh1", "dh2", "dh3"])
-    ]
+    players = [PlayerPicks(username="u", ranked=titles, dark_horses=["dh1", "dh2", "dh3"])]
     result = simulate_season(players, projections, n_trials=2_000, seed=1)
     assert 0.0 <= result.win_prob["u"] <= 1.0

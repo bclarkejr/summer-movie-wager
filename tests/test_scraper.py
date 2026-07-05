@@ -7,8 +7,14 @@ from summer_movie_wager.ingest.scraper import parse_snapshot
 
 FIXTURE = Path(__file__).parent / "fixtures" / "playalong.html"
 EXPECTED_USERNAMES = {
-    "bclarke", "vivrad", "zmeister", "brettfern",
-    "carleigh", "radhadr", "emsullivan", "mhartje",
+    "bclarke",
+    "vivrad",
+    "zmeister",
+    "brettfern",
+    "carleigh",
+    "radhadr",
+    "emsullivan",
+    "mhartje",
 }
 
 
@@ -36,9 +42,7 @@ def test_known_pick_present(snapshot):
 def test_cumulative_grosses_include_known_movie(snapshot):
     # The Devil Wears Prada 2 had ~$32.5M cumulative at 2026-05-03 capture
     keys_lower = {k.lower(): v for k, v in snapshot.cumulative_grosses.items()}
-    matched = [
-        v for k, v in keys_lower.items() if "devil wears prada" in k
-    ]
+    matched = [v for k, v in keys_lower.items() if "devil wears prada" in k]
     assert matched, "Devil Wears Prada 2 not found in cumulative_grosses"
     assert max(matched) > 1_000_000  # any reasonable post-opening number
 

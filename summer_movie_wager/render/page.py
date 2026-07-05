@@ -97,24 +97,25 @@ def render(out_dir: Path, data: RenderInput) -> None:
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     env = Environment(
-        loader = FileSystemLoader(str(_TEMPLATES)),
+        loader=FileSystemLoader(str(_TEMPLATES)),
         # select_autoescape misses .j2 suffixes; force escaping unconditionally
         # since movie titles and other fields originate from external scrapes.
-        autoescape = True,
+        autoescape=True,
     )
     template = env.get_template("index.html.j2")
     theme_css = (_STATIC / "theme.css").read_text()
     nav_css = (_STATIC / "nav.css").read_text()
+    shared_css = (_STATIC / "shared.css").read_text()
     inline_css = theme_css + "\n" + nav_css + "\n" + (_STATIC / "style.css").read_text()
     html = template.render(
-        generated_at = data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
-        leaderboard = data.leaderboard,
-        movies = data.movies,
-        player_details = data.player_details,
-        inline_css = inline_css,
-        active = "index",
-        forecast_available = data.forecast_available,
-        forecast_unavailable_reason = data.forecast_unavailable_reason,
+        generated_at=data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
+        leaderboard=data.leaderboard,
+        movies=data.movies,
+        player_details=data.player_details,
+        inline_css=inline_css,
+        active="index",
+        forecast_available=data.forecast_available,
+        forecast_unavailable_reason=data.forecast_unavailable_reason,
     )
     (out_dir / "index.html").write_text(html)
     (out_dir / "data.json").write_text(json.dumps(data.raw_snapshot, indent=2, default=str))
@@ -125,13 +126,14 @@ def render(out_dir: Path, data: RenderInput) -> None:
         "scenarios": data.raw_snapshot.get("winning_scenarios", {}),
     }
     scenarios_html = env.get_template("scenarios.html.j2").render(
-        generated_at = data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
-        theme_css = theme_css,
-        nav_css = nav_css,
-        active = "scenarios",
-        scenario_json = _json_for_script(scenario_payload),
-        forecast_available = data.forecast_available,
-        forecast_unavailable_reason = data.forecast_unavailable_reason,
+        generated_at=data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
+        theme_css=theme_css,
+        nav_css=nav_css,
+        shared_css=shared_css,
+        active="scenarios",
+        scenario_json=_json_for_script(scenario_payload),
+        forecast_available=data.forecast_available,
+        forecast_unavailable_reason=data.forecast_unavailable_reason,
     )
     (out_dir / "scenarios.html").write_text(scenarios_html)
 
@@ -149,12 +151,13 @@ def render(out_dir: Path, data: RenderInput) -> None:
         ],
     }
     whatif_html = env.get_template("whatif.html.j2").render(
-        generated_at = data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
-        theme_css = theme_css,
-        nav_css = nav_css,
-        active = "whatif",
-        whatif_json = _json_for_script(whatif_payload),
-        forecast_available = data.forecast_available,
-        forecast_unavailable_reason = data.forecast_unavailable_reason,
+        generated_at=data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
+        theme_css=theme_css,
+        nav_css=nav_css,
+        shared_css=shared_css,
+        active="whatif",
+        whatif_json=_json_for_script(whatif_payload),
+        forecast_available=data.forecast_available,
+        forecast_unavailable_reason=data.forecast_unavailable_reason,
     )
     (out_dir / "whatif.html").write_text(whatif_html)

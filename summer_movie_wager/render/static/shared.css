@@ -1,0 +1,64 @@
+/* Shared chrome for the JS pages (scenarios, whatif): page shell, theme toggle,
+   and the points-grid table both pages render. index.html has its own style.css. */
+
+* { box-sizing:border-box; }
+body {
+  font-family:'Nunito',sans-serif; font-size:15px; line-height:1.5;
+  max-width:1000px; margin:0 auto; padding:1.5em 1.2em 3em;
+  background:var(--bg); color:var(--text);
+  transition:background .25s,color .25s;
+}
+
+.theme-toggle {
+  position:fixed; top:1em; right:1em; z-index:100;
+  background:var(--bg-card); border:2px solid var(--border); border-radius:50px;
+  padding:.35em .9em; font-family:'Nunito',sans-serif; font-size:.85em; font-weight:700;
+  color:var(--text); cursor:pointer; box-shadow:0 2px 12px var(--shadow);
+  transition:transform .1s;
+}
+.theme-toggle:active { transform:scale(.94); }
+
+h1 { font-weight:800; font-size:1.7em; margin:0 0 .15em; }
+.subtitle { color:var(--text-muted); margin:0 0 1.2em; max-width:62ch; }
+
+/* ── Points-grid table ── */
+.grid-wrap { overflow-x:auto; border-radius:14px; box-shadow:0 2px 16px var(--shadow); }
+table { border-collapse:collapse; width:100%; background:var(--bg-card); min-width:780px; }
+thead th {
+  position:sticky; top:0; background:var(--bg-card); color:var(--th-color);
+  font-size:.78em; font-weight:700; text-transform:uppercase; letter-spacing:.02em;
+  padding:.7em .5em; text-align:center; border-bottom:2px solid var(--border);
+}
+thead th.film-col { text-align:left; }
+tbody td {
+  padding:.55em .5em; text-align:center; border-bottom:1px solid var(--border-row);
+  font-variant-numeric:tabular-nums;
+}
+tbody tr:nth-child(even) { background:var(--bg-row-alt); }
+td.film-col { text-align:left; font-weight:600; white-space:nowrap; }
+td.film-col .rank {
+  display:inline-block; width:1.6em; color:var(--text-muted); font-weight:800;
+  font-size:.85em; text-align:right; margin-right:.5em;
+}
+td.zero { color:var(--zero); }
+/* highlighted column = the featured player */
+.col-sel { background:var(--accent-soft-2); }
+thead th.col-sel { color:var(--accent); }
+tfoot td {
+  padding:.7em .5em; text-align:center; font-weight:800;
+  border-top:2px solid var(--border); font-variant-numeric:tabular-nums;
+}
+tfoot td.film-col { text-align:left; text-transform:uppercase; font-size:.8em; letter-spacing:.03em; color:var(--th-color); }
+/* winning column total (scenarios uses .col-sel, whatif uses .win) */
+tfoot td.col-sel, tfoot td.win {
+  background:var(--win-bg); color:var(--win-color); border-radius:0 0 4px 4px;
+}
+.crown { font-size:.9em; }
+
+footer { margin-top:2em; color:var(--footer-color); font-size:.82em; }
+
+/* ── Disabled (not enough films to simulate) state ── */
+.gated {
+  display:none; background:var(--forecast-bg); border:1px solid var(--forecast-border);
+  color:var(--forecast-color); border-radius:12px; padding:1em 1.2em; font-weight:600;
+}

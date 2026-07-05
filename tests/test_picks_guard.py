@@ -16,9 +16,7 @@ def _picks(username: str, ranked: list[str], dark_horses: list[str]) -> PlayerPi
 
 def test_bootstrap_writes_snapshot_when_missing(tmp_path: Path):
     snapshot_path = tmp_path / "picks_snapshot_2026.yaml"
-    scraped = {
-        "bclarke": _picks("bclarke", [f"M{i}" for i in range(1, 11)], ["DH1", "DH2", "DH3"])
-    }
+    scraped = {"bclarke": _picks("bclarke", [f"M{i}" for i in range(1, 11)], ["DH1", "DH2", "DH3"])}
     bootstrap_or_validate(scraped, snapshot_path)
     assert snapshot_path.exists()
     written = yaml.safe_load(snapshot_path.read_text())
@@ -28,9 +26,7 @@ def test_bootstrap_writes_snapshot_when_missing(tmp_path: Path):
 
 def test_validate_passes_on_match(tmp_path: Path):
     snapshot_path = tmp_path / "picks_snapshot_2026.yaml"
-    scraped = {
-        "bclarke": _picks("bclarke", [f"M{i}" for i in range(1, 11)], ["DH1", "DH2", "DH3"])
-    }
+    scraped = {"bclarke": _picks("bclarke", [f"M{i}" for i in range(1, 11)], ["DH1", "DH2", "DH3"])}
     bootstrap_or_validate(scraped, snapshot_path)
     bootstrap_or_validate(scraped, snapshot_path)
 

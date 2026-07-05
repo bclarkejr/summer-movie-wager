@@ -26,7 +26,8 @@ class Confidence(StrEnum):
 
 
 class PlayerPicks(BaseModel):
-    """A player is defined by three properties - their username, their ranked top 10 picks, and their dark horse picks."""
+    """A player is defined by three properties - their username, their ranked top 10 picks, and
+    their dark horse picks."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -83,14 +84,19 @@ class WinningScenario(BaseModel):
 
 class SiteSnapshot(BaseModel):
     """
-    This site snapshot comes from thesummermoviewager.com and is used to validate the pipeline's calculations against the site's reported points.
+    This site snapshot comes from thesummermoviewager.com and is used to validate the pipeline's
+    calculations against the site's reported points.
     The direct link to the snapshot is at:
     https://thesummermoviewager.com/index.php?year=2026&addPlayer=bclarke%2Cvivrad%2Czmeister%2Cbrettfern%2Ccarleigh%2Cradhadr%2Cemsullivan%2Cmhartje%2CAverageJoe&playAlongOnly=
 
-    The snapshot creates three dictionaries that we use to confirm our calculations are correct. The three dictionaries are:
-    1. players:  A dictionary of player usernames to their picks (PlayerPicks), validating the picks match what we have in data/picks_snapshot_2026.yaml.
-    2. cumulative_grosses:  A dictionary of movie titles to their cumulative grosses, which we use to calculate what _we_ think the points should be for each player.
-    3. site_reported_points:  A dictionary of player usernames to their points, as reported by thesummermoviewager.com.  We use this to validate our own calculations against the site.
+    The snapshot creates three dictionaries that we use to confirm our calculations are correct. The
+    three dictionaries are:
+    1. players:  A dictionary of player usernames to their picks (PlayerPicks), validating the picks
+    match what we have in data/picks_snapshot_2026.yaml.
+    2. cumulative_grosses:  A dictionary of movie titles to their cumulative grosses, which we use
+    to calculate what _we_ think the points should be for each player.
+    3. site_reported_points:  A dictionary of player usernames to their points, as reported by
+    thesummermoviewager.com.  We use this to validate our own calculations against the site.
     """
 
     model_config = ConfigDict(frozen=True)

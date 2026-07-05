@@ -1,11 +1,37 @@
 """Tests for build.py orchestration helpers (the parts that don't need full pipeline I/O)."""
 
+from datetime import date
+
 from summer_movie_wager.render.build import (
     _build_raw_sim_fields,
     _count_non_zero_projections,
     _current_top_10,
+    _project_all,
 )
-from summer_movie_wager.types import Projection
+from summer_movie_wager.types import Category, MovieStatus, PreopeningEntry, Projection
+
+
+def test_project_all_treats_incomplete_preopening_entry_as_no_projection():
+    # An entry with an opening estimate but no total/confidence (a half-filled
+    # placeholder) must project 0, not crash inside project_preopening.
+    movies = {
+        "Half Entry": {
+            "title": "Half Entry",
+            "release_date": date(2026, 7, 10),
+            "status": MovieStatus.PRE_RELEASE,
+            "category": Category.WIDE,
+            "cumulative": 0.0,
+        }
+    }
+    preopening = {
+        "Half Entry": PreopeningEntry(
+            release_date=date(2026, 7, 10),
+            opening_weekend_estimate=50_000_000.0,
+        )
+    }
+    projs = _project_all(movies, preopening, today=date(2026, 7, 5))
+    assert projs[0].median_in_window_gross == 0.0
+    assert projs[0].sigma == 0.0
 
 
 def test_current_top_10_excludes_zero_gross_movies():
@@ -35,8 +61,7 @@ def test_count_non_zero_projections_only_counts_positive_medians():
 
 def test_count_non_zero_projections_zero_when_all_zero():
     projections = [
-        Projection(movie_title=f"M{i}", median_in_window_gross=0.0, sigma=0.0)
-        for i in range(20)
+        Projection(movie_title=f"M{i}", median_in_window_gross=0.0, sigma=0.0) for i in range(20)
     ]
     assert _count_non_zero_projections(projections) == 0
 
@@ -45,6 +70,7 @@ def test_in_theaters_row_band_respects_floor():
     # _build_movie_rows should produce p10 >= floor and a tight band for a
     # deep-run film whose median is just above its banked gross.
     import math
+
     from summer_movie_wager.render.build import _build_movie_rows
     from summer_movie_wager.types import MovieStatus, Projection
 
