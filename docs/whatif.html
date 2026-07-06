@@ -124,7 +124,9 @@
   cursor:not-allowed; opacity:.55;
 }
 </style>
-<style>
+<style>/* Shared chrome for the JS pages (scenarios, whatif): page shell, theme toggle,
+   and the points-grid table both pages render. index.html has its own style.css. */
+
 * { box-sizing:border-box; }
 body {
   font-family:'Nunito',sans-serif; font-size:15px; line-height:1.5;
@@ -145,6 +147,49 @@ body {
 h1 { font-weight:800; font-size:1.7em; margin:0 0 .15em; }
 .subtitle { color:var(--text-muted); margin:0 0 1.2em; max-width:62ch; }
 
+/* ── Points-grid table ── */
+.grid-wrap { overflow-x:auto; border-radius:14px; box-shadow:0 2px 16px var(--shadow); }
+table { border-collapse:collapse; width:100%; background:var(--bg-card); min-width:780px; }
+thead th {
+  position:sticky; top:0; background:var(--bg-card); color:var(--th-color);
+  font-size:.78em; font-weight:700; text-transform:uppercase; letter-spacing:.02em;
+  padding:.7em .5em; text-align:center; border-bottom:2px solid var(--border);
+}
+thead th.film-col { text-align:left; }
+tbody td {
+  padding:.55em .5em; text-align:center; border-bottom:1px solid var(--border-row);
+  font-variant-numeric:tabular-nums;
+}
+tbody tr:nth-child(even) { background:var(--bg-row-alt); }
+td.film-col { text-align:left; font-weight:600; white-space:nowrap; }
+td.film-col .rank {
+  display:inline-block; width:1.6em; color:var(--text-muted); font-weight:800;
+  font-size:.85em; text-align:right; margin-right:.5em;
+}
+td.zero { color:var(--zero); }
+/* highlighted column = the featured player */
+.col-sel { background:var(--accent-soft-2); }
+thead th.col-sel { color:var(--accent); }
+tfoot td {
+  padding:.7em .5em; text-align:center; font-weight:800;
+  border-top:2px solid var(--border); font-variant-numeric:tabular-nums;
+}
+tfoot td.film-col { text-align:left; text-transform:uppercase; font-size:.8em; letter-spacing:.03em; color:var(--th-color); }
+/* winning column total (scenarios uses .col-sel, whatif uses .win) */
+tfoot td.col-sel, tfoot td.win {
+  background:var(--win-bg); color:var(--win-color); border-radius:0 0 4px 4px;
+}
+.crown { font-size:.9em; }
+
+footer { margin-top:2em; color:var(--footer-color); font-size:.82em; }
+
+/* ── Disabled (not enough films to simulate) state ── */
+.gated {
+  display:none; background:var(--forecast-bg); border:1px solid var(--forecast-border);
+  color:var(--forecast-color); border-radius:12px; padding:1em 1.2em; font-weight:600;
+}
+</style>
+<style>
 /* ── Sandbox layout ── */
 .sandbox-controls { display:flex; justify-content:flex-end; margin:0 0 .6em; }
 .reset-btn {
@@ -216,46 +261,26 @@ h1 { font-weight:800; font-size:1.7em; margin:0 0 .15em; }
 /* ── Points grid (same visual language as Winning Scenarios) ── */
 .grid-caption { margin:1.4em 0 .8em; font-weight:700; }
 .grid-caption .muted { color:var(--text-muted); font-weight:600; font-size:.9em; }
-.grid-wrap { overflow-x:auto; border-radius:14px; box-shadow:0 2px 16px var(--shadow); }
-table { border-collapse:collapse; width:100%; background:var(--bg-card); min-width:780px; }
-thead th {
-  position:sticky; top:0; background:var(--bg-card); color:var(--th-color);
-  font-size:.78em; font-weight:700; text-transform:uppercase; letter-spacing:.02em;
-  padding:.7em .5em; text-align:center; border-bottom:2px solid var(--border);
-}
-thead th.film-col { text-align:left; }
-tbody td {
-  padding:.55em .5em; text-align:center; border-bottom:1px solid var(--border-row);
-  font-variant-numeric:tabular-nums;
-}
-tbody tr:nth-child(even) { background:var(--bg-row-alt); }
-td.film-col { text-align:left; font-weight:600; white-space:nowrap; }
-td.film-col .rank {
-  display:inline-block; width:1.6em; color:var(--text-muted); font-weight:800;
-  font-size:.85em; text-align:right; margin-right:.5em;
-}
-td.zero { color:var(--zero); }
-.col-sel { background:var(--accent-soft-2); }
-thead th.col-sel { color:var(--accent); }
-tfoot td {
-  padding:.7em .5em; text-align:center; font-weight:800;
-  border-top:2px solid var(--border); font-variant-numeric:tabular-nums;
-}
-tfoot td.film-col { text-align:left; text-transform:uppercase; font-size:.8em; letter-spacing:.03em; color:var(--th-color); }
-tfoot td.win { background:var(--win-bg); color:var(--win-color); border-radius:0 0 4px 4px; }
-.crown { font-size:.9em; }
-
-footer { margin-top:2em; color:var(--footer-color); font-size:.82em; }
-
-/* ── Disabled (not enough films to simulate) state ── */
-.gated {
-  display:none; background:var(--forecast-bg); border:1px solid var(--forecast-border);
-  color:var(--forecast-color); border-radius:12px; padding:1em 1.2em; font-weight:600;
-}
 </style>
 </head>
 <body>
 <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙 Dark</button>
+<script>
+(function(){
+  const tgl = document.getElementById("themeToggle");
+  function apply(t){
+    document.documentElement.setAttribute("data-theme", t);
+    tgl.textContent = t === "dark" ? "☀️ Light" : "🌙 Dark";
+  }
+  apply(localStorage.getItem("smw-theme")
+        || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+  tgl.onclick = () => {
+    const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    localStorage.setItem("smw-theme", next);
+    apply(next);
+  };
+})();
+</script>
 <nav class="site-nav" aria-label="Site pages">
   
     
@@ -301,13 +326,13 @@ footer { margin-top:2em; color:var(--footer-color); font-size:.82em; }
 </div>
 
 <footer>
-  Refreshed 2026-07-03 20:52 UTC.
+  Refreshed 2026-07-06 23:21 UTC.
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"
         integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous"></script>
 <script>
-const DATA = {"movies": ["Spider-Man: Brand New Day", "Toy Story 5", "The Odyssey", "Obsession", "Minions & Monsters", "The Devil Wears Prada 2", "Backrooms", "Moana", "Star Wars: The Mandalorian and Grogu", "Disclosure Day", "Scary Movie", "Supergirl", "Young Washington", "Mortal Kombat II", "Evil Dead Burn"], "players": [{"username": "brettfern", "ranked": ["Spider-Man: Brand New Day", "Toy Story 5", "The Odyssey", "Moana", "Minions & Monsters", "The Devil Wears Prada 2", "Star Wars: The Mandalorian and Grogu", "Disclosure Day", "Supergirl", "Scary Movie"], "dark_horses": ["Coyote vs. Acme", "Mortal Kombat II", "Masters of the Universe"]}, {"username": "carleigh", "ranked": ["Spider-Man: Brand New Day", "Toy Story 5", "Moana", "Minions & Monsters", "The Odyssey", "The Devil Wears Prada 2", "Star Wars: The Mandalorian and Grogu", "Supergirl", "Disclosure Day", "Backrooms"], "dark_horses": ["Mortal Kombat II", "The End of Oak Street", "Scary Movie"]}, {"username": "emsullivan", "ranked": ["Toy Story 5", "The Odyssey", "Spider-Man: Brand New Day", "Moana", "The Devil Wears Prada 2", "Young Washington", "Minions & Monsters", "Star Wars: The Mandalorian and Grogu", "Disclosure Day", "Backrooms"], "dark_horses": ["Mortal Kombat II", "Scary Movie", "Supergirl"]}, {"username": "bclarke", "ranked": ["Toy Story 5", "Spider-Man: Brand New Day", "Minions & Monsters", "The Devil Wears Prada 2", "The Odyssey", "Moana", "Star Wars: The Mandalorian and Grogu", "Supergirl", "Disclosure Day", "Mortal Kombat II"], "dark_horses": ["Backrooms", "Scary Movie", "Evil Dead Burn"]}, {"username": "vivrad", "ranked": ["Spider-Man: Brand New Day", "Toy Story 5", "The Odyssey", "Minions & Monsters", "Star Wars: The Mandalorian and Grogu", "Moana", "Disclosure Day", "Supergirl", "The Devil Wears Prada 2", "Masters of the Universe"], "dark_horses": ["Scary Movie", "Mortal Kombat II", "Billie Eilish: Hit Me Hard and Soft"]}, {"username": "mhartje", "ranked": ["Moana", "Toy Story 5", "Supergirl", "Spider-Man: Brand New Day", "The Odyssey", "Star Wars: The Mandalorian and Grogu", "The Devil Wears Prada 2", "Minions & Monsters", "Disclosure Day", "Scary Movie"], "dark_horses": ["Power Ballad", "I Love Boosters", "The Sheep Detectives"]}, {"username": "zmeister", "ranked": ["Spider-Man: Brand New Day", "Supergirl", "Toy Story 5", "Moana", "Star Wars: The Mandalorian and Grogu", "The Odyssey", "Minions & Monsters", "The Devil Wears Prada 2", "Scary Movie", "Insidious: Out of the Further"], "dark_horses": ["Masters of the Universe", "Mortal Kombat II", "Coyote vs. Acme"]}, {"username": "radhadr", "ranked": ["Spider-Man: Brand New Day", "Moana", "Supergirl", "Star Wars: The Mandalorian and Grogu", "Animal Farm", "The Devil Wears Prada 2", "The Breadwinner", "PAW Patrol: The Dino Movie", "Tom and Jerry: Forbidden Compass", "Passenger"], "dark_horses": ["The Sheep Detectives", "Toy Story 5", "Finding Emily"]}]};
+const DATA = {"movies": ["Spider-Man: Brand New Day", "Toy Story 5", "The Odyssey", "Obsession", "The Devil Wears Prada 2", "Backrooms", "Moana", "Star Wars: The Mandalorian and Grogu", "Minions & Monsters", "Disclosure Day", "Scary Movie", "Supergirl", "Young Washington", "Mortal Kombat II", "Evil Dead Burn"], "players": [{"username": "emsullivan", "ranked": ["Toy Story 5", "The Odyssey", "Spider-Man: Brand New Day", "Moana", "The Devil Wears Prada 2", "Young Washington", "Minions & Monsters", "Star Wars: The Mandalorian and Grogu", "Disclosure Day", "Backrooms"], "dark_horses": ["Mortal Kombat II", "Scary Movie", "Supergirl"]}, {"username": "brettfern", "ranked": ["Spider-Man: Brand New Day", "Toy Story 5", "The Odyssey", "Moana", "Minions & Monsters", "The Devil Wears Prada 2", "Star Wars: The Mandalorian and Grogu", "Disclosure Day", "Supergirl", "Scary Movie"], "dark_horses": ["Coyote vs. Acme", "Mortal Kombat II", "Masters of the Universe"]}, {"username": "carleigh", "ranked": ["Spider-Man: Brand New Day", "Toy Story 5", "Moana", "Minions & Monsters", "The Odyssey", "The Devil Wears Prada 2", "Star Wars: The Mandalorian and Grogu", "Supergirl", "Disclosure Day", "Backrooms"], "dark_horses": ["Mortal Kombat II", "The End of Oak Street", "Scary Movie"]}, {"username": "bclarke", "ranked": ["Toy Story 5", "Spider-Man: Brand New Day", "Minions & Monsters", "The Devil Wears Prada 2", "The Odyssey", "Moana", "Star Wars: The Mandalorian and Grogu", "Supergirl", "Disclosure Day", "Mortal Kombat II"], "dark_horses": ["Backrooms", "Scary Movie", "Evil Dead Burn"]}, {"username": "mhartje", "ranked": ["Moana", "Toy Story 5", "Supergirl", "Spider-Man: Brand New Day", "The Odyssey", "Star Wars: The Mandalorian and Grogu", "The Devil Wears Prada 2", "Minions & Monsters", "Disclosure Day", "Scary Movie"], "dark_horses": ["Power Ballad", "I Love Boosters", "The Sheep Detectives"]}, {"username": "vivrad", "ranked": ["Spider-Man: Brand New Day", "Toy Story 5", "The Odyssey", "Minions & Monsters", "Star Wars: The Mandalorian and Grogu", "Moana", "Disclosure Day", "Supergirl", "The Devil Wears Prada 2", "Masters of the Universe"], "dark_horses": ["Scary Movie", "Mortal Kombat II", "Billie Eilish: Hit Me Hard and Soft"]}, {"username": "zmeister", "ranked": ["Spider-Man: Brand New Day", "Supergirl", "Toy Story 5", "Moana", "Star Wars: The Mandalorian and Grogu", "The Odyssey", "Minions & Monsters", "The Devil Wears Prada 2", "Scary Movie", "Insidious: Out of the Further"], "dark_horses": ["Masters of the Universe", "Mortal Kombat II", "Coyote vs. Acme"]}, {"username": "radhadr", "ranked": ["Spider-Man: Brand New Day", "Moana", "Supergirl", "Star Wars: The Mandalorian and Grogu", "Animal Farm", "The Devil Wears Prada 2", "The Breadwinner", "PAW Patrol: The Dino Movie", "Tom and Jerry: Forbidden Compass", "Passenger"], "dark_horses": ["The Sheep Detectives", "Toy Story 5", "Finding Emily"]}]};
 
 const esc = s => s.replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -420,21 +445,6 @@ new Sortable(finishEl, {
   onEnd: rescore,
 });
 document.getElementById("reset").onclick = () => { buildList(); rescore(); };
-
-/* dark-mode toggle (same behavior as index.html) */
-const tgl = document.getElementById("themeToggle");
-function applyTheme(t) {
-  if (t) document.documentElement.setAttribute("data-theme", t);
-  const dark = (t === "dark") || (!t && matchMedia("(prefers-color-scheme: dark)").matches);
-  tgl.textContent = dark ? "☀️ Light" : "🌙 Dark";
-}
-applyTheme(localStorage.getItem("smw-theme"));
-tgl.onclick = () => {
-  const cur = document.documentElement.getAttribute("data-theme")
-    || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  const next = cur === "dark" ? "light" : "dark";
-  localStorage.setItem("smw-theme", next); applyTheme(next);
-};
 
 const FORECAST_AVAILABLE = true;
 if (!FORECAST_AVAILABLE) {
