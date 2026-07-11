@@ -70,6 +70,7 @@ class RenderInput:
     raw_snapshot: dict[str, Any] = field(default_factory=dict)
     forecast_available: bool = True
     forecast_unavailable_reason: str = ""
+    history: dict[str, Any] = field(default_factory=dict)
 
 
 def render(out_dir: Path, data: RenderInput) -> None:
@@ -163,3 +164,16 @@ def render(out_dir: Path, data: RenderInput) -> None:
         forecast_unavailable_reason=data.forecast_unavailable_reason,
     )
     (out_dir / "whatif.html").write_text(whatif_html)
+
+    history_html = env.get_template("history.html.j2").render(
+        generated_at=data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
+        theme_css=theme_css,
+        nav_css=nav_css,
+        shared_css=shared_css,
+        active="history",
+        history_json=_json_for_script(
+            data.history if data.history else {"dates": [], "series": []}
+        ),
+        forecast_available=data.forecast_available,
+    )
+    (out_dir / "history.html").write_text(history_html)

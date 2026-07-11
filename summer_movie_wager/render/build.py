@@ -183,6 +183,7 @@ def main(argv: list[str] | None = None) -> int:
             raw_snapshot=raw,
             forecast_available=forecast_available,
             forecast_unavailable_reason=forecast_unavailable_reason,
+            history=_build_forecast_history_payload(DATA_DIR / "forecast_history.jsonl"),
         ),
     )
 

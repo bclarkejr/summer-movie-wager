@@ -392,3 +392,40 @@ def test_whatif_rows_have_keyboard_move_buttons(tmp_path):
     assert 'class="move-btn"' in whatif
     assert "Move ${esc(t)} up" in whatif  # aria-label template literal in the page JS
     assert 'filter: ".move-btn"' in whatif  # buttons never start a drag
+
+
+def test_history_page_rendered_and_always_linked(tmp_path):
+    index_on, _s, _w = _render_pages(tmp_path, True)
+    history = (tmp_path / "history.html").read_text()
+    assert "const DATA =" in history
+    assert "Odds Over Time" in history
+    assert 'class="site-nav"' in history
+    assert 'href="history.html"' in index_on
+
+    index_off, _s2, _w2 = _render_pages(tmp_path, False)
+    # unlike scenarios/whatif, history stays linked when the forecast is off
+    assert 'href="history.html"' in index_off
+    assert 'href="scenarios.html"' not in index_off
+
+
+def test_history_payload_embedded(tmp_path):
+    import json as _json
+    import re
+
+    data = _fixture_input()
+    data = RenderInput(
+        generated_at=data.generated_at,
+        leaderboard=data.leaderboard,
+        movies=data.movies,
+        player_details=data.player_details,
+        raw_snapshot=data.raw_snapshot,
+        history={
+            "dates": ["2026-05-11"],
+            "series": [{"player": "bclarke", "win_prob": [0.19]}],
+        },
+    )
+    render(tmp_path, data)
+    history = (tmp_path / "history.html").read_text()
+    payload = _json.loads(re.search(r"const DATA = (.*?);\n", history).group(1))
+    assert payload["dates"] == ["2026-05-11"]
+    assert payload["series"][0]["player"] == "bclarke"
