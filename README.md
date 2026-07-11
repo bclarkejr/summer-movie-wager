@@ -8,7 +8,7 @@ The official site ([thesummermoviewager.com](https://thesummermoviewager.com/ind
 
 ## What this is, architecturally
 
-There is no server and no frontend build step. A Python batch pipeline scrapes the official site, projects each movie's final gross, runs a Monte Carlo simulation of the season, and renders three **static HTML pages** into `docs/`. GitHub Pages serves `docs/` directly from the `main` branch. The only JavaScript is small vanilla scripts inlined into the pages (theme toggle, and the interactive What If? sandbox); all CSS is inlined at build time too. The pages' only external requests are Google Fonts and, on the What If? page, the SortableJS drag-and-drop library from a CDN (pinned with an integrity hash).
+There is no server and no frontend build step. A Python batch pipeline scrapes the official site, projects each movie's final gross, runs a Monte Carlo simulation of the season, and renders four **static HTML pages** into `docs/`. GitHub Pages serves `docs/` directly from the `main` branch. The only JavaScript is small vanilla scripts inlined into the pages (theme toggle, and the interactive What If? sandbox); all CSS is inlined at build time too. The pages' only external request is Google Fonts.
 
 ## The game & scoring rules
 
@@ -78,13 +78,14 @@ uv run ruff format --check .  # formatting
 
 8. **Append history** — production runs append one line per movie to `data/box_office_history.jsonl` and one line per player to `data/forecast_history.jsonl` (JSONL = one JSON object per line, append-only).
 
-## The three pages
+## The four pages
 
 | Page | What it shows | Client-side JS |
 |---|---|---|
 | `docs/index.html` (Leaderboard) | Current standings, projected final points with 80% intervals, win odds, per-movie projections, every player's picks | Theme toggle only |
 | `docs/scenarios.html` (Winning Scenarios) | For each player, the *most representative* season finish order in which they win — the medoid of their winning Monte Carlo trials under Spearman-footrule distance (i.e., the winning trial most similar to all their other winning trials) | Theme toggle only |
 | `docs/whatif.html` (What If? sandbox) | A drag-to-reorder list of the top 15 projected movies; scores for all 8 players recompute live as you rearrange the hypothetical finish order | The scoring rules reimplemented in ~140 lines of vanilla JS, with the movie list and all picks embedded as JSON at build time |
+| docs/history.html (Odds Over Time) | Each player's win probability at every production refresh, as an SVG line chart with a table fallback | Inline vanilla JS renders the chart from an embedded JSON payload |
 
 ## Projection models
 
@@ -126,8 +127,9 @@ summer_movie_wager/            # the Python package
   render/
     build.py                   # entry point: end-to-end pipeline glue
     page.py                    # Jinja2 rendering of all three pages + data.json
-    templates/                 # index / scenarios / whatif + shared _nav/_theme partials
+    templates/                 # index / scenarios / whatif / history + shared _nav/_theme partials
     static/                    # style.css, nav.css, theme.css, shared.css — inlined at build time
+      vendor/Sortable.min.js   # vendored drag-and-drop library (no CDN)
 data/                          # pipeline inputs + append-only history (see below)
 docs/                          # BUILD OUTPUT, served by GitHub Pages — don't hand-edit
   index.html, scenarios.html, whatif.html, data.json
