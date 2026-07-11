@@ -369,3 +369,11 @@ def test_render_escapes_html_in_scraped_fields(tmp_path: Path):
     rendered = (tmp_path / "index.html").read_text()
     assert hostile not in rendered, "raw <script> tag leaked through autoescape"
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in rendered
+
+
+def test_scenario_tabs_are_plain_buttons_with_pressed_state(tmp_path):
+    _index, scenarios, _whatif = _render_pages(tmp_path, True)
+    assert 'role="tablist"' not in scenarios
+    assert '"role","tab"' not in scenarios  # the buildTabs setAttribute call
+    assert "aria-pressed" in scenarios
+    assert "b.disabled = true" in scenarios  # no-scenario players are truly disabled
