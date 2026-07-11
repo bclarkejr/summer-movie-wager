@@ -130,3 +130,31 @@ def test_raw_winning_scenarios_all_null_when_forecast_off():
     raw: dict = {}
     _build_raw_sim_fields(raw, None, {"alice": object(), "bob": object()}, False, "not enough")
     assert set(raw["winning_scenarios"].values()) == {None}
+
+
+def test_forecast_history_payload_dedupes_and_gaps(tmp_path):
+    from summer_movie_wager.render.build import _build_forecast_history_payload
+
+    p = tmp_path / "forecast_history.jsonl"
+    rows = [
+        '{"date": "2026-05-11", "player": "alice", "win_prob": 0.10, '
+        '"median_final_pts": 50, "p10": 40, "p90": 60}',
+        '{"date": "2026-05-11", "player": "alice", "win_prob": 0.20, '
+        '"median_final_pts": 50, "p10": 40, "p90": 60}',
+        '{"date": "2026-05-11", "player": "bob", "win_prob": 0.30, '
+        '"median_final_pts": 50, "p10": 40, "p90": 60}',
+        '{"date": "2026-05-18", "player": "bob", "win_prob": 0.40, '
+        '"median_final_pts": 50, "p10": 40, "p90": 60}',
+    ]
+    p.write_text("\n".join(rows) + "\n")
+    payload = _build_forecast_history_payload(p)
+    assert payload["dates"] == ["2026-05-11", "2026-05-18"]
+    # same-day re-run wins; alice has no 05-18 row so her line gaps with None
+    assert payload["series"][0] == {"player": "alice", "win_prob": [0.20, None]}
+    assert payload["series"][1] == {"player": "bob", "win_prob": [0.30, 0.40]}
+
+
+def test_forecast_history_payload_empty_when_file_missing(tmp_path):
+    from summer_movie_wager.render.build import _build_forecast_history_payload
+
+    assert _build_forecast_history_payload(tmp_path / "nope.jsonl") == {"dates": [], "series": []}

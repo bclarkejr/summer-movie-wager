@@ -410,6 +410,29 @@ def _load_history() -> dict[str, list[tuple[date, float]]]:
     return history
 
 
+def _build_forecast_history_payload(path: Path) -> dict[str, Any]:
+    """Payload for the Odds Over Time page: one win-prob series per player.
+
+    Dedupes by (date, player) keeping the LAST row, so a same-day production
+    re-run supersedes the earlier one. Dates a player has no row for become
+    None so the chart line gaps instead of interpolating. Series are sorted by
+    username — color slot N stays bound to the same player across rebuilds.
+    """
+    rows: dict[tuple[str, str], float] = {}
+    if path.exists():
+        for line in path.read_text().splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            rows[(row["date"], row["player"])] = row["win_prob"]
+    dates = sorted({d for d, _ in rows})
+    players = sorted({p for _, p in rows})
+    return {
+        "dates": dates,
+        "series": [{"player": p, "win_prob": [rows.get((d, p)) for d in dates]} for p in players],
+    }
+
+
 def _current_top_10(grosses: dict[str, float]) -> list[str]:
     """Return up to 10 titles ranked by gross (descending). Excludes zero-gross movies.
 
