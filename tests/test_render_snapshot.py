@@ -377,3 +377,10 @@ def test_scenario_tabs_are_plain_buttons_with_pressed_state(tmp_path):
     assert '"role","tab"' not in scenarios  # the buildTabs setAttribute call
     assert "aria-pressed" in scenarios
     assert "b.disabled = true" in scenarios  # no-scenario players are truly disabled
+
+
+def test_whatif_rows_have_keyboard_move_buttons(tmp_path):
+    _index, _scenarios, whatif = _render_pages(tmp_path, True)
+    assert 'class="move-btn"' in whatif
+    assert "Move ${esc(t)} up" in whatif  # aria-label template literal in the page JS
+    assert 'filter: ".move-btn"' in whatif  # buttons never start a drag
