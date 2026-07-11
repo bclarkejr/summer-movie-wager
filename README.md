@@ -74,7 +74,7 @@ uv run ruff format --check .  # formatting
 
 6. **Validate scoring** — the pipeline recomputes every player's *current* points with its own scoring engine (`score/rules.py`) and compares against the points the official site reports. A mismatch prints a loud warning — a free correctness check on every run.
 
-7. **Render** — `render/page.py` renders three pages with [Jinja2](https://jinja.palletsprojects.com/) (HTML templating: templates in `render/templates/`, data in, HTML out). The shared nav bar and theme toggle (`_nav.html.j2`, `_theme.html.j2`) and the CSS files in `render/static/` (`style.css`, `nav.css`, `theme.css`, `shared.css`) are inlined into each page. Also writes `docs/data.json`, the full pipeline state as JSON.
+7. **Render** — `render/page.py` renders four pages with [Jinja2](https://jinja.palletsprojects.com/) (HTML templating: templates in `render/templates/`, data in, HTML out). The shared nav bar and theme toggle (`_nav.html.j2`, `_theme.html.j2`) and the CSS files in `render/static/` (`style.css`, `nav.css`, `theme.css`, `shared.css`) are inlined into each page. Also writes `docs/data.json`, the full pipeline state as JSON.
 
 8. **Append history** — production runs append one line per movie to `data/box_office_history.jsonl` and one line per player to `data/forecast_history.jsonl` (JSONL = one JSON object per line, append-only).
 
@@ -126,13 +126,13 @@ summer_movie_wager/            # the Python package
     rules.py                   # the wager scoring engine
   render/
     build.py                   # entry point: end-to-end pipeline glue
-    page.py                    # Jinja2 rendering of all three pages + data.json
+    page.py                    # Jinja2 rendering of all four pages + data.json
     templates/                 # index / scenarios / whatif / history + shared _nav/_theme partials
     static/                    # style.css, nav.css, theme.css, shared.css — inlined at build time
       vendor/Sortable.min.js   # vendored drag-and-drop library (no CDN)
 data/                          # pipeline inputs + append-only history (see below)
 docs/                          # BUILD OUTPUT, served by GitHub Pages — don't hand-edit
-  index.html, scenarios.html, whatif.html, data.json
+  index.html, scenarios.html, whatif.html, history.html, data.json
   superpowers/specs/, superpowers/plans/   # design docs for each feature, by date
   previews/                    # one-off styling mockups from the UI redesign
   .nojekyll                    # tells GitHub Pages to serve files as-is (no Jekyll)
