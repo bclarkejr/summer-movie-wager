@@ -106,6 +106,7 @@ def render(out_dir: Path, data: RenderInput) -> None:
     theme_css = (_STATIC / "theme.css").read_text()
     nav_css = (_STATIC / "nav.css").read_text()
     shared_css = (_STATIC / "shared.css").read_text()
+    sortable_js = (_STATIC / "vendor" / "Sortable.min.js").read_text()
     inline_css = theme_css + "\n" + nav_css + "\n" + (_STATIC / "style.css").read_text()
     html = template.render(
         generated_at=data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
@@ -156,6 +157,7 @@ def render(out_dir: Path, data: RenderInput) -> None:
         nav_css=nav_css,
         shared_css=shared_css,
         active="whatif",
+        sortable_js=sortable_js,
         whatif_json=_json_for_script(whatif_payload),
         forecast_available=data.forecast_available,
         forecast_unavailable_reason=data.forecast_unavailable_reason,

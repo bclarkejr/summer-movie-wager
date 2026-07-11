@@ -202,7 +202,7 @@ def test_whatif_page_rendered(tmp_path):
     index, _scenarios, whatif = _render_pages(tmp_path, True)
     assert "const DATA =" in whatif
     assert 'id="finish"' in whatif
-    assert "Sortable.min.js" in whatif
+    assert "Sortable" in whatif
     assert 'class="site-nav"' in whatif
     assert "const FORECAST_AVAILABLE = true" in whatif
     assert 'href="whatif.html"' in index
@@ -212,6 +212,14 @@ def test_whatif_gated_when_forecast_off(tmp_path):
     index, _scenarios, whatif = _render_pages(tmp_path, False)
     assert "const FORECAST_AVAILABLE = false" in whatif
     assert 'href="whatif.html"' not in index
+
+
+def test_whatif_has_no_cdn_dependency(tmp_path):
+    _index, _scenarios, whatif = _render_pages(tmp_path, True)
+    assert "jsdelivr" not in whatif
+    assert "cdn." not in whatif
+    assert "new Sortable(" in whatif  # library consumer still present
+    assert "This fork of Sortable" in whatif or "Sortable 1.15.6" in whatif or "MIT" in whatif
 
 
 def test_whatif_payload_top15_in_projected_order_with_picks(tmp_path):
