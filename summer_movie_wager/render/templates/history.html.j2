@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Odds Over Time — Summer Movie Wager 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>{{ theme_css | safe }}</style>
+<style>{{ nav_css | safe }}</style>
+<style>{{ shared_css | safe }}</style>
+<style>
+/* ── Series palette: validated (dataviz validate_palette.js) against #ffffff / #1e1830.
+     Slot N is bound to the Nth username alphabetically — never reorder by rank. ── */
+:root {
+  --s1:#2a78d6; --s2:#1baf7a; --s3:#eda100; --s4:#008300;
+  --s5:#4a3aa7; --s6:#e34948; --s7:#e87ba4; --s8:#eb6834;
+}
+[data-theme="dark"] {
+  --s1:#3987e5; --s2:#199e70; --s3:#c98500; --s4:#008300;
+  --s5:#9085e9; --s6:#e66767; --s7:#d55181; --s8:#d95926;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --s1:#3987e5; --s2:#199e70; --s3:#c98500; --s4:#008300;
+    --s5:#9085e9; --s6:#e66767; --s7:#d55181; --s8:#d95926;
+  }
+}
+
+.chart-card {
+  position:relative; background:var(--bg-card); border-radius:14px;
+  padding:1em 1em .6em; box-shadow:0 2px 16px var(--shadow);
+}
+.chart-card svg { display:block; width:100%; height:auto; font-family:'Nunito',sans-serif; }
+.tick { fill:var(--text-muted); font-size:11px; }
+.dlabel { fill:var(--text); font-size:12px; font-weight:700; }
+
+.legend { display:flex; flex-wrap:wrap; gap:.4em 1.1em; margin:.9em .2em 0; }
+.legend .key { display:inline-flex; align-items:center; gap:.45em; font-size:.9em; font-weight:600; }
+.legend .key i { width:12px; height:12px; border-radius:3px; display:inline-block; }
+.legend .key b { font-weight:800; }
+
+.tip {
+  position:absolute; pointer-events:none; z-index:10;
+  background:var(--bg-card); border:2px solid var(--border); border-radius:10px;
+  padding:.5em .7em; font-size:.85em; box-shadow:0 2px 12px var(--shadow);
+}
+.tip .tip-date { font-weight:800; margin-bottom:.25em; }
+.tip div i { width:10px; height:10px; border-radius:2px; display:inline-block; margin-right:.4em; }
+.tip div b { float:right; margin-left:.8em; }
+
+.table-view { margin-top:1.2em; }
+.table-view summary { cursor:pointer; font-weight:700; color:var(--text-muted); }
+.table-view .grid-wrap { margin-top:.6em; }
+</style>
+</head>
+<body>
+{% include "_theme.html.j2" %}
+{% include "_nav.html.j2" %}
+
+<h1>📈 Odds Over Time</h1>
+<p class="subtitle">Each player's simulated win probability at every site refresh.
+  Lines gap where a refresh produced no forecast for a player.</p>
+
+<div class="gated" id="gated">
+  ⏳ No forecast history yet — this chart fills in after the first production refresh.
+</div>
+
+<div id="view">
+  <div class="chart-card" id="card">
+    <svg id="chart" viewBox="0 0 920 440" role="img" aria-label="Win odds over time, one line per player"></svg>
+    <div class="tip" id="tip" hidden></div>
+  </div>
+  <div class="legend" id="legend"></div>
+  <details class="table-view">
+    <summary>View as table</summary>
+    <div class="grid-wrap"><table id="dataTable"></table></div>
+  </details>
+</div>
+
+<footer>
+  Refreshed {{ generated_at }}.
+</footer>
+
+<script>
+const DATA = {{ history_json | safe }};
+
+const esc = s => s.replace(/[&<>"']/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const svg = document.getElementById("chart");
+const tip = document.getElementById("tip");
+const card = document.getElementById("card");
+const NS = "http://www.w3.org/2000/svg";
+const W = 920, H = 440, M = { top: 16, right: 150, bottom: 36, left: 48 };
+const IW = W - M.left - M.right, IH = H - M.top - M.bottom;
+
+const last = s => [...s.win_prob].reverse().find(v => v != null) ?? 0;
+const byLatest = [...DATA.series].sort((a, b) => last(b) - last(a));
+// color follows the entity: slot index comes from the payload's fixed order
+const colorOf = p => `var(--s${DATA.series.findIndex(s => s.player === p) + 1})`;
+const pct = v => Math.round(v * 100) + "%";
+
+function el(name, attrs, parent) {
+  const node = document.createElementNS(NS, name);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  (parent || svg).appendChild(node);
+  return node;
+}
+
+const n = DATA.dates.length;
+const yMax = Math.max(0.1, ...DATA.series.flatMap(s => s.win_prob.filter(v => v != null)));
+const yTop = Math.min(1, Math.ceil(yMax * 10 + 1) / 10);   // next decile above the max
+const x = i => M.left + (n === 1 ? IW / 2 : (i / (n - 1)) * IW);
+const y = v => M.top + IH - (v / yTop) * IH;
+
+function draw() {
+  // gridlines + y ticks (every 10 points of probability)
+  for (let t = 0; t <= yTop + 1e-9; t += 0.1) {
+    el("line", { x1: M.left, x2: M.left + IW, y1: y(t), y2: y(t),
+                 stroke: "var(--border-row)", "stroke-width": 1 });
+    const lbl = el("text", { x: M.left - 8, y: y(t) + 4, "text-anchor": "end", class: "tick" });
+    lbl.textContent = pct(t);
+  }
+  // x ticks, thinned to at most 8 labels
+  const step = Math.max(1, Math.ceil(n / 8));
+  DATA.dates.forEach((d, i) => {
+    if (i % step && i !== n - 1) return;
+    const lbl = el("text", { x: x(i), y: M.top + IH + 22, "text-anchor": "middle", class: "tick" });
+    lbl.textContent = d.slice(5);            // MM-DD
+  });
+
+  // one 2px line + 8px markers per player; null values break the path
+  for (const s of DATA.series) {
+    let d = "", pen = false;
+    s.win_prob.forEach((v, i) => {
+      if (v == null) { pen = false; return; }
+      d += (pen ? " L" : " M") + x(i).toFixed(1) + " " + y(v).toFixed(1);
+      pen = true;
+    });
+    if (d.includes("L")) el("path", { d, fill: "none", stroke: colorOf(s.player),
+      "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" });
+    s.win_prob.forEach((v, i) => {
+      if (v != null) el("circle", { cx: x(i), cy: y(v), r: 4, fill: colorOf(s.player) });
+    });
+  }
+
+  // direct labels for the top 4 (text in ink, colored dash carries identity)
+  const labels = byLatest.slice(0, 4).map(s => ({ p: s.player, v: last(s) }))
+    .sort((a, b) => y(a.v) - y(b.v));
+  let prev = -Infinity;
+  for (const L of labels) {
+    const ly = Math.max(y(L.v), prev + 14);
+    prev = ly;
+    el("line", { x1: M.left + IW + 6, x2: M.left + IW + 16, y1: ly, y2: ly,
+                 stroke: colorOf(L.p), "stroke-width": 3 });
+    const t = el("text", { x: M.left + IW + 20, y: ly + 4, class: "dlabel" });
+    t.textContent = L.p;
+  }
+
+  // legend: all players, ordered by latest odds, color chip + name + latest %
+  document.getElementById("legend").innerHTML = byLatest.map(s =>
+    `<span class="key"><i style="background:${colorOf(s.player)}"></i>${esc(s.player)} <b>${pct(last(s))}</b></span>`
+  ).join("");
+
+  // table view (relief for sub-3:1 slots + screen readers)
+  document.getElementById("dataTable").innerHTML =
+    `<thead><tr><th class="film-col">Date</th>${byLatest.map(s => `<th>${esc(s.player)}</th>`).join("")}</tr></thead>` +
+    `<tbody>${DATA.dates.map((d, i) =>
+      `<tr><td class="film-col">${esc(d)}</td>${byLatest.map(s => {
+        const v = s.win_prob[i];
+        return `<td>${v == null ? "·" : pct(v)}</td>`;
+      }).join("")}</tr>`).join("")}</tbody>`;
+
+  // crosshair + tooltip
+  const hover = el("line", { y1: M.top, y2: M.top + IH, stroke: "var(--text-muted)",
+    "stroke-width": 1, "stroke-dasharray": "3 3", visibility: "hidden" });
+  svg.addEventListener("mousemove", e => {
+    const r = svg.getBoundingClientRect();
+    const px = (e.clientX - r.left) * (W / r.width);
+    const i = Math.max(0, Math.min(n - 1, Math.round((px - M.left) / (n === 1 ? IW : IW / (n - 1)))));
+    hover.setAttribute("x1", x(i)); hover.setAttribute("x2", x(i));
+    hover.setAttribute("visibility", "visible");
+    tip.innerHTML = `<div class="tip-date">${esc(DATA.dates[i])}</div>` + byLatest
+      .map(s => ({ p: s.player, v: s.win_prob[i] }))
+      .filter(o => o.v != null)
+      .sort((a, b) => b.v - a.v)
+      .map(o => `<div><i style="background:${colorOf(o.p)}"></i>${esc(o.p)}<b>${pct(o.v)}</b></div>`)
+      .join("");
+    tip.hidden = false;
+    const cw = card.clientWidth, tx = (x(i) / W) * cw;
+    tip.style.left = Math.max(8, Math.min(cw - tip.offsetWidth - 8, tx + 14)) + "px";
+    tip.style.top = "20px";
+  });
+  svg.addEventListener("mouseleave", () => {
+    hover.setAttribute("visibility", "hidden");
+    tip.hidden = true;
+  });
+}
+
+if (n === 0) {
+  document.getElementById("view").style.display = "none";
+  document.getElementById("gated").style.display = "block";
+} else {
+  draw();
+}
+</script>
+</body>
+</html>

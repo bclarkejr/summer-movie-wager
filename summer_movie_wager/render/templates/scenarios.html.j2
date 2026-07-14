@@ -54,7 +54,7 @@
 </div>
 
 <div id="view">
-  <div class="tabs" id="tabs" role="tablist"></div>
+  <div class="tabs" id="tabs"></div>
   <div class="scenario-caption" id="caption"></div>
   <div class="grid-wrap">
     <table id="grid">
@@ -94,11 +94,12 @@ function buildTabs(){
     const sc=DATA.scenarios[p];
     const b=document.createElement("button");
     b.className="tab"+(p===selected?" is-active":"")+(sc?"":" is-disabled");
-    b.setAttribute("role","tab");
     if(sc){
+      b.setAttribute("aria-pressed", p===selected ? "true" : "false");
       b.innerHTML=`${esc(p)}<span class="pct">${sc.win_pct}%</span>`;
       b.onclick=()=>{selected=p;render();};
     }else{
+      b.disabled = true;
       b.innerHTML=`${esc(p)}<span class="pct">0%</span>`;
       b.title="No winning scenario — can't catch the field";
     }

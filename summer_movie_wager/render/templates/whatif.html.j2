@@ -43,6 +43,14 @@
 }
 .finish-list li .grip { color:var(--zero); font-size:1em; flex:none; }
 .finish-list li .film-title { font-weight:700; }
+.finish-list li .row-move { margin-left:auto; display:flex; gap:.2em; }
+.move-btn {
+  font-family:'Nunito',sans-serif; font-size:.8em; font-weight:700; line-height:1;
+  color:var(--text-muted); background:transparent;
+  border:2px solid var(--border); border-radius:8px;
+  padding:.25em .45em; cursor:pointer;
+}
+.move-btn:hover { color:var(--text); background:var(--bg-hover); }
 .finish-list li:hover { border-color:var(--accent-soft); }
 .finish-list li.ghost { opacity:.25; }
 .finish-list li.chosen { border-color:var(--accent); cursor:grabbing; }
@@ -117,8 +125,7 @@
   Refreshed {{ generated_at }}.
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"
-        integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous"></script>
+<script>{{ sortable_js | safe }}</script>
 <script>
 const DATA = {{ whatif_json | safe }};
 
@@ -166,7 +173,11 @@ const footEl = document.getElementById("foot");
 
 function buildList() {
   finishEl.innerHTML = DATA.movies.map((t, i) =>
-    `<li data-i="${i}"><span class="grip">⠿</span><span class="film-title">${esc(t)}</span></li>`
+    `<li data-i="${i}"><span class="grip">⠿</span><span class="film-title">${esc(t)}</span>
+      <span class="row-move">
+        <button class="move-btn" data-dir="-1" aria-label="Move ${esc(t)} up">▲</button>
+        <button class="move-btn" data-dir="1" aria-label="Move ${esc(t)} down">▼</button>
+      </span></li>`
   ).join("");
 }
 const currentTop10 = () =>
@@ -230,7 +241,19 @@ new Sortable(finishEl, {
   ghostClass: "ghost",
   chosenClass: "chosen",
   delay: 150, delayOnTouchOnly: true, touchStartThreshold: 4,
+  filter: ".move-btn", preventOnFilter: false,
   onEnd: rescore,
+});
+finishEl.addEventListener("click", e => {
+  const btn = e.target.closest(".move-btn");
+  if (!btn) return;
+  const li = btn.closest("li");
+  const target = +btn.dataset.dir < 0 ? li.previousElementSibling : li.nextElementSibling;
+  if (!target) return;                       // ▲ on first row / ▼ on last row: no-op
+  if (+btn.dataset.dir < 0) finishEl.insertBefore(li, target);
+  else finishEl.insertBefore(target, li);
+  btn.focus();                               // repeated presses keep walking the film
+  rescore();
 });
 document.getElementById("reset").onclick = () => { buildList(); rescore(); };
 

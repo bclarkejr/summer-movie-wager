@@ -202,7 +202,7 @@ def test_whatif_page_rendered(tmp_path):
     index, _scenarios, whatif = _render_pages(tmp_path, True)
     assert "const DATA =" in whatif
     assert 'id="finish"' in whatif
-    assert "Sortable.min.js" in whatif
+    assert "Sortable" in whatif
     assert 'class="site-nav"' in whatif
     assert "const FORECAST_AVAILABLE = true" in whatif
     assert 'href="whatif.html"' in index
@@ -212,6 +212,14 @@ def test_whatif_gated_when_forecast_off(tmp_path):
     index, _scenarios, whatif = _render_pages(tmp_path, False)
     assert "const FORECAST_AVAILABLE = false" in whatif
     assert 'href="whatif.html"' not in index
+
+
+def test_whatif_has_no_cdn_dependency(tmp_path):
+    _index, _scenarios, whatif = _render_pages(tmp_path, True)
+    assert "jsdelivr" not in whatif
+    assert "cdn." not in whatif
+    assert "new Sortable(" in whatif  # library consumer still present
+    assert "This fork of Sortable" in whatif or "Sortable 1.15.6" in whatif or "MIT" in whatif
 
 
 def test_whatif_payload_top15_in_projected_order_with_picks(tmp_path):
@@ -369,3 +377,55 @@ def test_render_escapes_html_in_scraped_fields(tmp_path: Path):
     rendered = (tmp_path / "index.html").read_text()
     assert hostile not in rendered, "raw <script> tag leaked through autoescape"
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in rendered
+
+
+def test_scenario_tabs_are_plain_buttons_with_pressed_state(tmp_path):
+    _index, scenarios, _whatif = _render_pages(tmp_path, True)
+    assert 'role="tablist"' not in scenarios
+    assert '"role","tab"' not in scenarios  # the buildTabs setAttribute call
+    assert "aria-pressed" in scenarios
+    assert "b.disabled = true" in scenarios  # no-scenario players are truly disabled
+
+
+def test_whatif_rows_have_keyboard_move_buttons(tmp_path):
+    _index, _scenarios, whatif = _render_pages(tmp_path, True)
+    assert 'class="move-btn"' in whatif
+    assert "Move ${esc(t)} up" in whatif  # aria-label template literal in the page JS
+    assert 'filter: ".move-btn"' in whatif  # buttons never start a drag
+
+
+def test_history_page_rendered_and_always_linked(tmp_path):
+    index_on, _s, _w = _render_pages(tmp_path, True)
+    history = (tmp_path / "history.html").read_text()
+    assert "const DATA =" in history
+    assert "Odds Over Time" in history
+    assert 'class="site-nav"' in history
+    assert 'href="history.html"' in index_on
+
+    index_off, _s2, _w2 = _render_pages(tmp_path, False)
+    # unlike scenarios/whatif, history stays linked when the forecast is off
+    assert 'href="history.html"' in index_off
+    assert 'href="scenarios.html"' not in index_off
+
+
+def test_history_payload_embedded(tmp_path):
+    import json as _json
+    import re
+
+    data = _fixture_input()
+    data = RenderInput(
+        generated_at=data.generated_at,
+        leaderboard=data.leaderboard,
+        movies=data.movies,
+        player_details=data.player_details,
+        raw_snapshot=data.raw_snapshot,
+        history={
+            "dates": ["2026-05-11"],
+            "series": [{"player": "bclarke", "win_prob": [0.19]}],
+        },
+    )
+    render(tmp_path, data)
+    history = (tmp_path / "history.html").read_text()
+    payload = _json.loads(re.search(r"const DATA = (.*?);\n", history).group(1))
+    assert payload["dates"] == ["2026-05-11"]
+    assert payload["series"][0]["player"] == "bclarke"
