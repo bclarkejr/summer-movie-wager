@@ -266,6 +266,35 @@
   as_of: 2026-06-26
   notes: "212-255M opening range per BOT; 475-655M total gross per BOT"
 
+# August 2026 releases
+
+"PAW Patrol: The Dino Movie":
+  release_date: 2026-08-14
+  opening_weekend_estimate: 15_000_000
+  total_domestic_estimate: 43_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-07-17
+  notes: "14-19M opening range per BOT; 40-58M total gross per BOT"
+
+"The End of Oak Street":
+  release_date: 2026-08-14
+  opening_weekend_estimate: 40_000_000
+  total_domestic_estimate: 125_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-07-17
+  notes: "30-45M opening range per BOT; 72-148M total gross per BOT"
+
+"Insidious: Out of the Further":
+  release_date: 2026-08-21
+  opening_weekend_estimate: 24_000_000
+  total_domestic_estimate: 57_000_000
+  confidence: low
+  source: "Box Office Theory forecast"
+  as_of: 2026-07-17
+  notes: "23-28M opening range per BOT; 55-69M total gross per BOT"
+
 # ---------------------------------------------------------------------------
 # Placeholders — uncomment and fill as analyst data arrives
 # ---------------------------------------------------------------------------
@@ -278,35 +307,6 @@
 #   source: ""
 #   as_of: 2026-05-04
 #   notes: ""
-
-# August 2026 releases
-
-"PAW Patrol: The Dino Movie":
-  release_date: 2026-08-14
-#   opening_weekend_estimate: 0  # TODO
-#   total_domestic_estimate: 0  # TODO
-#   confidence: low
-#   source: ""
-#   as_of: 2026-05-04
-#   notes: "Paramount; comp PAW Patrol: The Mighty Movie 2023 ($23M opening / $67M domestic)"
-
-"The End of Oak Street":
-  release_date: 2026-08-14
-#   opening_weekend_estimate: 0  # TODO
-#   total_domestic_estimate: 0  # TODO
-#   confidence: low
-#   source: ""
-#   as_of: 2026-05-04
-#   notes: ""
-
-"Insidious: Out of the Further":
-  release_date: 2026-08-21
-#   opening_weekend_estimate: 0  # TODO
-#   total_domestic_estimate: 0  # TODO
-#   confidence: low
-#   source: ""
-#   as_of: 2026-05-04
-#   notes: "Sony/Blumhouse; Amelia Eve as Gemma; comp Insidious: The Red Door 2023 ($32M opening / $84M domestic)"
 
 "Coyote vs. Acme":
   release_date: 2026-08-28
