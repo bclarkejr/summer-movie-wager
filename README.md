@@ -52,7 +52,7 @@ The pages are plain static files, so opening `docs/index.html` straight from the
 ### Tests and linting
 
 ```bash
-uv run pytest                 # 127 tests: scoring, decay math, scraper (offline
+uv run pytest                 # 141 tests: scoring, decay math, scraper (offline
                               # fixture), Box Office Mojo chart parsing, simulator,
                               # HTML snapshot test
 uv run ruff check .           # lint
@@ -211,7 +211,7 @@ The GitHub Action (`.github/workflows/refresh.yml`) is `workflow_dispatch`-only 
 
 Before accepting that run, **check that the chart's top titles actually advanced versus the Sep 7 run** (compare the last two dates in `data/box_office_history.jsonl`, or the cumulative column on the leaderboard). If the numbers are identical, Box Office Mojo has not posted the Labor Day weekend yet — wait and re-run later in the day. A same-day re-run is safe: `_resolve_grosses` takes the highest gross on or before the cutoff, so the better figure wins, and the Odds Over Time chart keeps only the last row per date.
 
-
+If Sep 8 is missed entirely, there is no re-run path: from Sep 9 onward `_resolve_grosses` ignores the chart's values altogether, so the pipeline can no longer recover the final numbers on its own — they would have to be appended to `data/box_office_history.jsonl` by hand.
 
 ## Conventions
 
