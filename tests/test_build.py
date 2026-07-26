@@ -2,6 +2,8 @@
 
 from datetime import date
 
+import pytest
+
 from summer_movie_wager.ingest.boxoffice import BoxOfficeRow
 from summer_movie_wager.render.build import (
     _build_raw_sim_fields,
@@ -9,6 +11,7 @@ from summer_movie_wager.render.build import (
     _current_top_10,
     _normalize_movies,
     _project_all,
+    _require_nonempty_chart,
     _resolve_grosses,
 )
 from summer_movie_wager.types import (
@@ -355,3 +358,93 @@ def test_closed_film_projects_its_final_gross():
     assert projs[0].median_in_window_gross == 66_078_506.0
     assert projs[0].sigma == 0.0
     assert projs[0].floor == 66_078_506.0
+
+
+def test_require_nonempty_chart_raises_on_empty_chart():
+    # An empty chart means the scrape broke (markup changed, bad fetch, etc.) --
+    # it must fail loudly rather than being processed as "every film has closed".
+    with pytest.raises(ValueError, match="Box Office Mojo"):
+        _require_nonempty_chart({})
+
+
+def test_require_nonempty_chart_passes_through_a_real_chart():
+    chart = {"Toy Story 5": _row("Toy Story 5", 441_455_658.0, date(2026, 6, 19))}
+    assert _require_nonempty_chart(chart) is chart
+
+
+def test_normalize_movies_unions_picks_with_top_chart_contenders():
+    # 29 chart films ranked purely by gross, plus a picked film (Power Ballad,
+    # modeled on its real chart rank ~104 with $2.6M) that sits far below the
+    # top-25 cut. If candidates were built by intersecting picks with the chart
+    # contenders instead of unioning them, Power Ballad would vanish here.
+    chart = {}
+    for i in range(29):
+        title = f"Chart Film {i}"
+        chart[title] = _row(title, 200_000_000.0 - i * 1_000_000.0, date(2026, 6, 1))
+    chart["Power Ballad"] = _row("Power Ballad", 2_600_000.0, date(2026, 5, 20))
+    grosses = {title: row.cumulative_gross for title, row in chart.items()}
+
+    snap = _snapshot(
+        ["Power Ballad"]
+        + [f"Extra Pick {i}" for i in range(9)]
+        + [f"Extra DH {i}" for i in range(3)]
+    )
+    movies = _normalize_movies(
+        snap, {}, {}, grosses=grosses, chart=chart, carried=set(), today=date(2026, 7, 25)
+    )
+
+    # Picked long-shot survives despite ranking far below the top 25.
+    assert "Power Ballad" in movies
+    # Top of the chart (rank 1, and rank 25 exactly at the cut) is included.
+    assert "Chart Film 0" in movies
+    assert "Chart Film 24" in movies
+    # Unpicked film just past the cut (rank 26) is excluded by the truncation.
+    assert "Chart Film 25" not in movies
+
+
+def test_normalize_movies_unions_carried_titles():
+    # A film that fell off the chart (carried forward from history) must appear
+    # even though it is neither picked, nor in preopening, nor a chart contender.
+    snap = _snapshot(_THIRTEEN)
+    movies = _normalize_movies(
+        snap,
+        {},
+        {},
+        grosses={"The Sheep Detectives": 66_078_506.0},
+        chart={},
+        carried={"The Sheep Detectives"},
+        today=date(2026, 7, 25),
+    )
+    assert "The Sheep Detectives" in movies
+
+
+def test_normalize_film_released_today_with_gross_is_in_theaters():
+    # release == today falls past the `> today` PRE_RELEASE branch and must
+    # reach IN_THEATERS, not get caught by the CLOSED check ahead of it.
+    today = date(2026, 7, 25)
+    snap = _snapshot(_THIRTEEN)
+    chart = {"New Today": _row("New Today", 5_000_000.0, today)}
+    movies = _normalize_movies(
+        snap, {}, {}, grosses={"New Today": 5_000_000.0}, chart=chart, carried=set(), today=today
+    )
+    assert movies["New Today"]["status"] == MovieStatus.IN_THEATERS
+
+
+def test_normalize_unreleased_film_stays_pre_release():
+    today = date(2026, 7, 25)
+    snap = _snapshot(["Not Yet Released", *_THIRTEEN[1:]])
+    overrides = {"Not Yet Released": {"release_date": "2026-08-01"}}
+    movies = _normalize_movies(
+        snap, overrides, {}, grosses={}, chart={}, carried=set(), today=today
+    )
+    assert movies["Not Yet Released"]["status"] == MovieStatus.PRE_RELEASE
+
+
+def test_normalize_zero_gross_film_stays_pre_release():
+    today = date(2026, 7, 25)
+    snap = _snapshot(["No Gross Yet", *_THIRTEEN[1:]])
+    overrides = {"No Gross Yet": {"release_date": "2026-07-01"}}
+    movies = _normalize_movies(
+        snap, overrides, {}, grosses={}, chart={}, carried=set(), today=today
+    )
+    assert movies["No Gross Yet"]["status"] == MovieStatus.PRE_RELEASE

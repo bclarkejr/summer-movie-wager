@@ -124,9 +124,10 @@ def main(argv: list[str] | None = None) -> int:
     preopening = _parse_preopening(preopening_raw)
 
     # TODO(Task 5): wire in the live Box Office Mojo chart via fetch_year_chart.
-    # Until then there's no chart to resolve against, so grosses/carried fall
-    # straight out of history and every film reads as picked-or-history-only.
-    chart: dict[str, BoxOfficeRow] = {}
+    # Until then, this placeholder raises by design (see _require_nonempty_chart):
+    # an empty chart must fail loudly rather than silently reclassifying every
+    # film with a gross as CLOSED.
+    chart: dict[str, BoxOfficeRow] = _require_nonempty_chart({})
     grosses, carried = _resolve_grosses(chart, _load_history(), today=today)
     movies = _normalize_movies(
         snapshot,
@@ -244,6 +245,33 @@ def _parse_preopening(raw: dict[str, Any]) -> dict[str, PreopeningEntry]:
             notes=str(entry.get("notes", "")),
         )
     return out
+
+
+def _require_nonempty_chart(chart: dict[str, BoxOfficeRow]) -> dict[str, BoxOfficeRow]:
+    """Fail loudly on an empty chart instead of quietly reclassifying the slate.
+
+    `_normalize_movies` marks a film CLOSED when it has gross but isn't in the
+    chart. If the chart is empty -- because Box Office Mojo changed its markup
+    and `parse_year_chart` returned no rows, or a fetch hit an unexpected page --
+    every film with any recorded gross would flip to CLOSED, freezing every
+    projection at today's number with zero uncertainty and appending corrupted
+    rows to the append-only `data/box_office_history.jsonl`. Call this on the
+    chart at the point it enters the pipeline, before `_resolve_grosses` or
+    `_normalize_movies` see it, so both `main()` and any future caller are
+    protected the same way.
+    """
+    if not chart:
+        raise ValueError(
+            "Box Office Mojo year chart is empty -- refusing to run the pipeline "
+            "on it. fetch_year_chart()/parse_year_chart() returned no rows, which "
+            "means the site's markup likely changed or the fetch returned an "
+            "unexpected page. Check the CSS selectors in "
+            "summer_movie_wager/ingest/boxoffice.py against the live page at "
+            "https://www.boxofficemojo.com/year/<year>/ before retrying -- running "
+            "the pipeline on an empty chart would misclassify every in-theaters "
+            "film as CLOSED."
+        )
+    return chart
 
 
 def _normalize_movies(
