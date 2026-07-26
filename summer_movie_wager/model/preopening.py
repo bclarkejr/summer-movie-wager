@@ -1,4 +1,4 @@
-"""Pre-release projection (Mode B) — analyst-estimate driven."""
+"""Pre-release projection (Mode B) — analyst-estimate driven — and the wager window constants."""
 
 from datetime import date
 

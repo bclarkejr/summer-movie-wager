@@ -12,11 +12,11 @@ from typing import Any
 
 import yaml
 
-from summer_movie_wager.ingest.boxoffice import BoxOfficeRow
+from summer_movie_wager.ingest.boxoffice import BoxOfficeRow, fetch_year_chart, in_window
 from summer_movie_wager.ingest.picks_guard import bootstrap_or_validate
 from summer_movie_wager.ingest.scraper import fetch_snapshot
 from summer_movie_wager.model.decay import project_decay
-from summer_movie_wager.model.preopening import WINDOW_END, project_preopening
+from summer_movie_wager.model.preopening import WINDOW_END, WINDOW_START, project_preopening
 from summer_movie_wager.model.simulate import simulate_season
 from summer_movie_wager.render.page import (
     LeaderboardRow,
@@ -71,26 +71,31 @@ def _build_raw_sim_fields(
 
 def main(argv: list[str] | None = None) -> int:
     """
-    Run the full pipeline to refresh the site.  There are 8 steps to the pipeline:
+    Run the full pipeline to refresh the site.  There are 9 steps to the pipeline:
 
-    1. fetch_snapshot:  Scrape thesummermoviewager.com to get the current state of the game (picks,
-    cumulative grosses, and reported points).
+    1. fetch_snapshot:  Scrape thesummermoviewager.com for picks and the site's own
+    reported standings.  Its top-13 gross table is used only for the correctness
+    cross-check in step 7, never for projections.
     2. bootstrap_or_validate:  Validate that the picks we have in data/picks_snapshot_2026.yaml
     match what we scraped from the site.
-    3. _normalize_movies:  Normalize the movie data from the snapshot, overrides,
+    3. fetch_year_chart + in_window + _resolve_grosses:  Pull cumulative domestic
+    grosses from Box Office Mojo's 2026 yearly chart, filter to films released in the
+    wager window, and merge with recorded history so films that have left the chart
+    keep their final gross and nothing counts gross earned after Labor Day.
+    4. _normalize_movies:  Normalize the movie data from the snapshot, overrides,
          and preopening projections into a single dictionary of movies with their release dates,
          status, category, and cumulative gross.
-    4. _project_all:  For each movie, project its in-window gross and uncertainty (sigma) based on
+    5. _project_all:  For each movie, project its in-window gross and uncertainty (sigma) based on
     its status and available data.
          For IN_THEATERS movies, use the decay model.  For PRE_RELEASE movies with an analyst entry,
          use the preopening projection model.
          For other PRE_RELEASE movies, project zero gross.
-    5. simulate_season:  If there are at least 25 movies with non-zero projections, simulate the
+    6. simulate_season:  If there are at least 25 movies with non-zero projections, simulate the
     season 10,000 times to estimate each player's win probability and final points distribution.
-    6. _validate_against_site:  Compare our computed current points against the site's reported
-    points to ensure our scoring engine is correct.
-    7. render:  Render the HTML page using the leaderboard, movie rows, and player details.
-    8. _append_box_office_history and _append_forecast_history:  Append the current box office and
+    7. _validate_against_site:  Compare the site's own gross list, scored, against the site's own
+    reported points to ensure our scoring engine is correct.
+    8. render:  Render the HTML page using the leaderboard, movie rows, and player details.
+    9. _append_box_office_history and _append_forecast_history:  Append the current box office and
     forecast data to history files for future reference.
     """
 
@@ -114,6 +119,19 @@ def main(argv: list[str] | None = None) -> int:
     print("[build] validating picks against snapshot", file=sys.stderr)
     bootstrap_or_validate(snapshot.players, DATA_DIR / "picks_snapshot_2026.yaml")
 
+    # Cumulative grosses come from Box Office Mojo, not the play-along site. The site
+    # only publishes its top 13, so films below it (Power Ballad) never appear and
+    # films that fall out of it (The Sheep Detectives) go dark mid-season.
+    print("[build] fetching Box Office Mojo yearly chart", file=sys.stderr)
+    chart = _require_nonempty_chart(in_window(fetch_year_chart(year=WINDOW_START.year)))
+    grosses, carried = _resolve_grosses(chart, _load_history(), today=today)
+    if carried:
+        print(
+            f"[build] {len(carried)} film(s) carried forward from history "
+            "(off the chart, treated as closed):\n  - " + "\n  - ".join(sorted(carried)),
+            file=sys.stderr,
+        )
+
     # This is the real value-add of the pipeline.  Using the week-over-week decay model and
     # preopening projections, we can start to guess what each film will gross in the wager window.
     # Once we have 25 projections (i.e., once we have an industry projection for Spider-Man: Brand
@@ -123,12 +141,6 @@ def main(argv: list[str] | None = None) -> int:
     preopening_raw = _load_yaml(DATA_DIR / "preopening_projections.yaml")
     preopening = _parse_preopening(preopening_raw)
 
-    # TODO(Task 5): wire in the live Box Office Mojo chart via fetch_year_chart.
-    # Until then, this placeholder raises by design (see _require_nonempty_chart):
-    # an empty chart must fail loudly rather than silently reclassifying every
-    # film with a gross as CLOSED.
-    chart: dict[str, BoxOfficeRow] = _require_nonempty_chart({})
-    grosses, carried = _resolve_grosses(chart, _load_history(), today=today)
     movies = _normalize_movies(
         snapshot,
         overrides,
@@ -163,13 +175,21 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
 
-    # Calculate the current points for each player based on the current top 10 movies and validate
-    # against thesummermoviewager.com reported points.
-    current_top10 = _current_top_10(snapshot.cumulative_grosses)
+    # Displayed standings use the Box Office Mojo top 10 -- it sees films the play-along
+    # site's top-13 table doesn't.
+    current_top10 = _current_top_10(grosses)
     current_pts = {
         username: score_player(picks, current_top10) for username, picks in snapshot.players.items()
     }
-    _validate_against_site(current_pts, snapshot.site_reported_points)
+
+    # The correctness check scores the *site's own* gross list against the site's own
+    # standings. Comparing our BOM-derived points here instead would conflate a broken
+    # scoring engine with data that is simply fresher than theirs.
+    site_top10 = _current_top_10(snapshot.cumulative_grosses)
+    site_pts = {
+        username: score_player(picks, site_top10) for username, picks in snapshot.players.items()
+    }
+    _validate_against_site(site_pts, snapshot.site_reported_points)
 
     # Build the leaderboard, movie rows, and player details for rendering the HTML page.
     leaderboard = _build_leaderboard(snapshot, sim, current_pts)
@@ -207,7 +227,7 @@ def main(argv: list[str] | None = None) -> int:
     # This ensures our decay model has historical information to see week-over-week trends.
     # It is skipped if --local is passed.
     if not args.local:
-        _append_box_office_history(snapshot, today=today)
+        _append_box_office_history(grosses, today=today)
         if sim is not None:
             _append_forecast_history(snapshot, sim, today=today)
 
@@ -807,16 +827,19 @@ def _pick_detail(
     )
 
 
-def _append_box_office_history(snapshot: SiteSnapshot, *, today: date) -> None:
+def _append_box_office_history(grosses: dict[str, float], *, today: date) -> None:
     """
-    Append the current box office data to history files for future reference.  This ensures our
-    decay model has historical information to see week-over-week trends.
-    It is skipped if --local is passed.
+    Append today's resolved cumulative grosses to `data/box_office_history.jsonl`,
+    so the decay model can read week-over-week trends on the next run.
+
+    Skipped when --local is passed. Closed films keep re-appearing at a flat value;
+    that is intentional -- it is what lets a film that has left the chart entirely
+    still carry its final gross into scoring.
     """
 
     box_path = DATA_DIR / "box_office_history.jsonl"
     with box_path.open("a") as f:
-        for movie, gross in snapshot.cumulative_grosses.items():
+        for movie, gross in sorted(grosses.items()):
             f.write(
                 json.dumps(
                     {

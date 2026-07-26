@@ -1,6 +1,6 @@
 # summer-movie-wager
 
-A tracker and forecaster for the 2026 **Summer Movie Wager** — a competition among 8 friends to predict which movies will gross the most at the domestic box office between **2026-04-30 and 2026-09-07**.
+A tracker and forecaster for the 2026 **Summer Movie Wager** — a competition among 8 friends to predict which movies will gross the most at the domestic box office between **2026-05-01 and 2026-09-07**.
 
 The official site ([thesummermoviewager.com](https://thesummermoviewager.com/index.php?year=2026&addPlayer=bclarke%2Cvivrad%2Czmeister%2Cbrettfern%2Ccarleigh%2Cradhadr%2Cemsullivan%2Cmhartje&playAlongOnly=)) shows current standings but nothing forward-looking. This project adds what the site doesn't: **projected final scores and per-player win probabilities**, refreshed on demand.
 
@@ -52,8 +52,9 @@ The pages are plain static files, so opening `docs/index.html` straight from the
 ### Tests and linting
 
 ```bash
-uv run pytest                 # 87 tests: scoring, decay math, scraper (offline
-                              # fixture), simulator, HTML snapshot test
+uv run pytest                 # 127 tests: scoring, decay math, scraper (offline
+                              # fixture), Box Office Mojo chart parsing, simulator,
+                              # HTML snapshot test
 uv run ruff check .           # lint
 uv run ruff format --check .  # formatting
 ```
@@ -62,21 +63,23 @@ uv run ruff format --check .  # formatting
 
 `summer_movie_wager/render/build.py` is the entry point and glue. One run does:
 
-1. **Scrape** — `ingest/scraper.py` fetches the play-along page with [httpx](https://www.python-httpx.org/) (a modern requests-style HTTP client) and parses it with [selectolax](https://github.com/rushter/selectolax) (a fast HTML parser; think BeautifulSoup with less API and more speed). Produces a `SiteSnapshot`: every player's picks, each movie's cumulative gross so far, and the site's own reported points.
+1. **Scrape** — `ingest/scraper.py` fetches the play-along page with [httpx](https://www.python-httpx.org/) (a modern requests-style HTTP client) and parses it with [selectolax](https://github.com/rushter/selectolax) (a fast HTML parser; think BeautifulSoup with less API and more speed). Produces a `SiteSnapshot`: every player's picks, the site's own top-13 cumulative-gross table, and the site's own reported points. The site is scraped only for picks and for the correctness cross-check in step 6 below — it is never the source of the grosses used for projections or the displayed leaderboard.
 
 2. **Picks-drift guard** — `ingest/picks_guard.py` compares the freshly-scraped picks against the locked snapshot in `data/picks_snapshot_2026.yaml`. Any difference — a changed pick, a missing username, a renamed title — fails the build loudly. This protects against both upstream site changes and silent scraper regressions. (On the first-ever run the snapshot is bootstrapped from the scrape; to legitimately re-lock, delete the file and re-run.)
 
-3. **Normalize** — `build.py` merges the scrape with `data/movies_overrides.yaml` (title aliases, category fixes, release-date corrections) into one typed `MovieRecord` per tracked title. All shared data models live in `types.py` as [pydantic](https://docs.pydantic.dev/) models — dataclass-style classes that validate their fields at runtime, so bad scraped data fails at the boundary instead of deep in the math.
+3. **Fetch cumulative grosses** — `ingest/boxoffice.py` fetches `https://www.boxofficemojo.com/year/2026/`, a 200-row yearly chart, far more complete than the play-along site's top-13 table: it still shows films after they drop out of the site's table (e.g. *The Sheep Detectives*, $66M+) and films that never made the site's cut at all (e.g. *Power Ballad*, ~$2.6M). `in_window()` filters to releases inside the wager window, and `_resolve_grosses()` in `build.py` merges the chart with `data/box_office_history.jsonl` so a film that eventually falls off the 200-row chart keeps its last observed gross instead of going dark, and nothing counts gross earned after Labor Day.
 
-4. **Project** — each movie gets a `(median_in_window_gross, sigma)` estimate from one of two models (details below): `model/decay.py` for movies already in theaters, `model/preopening.py` for unreleased movies with analyst estimates. Unreleased movies *without* analyst data get a projection of 0 and a "no projection" badge — there is deliberately no comparable-titles fallback; if there's no real data, there's no projection.
+4. **Normalize** — `build.py` merges the resolved grosses with `data/movies_overrides.yaml` (title aliases, category fixes, release-date corrections) into one typed `MovieRecord` per tracked title. All shared data models live in `types.py` as [pydantic](https://docs.pydantic.dev/) models — dataclass-style classes that validate their fields at runtime, so bad scraped data fails at the boundary instead of deep in the math.
 
-5. **Simulate** — `model/simulate.py` runs a 10,000-trial Monte Carlo season using [numpy](https://numpy.org/) (all trials vectorized as arrays; no Python-level loop over trials). Requires at least 25 movies with non-zero projections; below that the site shows current standings only, with a warning.
+5. **Project** — each movie gets a `(median_in_window_gross, sigma)` estimate from one of two models (details below): `model/decay.py` for movies already in theaters, `model/preopening.py` for unreleased movies with analyst estimates. Unreleased movies *without* analyst data get a projection of 0 and a "no projection" badge — there is deliberately no comparable-titles fallback; if there's no real data, there's no projection.
 
-6. **Validate scoring** — the pipeline recomputes every player's *current* points with its own scoring engine (`score/rules.py`) and compares against the points the official site reports. A mismatch prints a loud warning — a free correctness check on every run.
+6. **Simulate** — `model/simulate.py` runs a 10,000-trial Monte Carlo season using [numpy](https://numpy.org/) (all trials vectorized as arrays; no Python-level loop over trials). Requires at least 25 movies with non-zero projections; below that the site shows current standings only, with a warning.
 
-7. **Render** — `render/page.py` renders four pages with [Jinja2](https://jinja.palletsprojects.com/) (HTML templating: templates in `render/templates/`, data in, HTML out). The shared nav bar and theme toggle (`_nav.html.j2`, `_theme.html.j2`) and the CSS files in `render/static/` (`style.css`, `nav.css`, `theme.css`, `shared.css`) are inlined into each page. Also writes `docs/data.json`, the full pipeline state as JSON.
+7. **Validate scoring** — the pipeline recomputes every player's *current* points, scored against the **site's own** top-13 gross list, with its own scoring engine (`score/rules.py`) and compares against the points the official site reports. A mismatch prints a loud warning — a free correctness check on every run, kept deliberately independent of the Box Office Mojo data: comparing our fresher numbers against the site's own would conflate "our scoring engine is broken" with "our data is more complete than theirs." The leaderboard actually displayed to players is scored against the Box Office Mojo top 10 instead (step 8), since it sees films the site's top-13 table doesn't.
 
-8. **Append history** — production runs append one line per movie to `data/box_office_history.jsonl` and one line per player to `data/forecast_history.jsonl` (JSONL = one JSON object per line, append-only).
+8. **Render** — `render/page.py` renders four pages with [Jinja2](https://jinja.palletsprojects.com/) (HTML templating: templates in `render/templates/`, data in, HTML out). The shared nav bar and theme toggle (`_nav.html.j2`, `_theme.html.j2`) and the CSS files in `render/static/` (`style.css`, `nav.css`, `theme.css`, `shared.css`) are inlined into each page. Also writes `docs/data.json`, the full pipeline state as JSON.
+
+9. **Append history** — production runs append one line per movie in the resolved Box Office Mojo grosses to `data/box_office_history.jsonl` and one line per player to `data/forecast_history.jsonl` (JSONL = one JSON object per line, append-only).
 
 ## The four pages
 
@@ -149,7 +152,7 @@ Generated pages under `docs/` are committed on purpose — that's how GitHub Pag
 | `data/picks_snapshot_2026.yaml` | Locked season picks, committed on first run. Every subsequent run validates the scrape against this — any drift fails loudly. |
 | `data/preopening_projections.yaml` | Hand-curated analyst estimates for unreleased movies. **The main file to maintain through the season.** |
 | `data/movies_overrides.yaml` | Patch file for title variants, wrong categories, and bad release dates from the scraper. |
-| `data/box_office_history.jsonl` | Append-only log of `{movie, date, cumulative_gross}` per production run. Feeds observed-WoW blending in Mode A. |
+| `data/box_office_history.jsonl` | Append-only log of `{movie, date, cumulative_gross}` per production run. Now records Box Office Mojo figures for every in-window film plus every picked film — not just the site's top 13. Feeds observed-WoW blending in Mode A, and lets a film that falls off the 200-row chart keep re-appearing at a flat final value by design (that's what lets a closed film's final gross carry into scoring). |
 | `data/forecast_history.jsonl` | Append-only log of per-player forecasts per production run. Available for a future "win odds over time" chart. |
 
 ### Adding or updating a pre-release movie
@@ -205,4 +208,11 @@ The GitHub Action (`.github/workflows/refresh.yml`) is `workflow_dispatch`-only 
 
 ## Wager window
 
-`2026-04-30` through `2026-09-07` (inclusive). Movies releasing after 2026-09-07 are shown with a "won't score" badge and get `projected_gross = 0`.
+`2026-05-01` through `2026-09-07` (inclusive). Movies releasing after 2026-09-07 are shown with a "won't score" badge and get `projected_gross = 0`.
+
+May 1 is the first Friday of May and matches what the play-along site scores — its 2026-05-04 gross list contains only May 1 releases.
+
+## Known limits
+
+- **The Box Office Mojo yearly chart is capped at 200 rows** (floor ≈ $468K as of July 2026). A film that has grossed less than the chart's current floor won't appear on it; it's carried forward from `data/box_office_history.jsonl` at its last observed gross and treated as closed. This only matters for films near the bottom of the pack — nothing that could plausibly reach the top 10.
+- **The 25-projection gate for running the simulation** (`build.py`) is now easily cleared by released films alone, so it no longer implicitly waits on an analyst estimate for *Spider-Man: Brand New Day* before it can simulate. `_warn_missing_projections` remains the signal to watch for picked-but-unprojected films.
