@@ -123,7 +123,20 @@ def main(argv: list[str] | None = None) -> int:
     preopening_raw = _load_yaml(DATA_DIR / "preopening_projections.yaml")
     preopening = _parse_preopening(preopening_raw)
 
-    movies = _normalize_movies(snapshot, overrides, preopening, today=today)
+    # TODO(Task 5): wire in the live Box Office Mojo chart via fetch_year_chart.
+    # Until then there's no chart to resolve against, so grosses/carried fall
+    # straight out of history and every film reads as picked-or-history-only.
+    chart: dict[str, BoxOfficeRow] = {}
+    grosses, carried = _resolve_grosses(chart, _load_history(), today=today)
+    movies = _normalize_movies(
+        snapshot,
+        overrides,
+        preopening,
+        grosses=grosses,
+        chart=chart,
+        carried=carried,
+        today=today,
+    )
     projections = _project_all(movies, preopening, today=today)
     _warn_missing_projections(movies, preopening, today=today)
 
@@ -238,40 +251,45 @@ def _normalize_movies(
     overrides: dict[str, Any],
     preopening: dict[str, PreopeningEntry],
     *,
+    grosses: dict[str, float],
+    chart: dict[str, BoxOfficeRow],
+    carried: set[str],
     today: date,
 ) -> dict[str, dict[str, Any]]:
     """
-    Given three sources of movie data (snapshot, overrides, and preopening projections), insert all
-    distinct movies into a single dictionary of movies.
-    The dictionary is then populated with their canonical title, release date, status, category, and
-    cumulative gross.
-    Cumulative gross is taken from the snapshot.  The cumulative gross will be zero for movies that
-    have not yet been released or have no reported gross.
+    Given the picks, the resolved grosses, the Box Office Mojo chart, the overrides
+    and the preopening projections, insert all distinct movies into a single
+    dictionary keyed by canonical title, carrying release date, status, category
+    and cumulative gross.
+
+    Candidates are the films that could matter to the wager: everything anyone
+    picked, everything with an analyst estimate, everything already in history,
+    and the top of the in-window chart. The chart's long tail is excluded from the
+    movie table on purpose -- it is ~120 films that cannot reach the top 10 and
+    would bury the ones that can. Picked films are always included regardless of
+    where they sit on the chart, which is how Power Ballad gets displayed.
     """
 
-    # Build a set of all "candidate movie titles" from the snapshot, preopening projections, and
-    # overrides.
-    # Candidates are any movie that is either picked by a player, has a preopening projection, or
-    # has a cumulative gross reported by the site.
-    # Candidates are not all movies that have been released, just movies that are relevant to the
-    # wager.
     movies: dict[str, dict[str, Any]] = {}
     candidates: set[str] = set()
     for picks in snapshot.players.values():
         candidates.update(picks.ranked + picks.dark_horses)
     candidates.update(preopening.keys())
-    candidates.update(snapshot.cumulative_grosses.keys())
+    candidates.update(grosses.keys() & _chart_contenders(chart))
+    candidates.update(carried)
 
-    # For each movie that might score, determine its canonical title, release date, status,
-    # category, and (most importantly) cumulative gross.
     for title in candidates:
         ov = overrides.get(title, {}) or {}
         canonical = ov.get("alias_of", title)
         category = Category(ov.get("category", "wide"))
-        cumulative = snapshot.cumulative_grosses.get(canonical, 0.0)
+        cumulative = grosses.get(canonical, 0.0)
+        chart_row = chart.get(canonical)
 
         if "release_date" in ov:
             release = date.fromisoformat(str(ov["release_date"]))
+        elif chart_row is not None:
+            # An actual reported release date beats an analyst's projected one.
+            release = chart_row.release_date
         elif canonical in preopening:
             release = preopening[canonical].release_date
         elif cumulative > 0:
@@ -283,6 +301,10 @@ def _normalize_movies(
             status = MovieStatus(ov["status"])
         elif release > today:
             status = MovieStatus.PRE_RELEASE
+        elif cumulative > 0 and chart_row is None:
+            # Has gross but is no longer on a 200-row chart whose floor is under
+            # $500K: the run is over and this is the final number.
+            status = MovieStatus.CLOSED
         elif cumulative > 0:
             status = MovieStatus.IN_THEATERS
         else:
@@ -296,6 +318,19 @@ def _normalize_movies(
             "cumulative": cumulative,
         }
     return movies
+
+
+# How many of the in-window chart's films to carry into the movie table beyond the
+# ones players picked. The top-10 race is decided well inside this; the rest of the
+# 200-row chart is noise.
+_CHART_CONTENDERS = 25
+
+
+def _chart_contenders(chart: dict[str, BoxOfficeRow]) -> set[str]:
+    """The highest-grossing in-window films, as candidates for the top 10."""
+
+    ranked = sorted(chart.values(), key=lambda r: r.cumulative_gross, reverse=True)
+    return {r.title for r in ranked[:_CHART_CONTENDERS]}
 
 
 def _has_complete_estimate(entry: PreopeningEntry) -> bool:
@@ -317,7 +352,11 @@ def _project_all(
     projections: list[Projection] = []
     history = _load_history()
     for title, m in movies.items():
-        if m["status"] == MovieStatus.IN_THEATERS:
+        if m["status"] == MovieStatus.CLOSED:
+            # The run is over: the observed cumulative is the final answer, with
+            # no uncertainty left to model.
+            gross, sigma = m["cumulative"], 0.0
+        elif m["status"] == MovieStatus.IN_THEATERS:
             obs = history.get(title, [])
             gross, sigma = project_decay(
                 release_date=m["release_date"],
@@ -341,7 +380,9 @@ def _project_all(
             )
         else:
             gross, sigma = 0.0, 0.0
-        floor = m["cumulative"] if m["status"] == MovieStatus.IN_THEATERS else 0.0
+        floor = (
+            m["cumulative"] if m["status"] in (MovieStatus.IN_THEATERS, MovieStatus.CLOSED) else 0.0
+        )
         projections.append(
             Projection(
                 movie_title=title,
@@ -620,7 +661,12 @@ def _build_movie_rows(
         p10 = proj.floor + remaining * math.exp(-1.2816 * proj.sigma)
         p90 = proj.floor + remaining * math.exp(1.2816 * proj.sigma)
         status_key = m["status"].value
-        src = "decay model" if m["status"] == MovieStatus.IN_THEATERS else "analyst estimate"
+        if m["status"] == MovieStatus.CLOSED:
+            src = "final gross"
+        elif m["status"] == MovieStatus.IN_THEATERS:
+            src = "decay model"
+        else:
+            src = "analyst estimate"
         rows.append(
             MovieRow(
                 title=title,

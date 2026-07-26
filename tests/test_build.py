@@ -7,10 +7,18 @@ from summer_movie_wager.render.build import (
     _build_raw_sim_fields,
     _count_non_zero_projections,
     _current_top_10,
+    _normalize_movies,
     _project_all,
     _resolve_grosses,
 )
-from summer_movie_wager.types import Category, MovieStatus, PreopeningEntry, Projection
+from summer_movie_wager.types import (
+    Category,
+    MovieStatus,
+    PlayerPicks,
+    PreopeningEntry,
+    Projection,
+    SiteSnapshot,
+)
 
 
 def test_project_all_treats_incomplete_preopening_entry_as_no_projection():
@@ -278,3 +286,72 @@ def test_resolve_grosses_handles_out_of_order_history():
     }
     grosses, _ = _resolve_grosses(chart, history, today=date(2026, 7, 25))
     assert grosses["X"] == 100_000_000.0
+
+
+def _snapshot(picks_titles):
+    picks = PlayerPicks(
+        username="bclarke",
+        ranked=picks_titles[:10],
+        dark_horses=picks_titles[10:13],
+    )
+    return SiteSnapshot(
+        captured_at=date(2026, 7, 25),
+        players={"bclarke": picks},
+        cumulative_grosses={},
+        site_reported_points={},
+    )
+
+
+_THIRTEEN = [f"Film {i}" for i in range(13)]
+
+
+def test_normalize_marks_a_carried_film_closed():
+    snap = _snapshot(_THIRTEEN)
+    movies = _normalize_movies(
+        snap,
+        {},
+        {},
+        grosses={"The Sheep Detectives": 66_078_506.0},
+        chart={},
+        carried={"The Sheep Detectives"},
+        today=date(2026, 7, 25),
+    )
+    m = movies["The Sheep Detectives"]
+    assert m["status"] == MovieStatus.CLOSED
+    assert m["cumulative"] == 66_078_506.0
+
+
+def test_normalize_takes_release_date_from_the_chart():
+    snap = _snapshot(_THIRTEEN)
+    chart = {
+        "Moana": BoxOfficeRow(
+            title="Moana", cumulative_gross=95_069_653.0, release_date=date(2026, 7, 10)
+        )
+    }
+    movies = _normalize_movies(
+        snap,
+        {},
+        {},
+        grosses={"Moana": 95_069_653.0},
+        chart=chart,
+        carried=set(),
+        today=date(2026, 7, 25),
+    )
+    assert movies["Moana"]["release_date"] == date(2026, 7, 10)
+    assert movies["Moana"]["status"] == MovieStatus.IN_THEATERS
+
+
+def test_closed_film_projects_its_final_gross():
+    movies = {
+        "The Sheep Detectives": {
+            "title": "The Sheep Detectives",
+            "release_date": date(2026, 5, 8),
+            "status": MovieStatus.CLOSED,
+            "category": Category.WIDE,
+            "cumulative": 66_078_506.0,
+        }
+    }
+    projs = _project_all(movies, {}, today=date(2026, 7, 25))
+    assert projs[0].median_in_window_gross == 66_078_506.0
+    assert projs[0].sigma == 0.0
+    assert projs[0].floor == 66_078_506.0
