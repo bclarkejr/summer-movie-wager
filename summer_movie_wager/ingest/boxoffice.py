@@ -30,6 +30,8 @@ import httpx
 from pydantic import BaseModel, ConfigDict
 from selectolax.parser import HTMLParser
 
+from summer_movie_wager.model.preopening import WINDOW_END, WINDOW_START
+
 YEAR_CHART_URL = "https://www.boxofficemojo.com/year/{year}/"
 
 
@@ -114,3 +116,11 @@ def _parse_release_date(text: str, *, year: int) -> date | None:
         return datetime.strptime(f"{text} {year}", "%b %d %Y").date()
     except ValueError:
         return None
+
+
+def in_window(chart: dict[str, BoxOfficeRow]) -> dict[str, BoxOfficeRow]:
+    """Keep only releases inside the wager window (inclusive on both ends)."""
+
+    return {
+        title: row for title, row in chart.items() if WINDOW_START <= row.release_date <= WINDOW_END
+    }
