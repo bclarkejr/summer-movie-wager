@@ -425,16 +425,20 @@ def _resolve_grosses(
     Two things history gives us that a single chart read cannot:
 
     1. A film that has fallen off the 200-row chart keeps its last observed gross
-       instead of collapsing to 0. Grosses only go up, so we take the max of the
-       two -- which also absorbs a downward revision on Box Office Mojo's side.
+       instead of collapsing to 0. Grosses only go up, so we take the highest
+       gross observed on or before the cutoff -- which also absorbs a downward
+       revision on Box Office Mojo's side, regardless of which date it was
+       recorded on.
     2. After Labor Day the chart keeps accumulating gross the wager doesn't count.
        The chart reports through *yesterday*, so it is still exactly right when run
        on WINDOW_END + 1 and wrong from WINDOW_END + 2 onward; past that we fall
        back to the last observation recorded on or before WINDOW_END.
 
-    `carried_titles` is the set of titles that came from history alone. Callers
-    surface it as a warning: a title carried forward while the film is plainly
-    still playing means the chart title drifted from ours.
+    `carried_titles` is the set of resolved titles absent from `chart` -- true
+    regardless of whether the chart's values were usable this run, since `chart`
+    (the mapping's keys) is always passed in; only its VALUES get ignored after
+    the freeze. Callers surface it as a warning: a title carried forward while
+    the film is plainly still playing means the chart title drifted from ours.
     """
 
     cutoff = min(today, WINDOW_END)
@@ -444,15 +448,15 @@ def _resolve_grosses(
 
     grosses: dict[str, float] = {}
     for title, obs in history.items():
-        in_range = [(d, g) for d, g in obs if d <= cutoff]
+        in_range = [g for d, g in obs if d <= cutoff]
         if in_range:
-            grosses[title] = max(in_range)[1]
+            grosses[title] = max(in_range)
 
-    carried = set(grosses)
     if chart_usable:
         for title, row in chart.items():
             grosses[title] = max(row.cumulative_gross, grosses.get(title, 0.0))
-            carried.discard(title)
+
+    carried = {title for title in grosses if title not in chart}
     return grosses, carried
 
 

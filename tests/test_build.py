@@ -227,3 +227,54 @@ def test_resolve_grosses_ignores_history_after_the_cutoff():
     }
     grosses, _ = _resolve_grosses(chart, history, today=date(2026, 9, 20))
     assert grosses["Backrooms"] == 200_000_000.0
+
+
+def test_resolve_grosses_uses_highest_gross_not_latest_date():
+    # A revision (or a late-arriving lower report) recorded after an earlier,
+    # higher observation must not pull the resolved gross back down. max() on
+    # (date, gross) tuples picks the greatest DATE first -- this pins the
+    # highest GROSS on or before the cutoff instead.
+    chart = {}
+    history = {
+        "X": [
+            (date(2026, 7, 10), 100_000_000.0),
+            (date(2026, 7, 20), 90_000_000.0),
+        ]
+    }
+    grosses, _ = _resolve_grosses(chart, history, today=date(2026, 7, 25))
+    assert grosses["X"] == 100_000_000.0
+
+
+def test_resolve_grosses_carried_titles_correct_during_freeze():
+    # After the freeze, chart VALUES are ignored but chart MEMBERSHIP still
+    # tells us whether a title is actually on the live chart. A title present
+    # in chart must never be reported as carried, even past the cutoff.
+    chart = {"Toy Story 5": _row("Toy Story 5", 999_000_000.0, date(2026, 6, 19))}
+    history = {"Toy Story 5": [(date(2026, 9, 7), 461_000_000.0)]}
+    grosses, carried = _resolve_grosses(chart, history, today=date(2026, 9, 20))
+    assert grosses["Toy Story 5"] == 461_000_000.0
+    assert "Toy Story 5" not in carried
+
+
+def test_resolve_grosses_freezes_exactly_on_sep_9():
+    # Sep 9 is the exact flip day: the chart would report through Sep 8, one
+    # day past WINDOW_END (Sep 7), so it is already frozen -- the live chart's
+    # gross must not leak in.
+    chart = {"Toy Story 5": _row("Toy Story 5", 470_000_000.0, date(2026, 6, 19))}
+    history = {"Toy Story 5": [(date(2026, 9, 7), 461_000_000.0)]}
+    grosses, _ = _resolve_grosses(chart, history, today=date(2026, 9, 9))
+    assert grosses["Toy Story 5"] == 461_000_000.0
+
+
+def test_resolve_grosses_handles_out_of_order_history():
+    # History rows aren't guaranteed to arrive in chronological order; the
+    # resolved gross must still be the max, not the last element.
+    chart = {}
+    history = {
+        "X": [
+            (date(2026, 7, 20), 90_000_000.0),
+            (date(2026, 7, 10), 100_000_000.0),
+        ]
+    }
+    grosses, _ = _resolve_grosses(chart, history, today=date(2026, 7, 25))
+    assert grosses["X"] == 100_000_000.0
