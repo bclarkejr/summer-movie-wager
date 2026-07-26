@@ -4,7 +4,7 @@ from datetime import date
 
 import pytest
 
-from summer_movie_wager.ingest.boxoffice import BoxOfficeRow
+from summer_movie_wager.ingest.boxoffice import BoxOfficeRow, in_window
 from summer_movie_wager.render.build import (
     _apply_chart_aliases,
     _build_raw_sim_fields,
@@ -13,6 +13,7 @@ from summer_movie_wager.render.build import (
     _normalize_movies,
     _project_all,
     _require_nonempty_chart,
+    _require_nonempty_windowed_chart,
     _resolve_grosses,
 )
 from summer_movie_wager.types import (
@@ -43,7 +44,7 @@ def test_project_all_treats_incomplete_preopening_entry_as_no_projection():
             opening_weekend_estimate=50_000_000.0,
         )
     }
-    projs = _project_all(movies, preopening, today=date(2026, 7, 5))
+    projs = _project_all(movies, preopening, today=date(2026, 7, 5), history={})
     assert projs[0].median_in_window_gross == 0.0
     assert projs[0].sigma == 0.0
 
@@ -460,7 +461,7 @@ def test_closed_film_projects_its_final_gross():
             "cumulative": 66_078_506.0,
         }
     }
-    projs = _project_all(movies, {}, today=date(2026, 7, 25))
+    projs = _project_all(movies, {}, today=date(2026, 7, 25), history={})
     assert projs[0].median_in_window_gross == 66_078_506.0
     assert projs[0].sigma == 0.0
     assert projs[0].floor == 66_078_506.0
@@ -476,6 +477,38 @@ def test_require_nonempty_chart_raises_on_empty_chart():
 def test_require_nonempty_chart_passes_through_a_real_chart():
     chart = {"Toy Story 5": _row("Toy Story 5", 441_455_658.0, date(2026, 6, 19))}
     assert _require_nonempty_chart(chart) is chart
+
+
+def test_require_nonempty_windowed_chart_raises_on_empty_chart():
+    with pytest.raises(ValueError, match="filtered out"):
+        _require_nonempty_windowed_chart({})
+
+
+def test_require_nonempty_windowed_chart_passes_through_a_real_chart():
+    chart = {"Toy Story 5": _row("Toy Story 5", 441_455_658.0, date(2026, 6, 19))}
+    assert _require_nonempty_windowed_chart(chart) is chart
+
+
+def test_require_nonempty_windowed_chart_catches_a_raw_chart_that_all_flags_rerelease():
+    # Reproduces the reported gap: a raw chart that passes
+    # `_require_nonempty_chart` (it has rows) but where every row is flagged as
+    # a re-release -- e.g. Box Office Mojo wraps release cells in a layout <div>
+    # that `parse_year_chart`'s re-release detection mistakes for a re-release
+    # note. `in_window()` then drops every row, and without this guard that
+    # empty windowed chart would sail through unnoticed.
+    raw = {
+        "Toy Story 5": BoxOfficeRow(
+            title="Toy Story 5",
+            cumulative_gross=441_455_658.0,
+            release_date=date(2026, 6, 19),
+            is_rerelease=True,
+        )
+    }
+    assert _require_nonempty_chart(raw) is raw
+    windowed = in_window(raw)
+    assert windowed == {}
+    with pytest.raises(ValueError, match="filtered out"):
+        _require_nonempty_windowed_chart(windowed)
 
 
 def test_normalize_movies_unions_picks_with_top_chart_contenders():

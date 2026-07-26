@@ -128,11 +128,15 @@ def main(argv: list[str] | None = None) -> int:
     # films that fall out of it (The Sheep Detectives) go dark mid-season.
     print("[build] fetching Box Office Mojo yearly chart", file=sys.stderr)
     overrides = _load_yaml(DATA_DIR / "movies_overrides.yaml")
-    # Guard the RAW chart: after `in_window` an empty result is ambiguous (a broken
-    # parse looks exactly like "no in-window releases yet"). Aliases are applied to
-    # the chart's KEYS here, before anything downstream is keyed off them.
+    # Guard both the RAW chart (total parse failure) and the WINDOWED chart
+    # (every row filtered out, e.g. by a false-positive re-release flag) so a
+    # parser or filter that breaks quietly fails loudly here instead of
+    # downstream. Aliases are applied to the chart's KEYS here, before anything
+    # downstream is keyed off them.
     chart = _apply_chart_aliases(
-        in_window(_require_nonempty_chart(fetch_year_chart(year=WINDOW_START.year))),
+        _require_nonempty_windowed_chart(
+            in_window(_require_nonempty_chart(fetch_year_chart(year=WINDOW_START.year)))
+        ),
         overrides,
     )
     history = _load_history()
@@ -279,7 +283,7 @@ def _parse_preopening(raw: dict[str, Any]) -> dict[str, PreopeningEntry]:
 
 
 def _require_nonempty_chart(chart: dict[str, BoxOfficeRow]) -> dict[str, BoxOfficeRow]:
-    """Fail loudly on an empty chart instead of quietly reclassifying the slate.
+    """Fail loudly on an empty RAW chart instead of quietly reclassifying the slate.
 
     `_normalize_movies` marks a film CLOSED when it has gross but isn't in the
     chart. If the chart is empty -- because Box Office Mojo changed its markup
@@ -288,14 +292,18 @@ def _require_nonempty_chart(chart: dict[str, BoxOfficeRow]) -> dict[str, BoxOffi
     projection at today's number with zero uncertainty and appending corrupted
     rows to the append-only `data/box_office_history.jsonl`.
 
-    Call this on the RAW chart, before `in_window()`: a windowed chart is empty
-    both when the parse broke and when there simply are no in-window releases
-    yet, so the guard cannot tell those apart once the filter has run.
+    Call this on the RAW chart, before `in_window()`. It only catches total parse
+    failure -- zero rows at all. A parse that returns rows but has every one of
+    them filtered out by `in_window()` (e.g. a false-positive re-release flag)
+    passes this guard untouched; that case is caught separately, after
+    `in_window()`, by `_require_nonempty_windowed_chart`.
 
-    This only catches total parse failure -- it is deliberately not a row-count
-    threshold. A partial parse is caught downstream and self-calibratingly by
-    `_reject_impossible_carries`, which notices films missing from a truncated
-    chart that are too big to have dropped off it.
+    This is deliberately not a row-count threshold: `_reject_impossible_carries`
+    catches SCATTERED row loss downstream (a carried-forward title whose gross is
+    too big to have plausibly fallen off the chart), but not a TRUNCATED parse.
+    The chart is ordered by gross descending, so a parse that simply stops after
+    row N drops only rows already below the surviving floor by construction --
+    nothing about that looks impossible, so truncation passes uncaught.
     """
     if not chart:
         raise ValueError(
@@ -307,6 +315,40 @@ def _require_nonempty_chart(chart: dict[str, BoxOfficeRow]) -> dict[str, BoxOffi
             "https://www.boxofficemojo.com/year/<year>/ before retrying -- running "
             "the pipeline on an empty chart would misclassify every in-theaters "
             "film as CLOSED."
+        )
+    return chart
+
+
+def _require_nonempty_windowed_chart(chart: dict[str, BoxOfficeRow]) -> dict[str, BoxOfficeRow]:
+    """Fail loudly on an empty WINDOWED chart instead of quietly reclassifying the slate.
+
+    Complements `_require_nonempty_chart`, which only guards the RAW chart. A raw
+    chart can pass that guard (it has 200 rows) while every single one gets
+    dropped by `in_window()` -- in particular, `parse_year_chart`'s re-release
+    detection flags a row solely by the presence of a `<div>` in its release
+    cell, so a cosmetic Box Office Mojo markup change that wraps every release
+    cell in a layout div would flag all 200 rows as re-releases and `in_window()`
+    would return nothing, with no error, no matter how healthy the raw chart was.
+
+    The windowed chart can never legitimately be empty: the wager window
+    (`WINDOW_START`..`WINDOW_END`) is a fixed module constant and this pipeline
+    is only ever run manually, by hand, during that window -- so a run that
+    keeps zero in-window rows means the window filter itself misfired, not that
+    the season has no releases yet.
+    """
+    if not chart:
+        raise ValueError(
+            "Every row was filtered out of the windowed Box Office Mojo chart -- "
+            "refusing to run the pipeline on it. The wager window "
+            f"({WINDOW_START} to {WINDOW_END}) is fixed and this pipeline only runs "
+            "manually during the season, so a run that keeps zero rows means "
+            "in_window() (or the re-release detection feeding it) is filtering "
+            "wrongly -- not that there are no in-window releases. Check whether "
+            "Box Office Mojo added a layout <div> to the release cell that "
+            "parse_year_chart()'s re-release detection (`title_cell.css_first("
+            "'div')`) is now matching by mistake, by comparing the CSS selectors "
+            "in summer_movie_wager/ingest/boxoffice.py against the live page at "
+            "https://www.boxofficemojo.com/year/<year>/ before retrying."
         )
     return chart
 
@@ -446,13 +488,9 @@ def _project_all(
     preopening: dict[str, PreopeningEntry],
     *,
     today: date,
-    history: dict[str, list[tuple[date, float]]] | None = None,
+    history: dict[str, list[tuple[date, float]]],
 ) -> list[Projection]:
     projections: list[Projection] = []
-    # `main()` already holds the parsed history; re-reading the file here would
-    # parse it a second time per run. Callers that don't have it pass nothing.
-    if history is None:
-        history = _load_history()
     for title, m in movies.items():
         if m["status"] == MovieStatus.CLOSED:
             # The run is over: the observed cumulative is the final answer, with
@@ -634,7 +672,10 @@ def _reject_impossible_carries(
     the freeze can only make this check quieter, never spurious.
     """
     if not chart:
-        # No chart, no floor. `_require_nonempty_chart` handles this upstream.
+        # No chart, no floor to compare against. In the real pipeline this chart
+        # is already guaranteed non-empty by `_require_nonempty_windowed_chart`
+        # in main(); an empty chart reaching here is a test calling this
+        # function directly with contents that don't matter for that case.
         return
     floor = min(row.cumulative_gross for row in chart.values())
     impossible = sorted(t for t in carried if grosses[t] >= floor)
