@@ -537,15 +537,21 @@ def _resolve_grosses(
 
     grosses: dict[str, float] = {}
     for title, obs in history.items():
-        in_range = [(d, g) for d, g in obs if d <= cutoff]
+        # Max over gross values, not over (date, gross) tuples: tuple comparison
+        # would pick the latest-DATED entry, which regresses the film's gross when
+        # Box Office Mojo revises a number downward.
+        in_range = [g for d, g in obs if d <= cutoff]
         if in_range:
-            grosses[title] = max(in_range)[1]
+            grosses[title] = max(in_range)
 
-    carried = set(grosses)
     if chart_usable:
         for title, row in chart.items():
             grosses[title] = max(row.cumulative_gross, grosses.get(title, 0.0))
-            carried.discard(title)
+
+    # Membership in `chart` decides this, not whether the chart's VALUES were
+    # usable this run -- otherwise every tracked film reads as carried once the
+    # Labor Day freeze kicks in.
+    carried = {title for title in grosses if title not in chart}
     return grosses, carried
 ```
 
