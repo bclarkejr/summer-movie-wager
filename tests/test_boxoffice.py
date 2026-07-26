@@ -80,6 +80,38 @@ def test_window_keeps_the_long_tail(chart):
     assert "The Sheep Detectives" in windowed
 
 
+def test_rerelease_row_title_is_not_mangled(chart):
+    # The release cell of a re-release row holds a note element after the title
+    # link; text(deep=True) glued it onto the title with no separator, producing
+    # 'Top Gun/Top Gun: Maverick2026 Re-release (Top Gun 40th Anniversary)' --
+    # which then got written into the append-only history file.
+    row = chart["Top Gun/Top Gun: Maverick"]
+    assert row.is_rerelease
+    assert not any("Re-release" in title for title in chart)
+
+
+def test_original_releases_are_not_flagged_as_rereleases(chart):
+    assert not chart["Toy Story 5"].is_rerelease
+    assert not chart["Power Ballad"].is_rerelease
+
+
+def test_window_excludes_rereleases(chart):
+    # All five in-window re-release rows on the 2026 chart are revivals of older
+    # films (Top Gun 40th, Shrek 25th, End of Evangelion, and two Ghibli Fest
+    # bookings) -- none is a 2026 original, so none is a wager film.
+    windowed = in_window(chart)
+    for title in (
+        "Top Gun/Top Gun: Maverick",
+        "Shrek",
+        "Neon Genesis Evangelion: The End of Evangelion",
+        "My Neighbor Totoro",
+        "Ponyo",
+    ):
+        assert chart[title].is_rerelease
+        assert title not in windowed
+    assert not any(row.is_rerelease for row in windowed.values())
+
+
 def test_window_end_boundary_with_synthetic_rows():
     # The fixture contains no Sep 6/7/8 releases, so this test constructs
     # synthetic BoxOfficeRow objects to cover the WINDOW_END boundary

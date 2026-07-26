@@ -6,6 +6,7 @@ import pytest
 
 from summer_movie_wager.ingest.boxoffice import BoxOfficeRow
 from summer_movie_wager.render.build import (
+    _apply_chart_aliases,
     _build_raw_sim_fields,
     _count_non_zero_projections,
     _current_top_10,
@@ -289,6 +290,111 @@ def test_resolve_grosses_handles_out_of_order_history():
     }
     grosses, _ = _resolve_grosses(chart, history, today=date(2026, 7, 25))
     assert grosses["X"] == 100_000_000.0
+
+
+def test_resolve_grosses_keeps_the_history_row_written_the_day_after_labor_day():
+    # The Sep 8 row was written from a chart reporting through Sep 7 -- it holds
+    # the exact through-Labor-Day number and is the answer for every later run.
+    # Dropping it regresses the final standings to the previous week's, on the
+    # most likely click of the season ("show me the final result").
+    chart = {"Toy Story 5": _row("Toy Story 5", 500_000_000.0, date(2026, 6, 19))}
+    history = {
+        "Toy Story 5": [
+            (date(2026, 8, 31), 400_000_000.0),
+            (date(2026, 9, 8), 480_000_000.0),
+        ]
+    }
+    grosses, _ = _resolve_grosses(chart, history, today=date(2026, 9, 9))
+    assert grosses["Toy Story 5"] == 480_000_000.0
+    # ...and it stays the answer a week later, not just on the flip day.
+    grosses, _ = _resolve_grosses(chart, history, today=date(2026, 9, 14))
+    assert grosses["Toy Story 5"] == 480_000_000.0
+
+
+def test_resolve_grosses_drops_the_history_row_written_two_days_after_labor_day():
+    # The other side of the same boundary: a row dated Sep 9 was written from a
+    # chart reporting through Sep 8, so it contains gross the wager excludes.
+    chart = {"Toy Story 5": _row("Toy Story 5", 500_000_000.0, date(2026, 6, 19))}
+    history = {
+        "Toy Story 5": [
+            (date(2026, 9, 8), 480_000_000.0),
+            (date(2026, 9, 9), 490_000_000.0),
+        ]
+    }
+    grosses, _ = _resolve_grosses(chart, history, today=date(2026, 9, 14))
+    assert grosses["Toy Story 5"] == 480_000_000.0
+
+
+def test_resolve_grosses_rejects_a_carried_title_above_the_chart_floor():
+    # Box Office Mojo renamed Moana mid-season. The old key survives in history
+    # (frozen, "closed") while the new key arrives live from the chart, and both
+    # would compete for a slot in the scoring top 10.
+    chart = {
+        "Moana (2026)": _row("Moana (2026)", 95_000_000.0, date(2026, 7, 10)),
+        "Tiny Film": _row("Tiny Film", 468_400.0, date(2026, 5, 15)),
+    }
+    history = {"Moana": [(date(2026, 7, 20), 81_019_028.0)]}
+    with pytest.raises(ValueError, match="Moana"):
+        _resolve_grosses(chart, history, today=date(2026, 7, 25))
+
+
+def test_resolve_grosses_allows_a_carried_title_below_the_chart_floor():
+    # The legitimate case: the film really did fade under the 200-row chart's
+    # floor, so it is carried forward from history without complaint.
+    chart = {"Tiny Film": _row("Tiny Film", 468_400.0, date(2026, 5, 15))}
+    history = {"Faded": [(date(2026, 7, 20), 400_000.0)]}
+    grosses, carried = _resolve_grosses(chart, history, today=date(2026, 7, 25))
+    assert carried == {"Faded"}
+    assert grosses["Faded"] == 400_000.0
+
+
+def test_resolve_grosses_carry_check_does_not_fire_during_the_post_labor_day_freeze():
+    # After Labor Day the chart's VALUES are ignored but its membership still
+    # decides what is carried. A frozen carried gross is by construction no
+    # larger than the film's live total, so the freeze cannot make this fire.
+    chart = {"Tiny Film": _row("Tiny Film", 900_000.0, date(2026, 5, 15))}
+    history = {"Faded": [(date(2026, 9, 7), 500_000.0)]}
+    grosses, carried = _resolve_grosses(chart, history, today=date(2026, 9, 20))
+    assert carried == {"Faded"}
+    assert grosses["Faded"] == 500_000.0
+
+
+def test_apply_chart_aliases_merges_a_renamed_chart_title_with_its_history():
+    # (a) one key, (b) no double count in the top 10, (c) no impossible-carry raise.
+    chart = _apply_chart_aliases(
+        {
+            "Moana (2026)": _row("Moana (2026)", 95_069_653.0, date(2026, 7, 10)),
+            "Tiny Film": _row("Tiny Film", 468_400.0, date(2026, 5, 15)),
+        },
+        {"Moana (2026)": {"alias_of": "Moana"}},
+    )
+    assert set(chart) == {"Moana", "Tiny Film"}
+    assert chart["Moana"].title == "Moana"
+
+    history = {"Moana": [(date(2026, 7, 20), 81_019_028.0)]}
+    grosses, carried = _resolve_grosses(chart, history, today=date(2026, 7, 25))
+    assert grosses["Moana"] == 95_069_653.0
+    assert carried == set()
+    assert _current_top_10(grosses) == ["Moana", "Tiny Film"]
+
+
+def test_apply_chart_aliases_collapses_both_titles_onto_the_higher_gross():
+    # The chart briefly carrying old and new titles at once must not survive as
+    # two films; grosses only go up, so the bigger number is the current one.
+    chart = _apply_chart_aliases(
+        {
+            "Moana": _row("Moana", 81_019_028.0, date(2026, 7, 10)),
+            "Moana (2026)": _row("Moana (2026)", 95_069_653.0, date(2026, 7, 10)),
+        },
+        {"Moana (2026)": {"alias_of": "Moana"}},
+    )
+    assert set(chart) == {"Moana"}
+    assert chart["Moana"].cumulative_gross == 95_069_653.0
+
+
+def test_apply_chart_aliases_is_a_no_op_without_overrides():
+    chart = {"Toy Story 5": _row("Toy Story 5", 441_455_658.0, date(2026, 6, 19))}
+    assert _apply_chart_aliases(chart, {}) == chart
 
 
 def _snapshot(picks_titles):

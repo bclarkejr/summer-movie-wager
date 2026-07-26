@@ -78,10 +78,11 @@ def main(argv: list[str] | None = None) -> int:
     cross-check in step 7, never for projections.
     2. bootstrap_or_validate:  Validate that the picks we have in data/picks_snapshot_2026.yaml
     match what we scraped from the site.
-    3. fetch_year_chart + in_window + _resolve_grosses:  Pull cumulative domestic
-    grosses from Box Office Mojo's 2026 yearly chart, filter to films released in the
-    wager window, and merge with recorded history so films that have left the chart
-    keep their final gross and nothing counts gross earned after Labor Day.
+    3. fetch_year_chart + in_window + _apply_chart_aliases + _resolve_grosses:  Pull
+    cumulative domestic grosses from Box Office Mojo's 2026 yearly chart, filter to
+    original films released in the wager window, apply any title aliases, and merge
+    with recorded history so films that have left the chart keep their final gross
+    and nothing counts gross earned after Labor Day.
     4. _normalize_movies:  Normalize the movie data from the snapshot, overrides,
          and preopening projections into a single dictionary of movies with their release dates,
          status, category, and cumulative gross.
@@ -92,6 +93,9 @@ def main(argv: list[str] | None = None) -> int:
          For other PRE_RELEASE movies, project zero gross.
     6. simulate_season:  If there are at least 25 movies with non-zero projections, simulate the
     season 10,000 times to estimate each player's win probability and final points distribution.
+    (Unnumbered, between 6 and 7 in code order: score every player's *current*
+    points against the Box Office Mojo top 10 -- these are the standings the
+    leaderboard actually displays.)
     7. _validate_against_site:  Compare the site's own gross list, scored, against the site's own
     reported points to ensure our scoring engine is correct.
     8. render:  Render the HTML page using the leaderboard, movie rows, and player details.
@@ -123,8 +127,16 @@ def main(argv: list[str] | None = None) -> int:
     # only publishes its top 13, so films below it (Power Ballad) never appear and
     # films that fall out of it (The Sheep Detectives) go dark mid-season.
     print("[build] fetching Box Office Mojo yearly chart", file=sys.stderr)
-    chart = _require_nonempty_chart(in_window(fetch_year_chart(year=WINDOW_START.year)))
-    grosses, carried = _resolve_grosses(chart, _load_history(), today=today)
+    overrides = _load_yaml(DATA_DIR / "movies_overrides.yaml")
+    # Guard the RAW chart: after `in_window` an empty result is ambiguous (a broken
+    # parse looks exactly like "no in-window releases yet"). Aliases are applied to
+    # the chart's KEYS here, before anything downstream is keyed off them.
+    chart = _apply_chart_aliases(
+        in_window(_require_nonempty_chart(fetch_year_chart(year=WINDOW_START.year))),
+        overrides,
+    )
+    history = _load_history()
+    grosses, carried = _resolve_grosses(chart, history, today=today)
     if carried:
         print(
             f"[build] {len(carried)} film(s) carried forward from history "
@@ -134,10 +146,9 @@ def main(argv: list[str] | None = None) -> int:
 
     # This is the real value-add of the pipeline.  Using the week-over-week decay model and
     # preopening projections, we can start to guess what each film will gross in the wager window.
-    # Once we have 25 projections (i.e., once we have an industry projection for Spider-Man: Brand
-    # New Day), we simulate the season and estimate each player's win probability and final points
-    # distribution.
-    overrides = _load_yaml(DATA_DIR / "movies_overrides.yaml")
+    # Once at least 25 movies have a non-zero projection -- a bar the released films clear on
+    # their own now -- we simulate the season and estimate each player's win probability and
+    # final points distribution.
     preopening_raw = _load_yaml(DATA_DIR / "preopening_projections.yaml")
     preopening = _parse_preopening(preopening_raw)
 
@@ -150,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
         carried=carried,
         today=today,
     )
-    projections = _project_all(movies, preopening, today=today)
+    projections = _project_all(movies, preopening, today=today, history=history)
     _warn_missing_projections(movies, preopening, today=today)
 
     # We don't similuate until we have at least 25 projections.
@@ -275,10 +286,16 @@ def _require_nonempty_chart(chart: dict[str, BoxOfficeRow]) -> dict[str, BoxOffi
     and `parse_year_chart` returned no rows, or a fetch hit an unexpected page --
     every film with any recorded gross would flip to CLOSED, freezing every
     projection at today's number with zero uncertainty and appending corrupted
-    rows to the append-only `data/box_office_history.jsonl`. Call this on the
-    chart at the point it enters the pipeline, before `_resolve_grosses` or
-    `_normalize_movies` see it, so both `main()` and any future caller are
-    protected the same way.
+    rows to the append-only `data/box_office_history.jsonl`.
+
+    Call this on the RAW chart, before `in_window()`: a windowed chart is empty
+    both when the parse broke and when there simply are no in-window releases
+    yet, so the guard cannot tell those apart once the filter has run.
+
+    This only catches total parse failure -- it is deliberately not a row-count
+    threshold. A partial parse is caught downstream and self-calibratingly by
+    `_reject_impossible_carries`, which notices films missing from a truncated
+    chart that are too big to have dropped off it.
     """
     if not chart:
         raise ValueError(
@@ -292,6 +309,33 @@ def _require_nonempty_chart(chart: dict[str, BoxOfficeRow]) -> dict[str, BoxOffi
             "film as CLOSED."
         )
     return chart
+
+
+def _apply_chart_aliases(
+    chart: dict[str, BoxOfficeRow],
+    overrides: dict[str, Any],
+) -> dict[str, BoxOfficeRow]:
+    """Rewrite chart titles through `alias_of` from `data/movies_overrides.yaml`.
+
+    Applied at the ingest boundary, before `_resolve_grosses` sees the chart, so
+    every downstream consumer -- resolved grosses, carried titles, chart
+    contenders, the scoring top 10, and the history append -- agrees on one key
+    per film. Relabelling later (in `_normalize_movies`, say) would leave the
+    chart's own key in `grosses` and the film would be counted twice.
+
+    Aliasing merges: if the chart carries both the old and the new title, we keep
+    the bigger gross, since grosses only go up.
+    """
+
+    aliased: dict[str, BoxOfficeRow] = {}
+    for title, row in chart.items():
+        canonical = (overrides.get(title) or {}).get("alias_of", title)
+        if canonical != title:
+            row = row.model_copy(update={"title": canonical})
+        previous = aliased.get(canonical)
+        if previous is None or row.cumulative_gross > previous.cumulative_gross:
+            aliased[canonical] = row
+    return aliased
 
 
 def _normalize_movies(
@@ -309,6 +353,12 @@ def _normalize_movies(
     and the preopening projections, insert all distinct movies into a single
     dictionary keyed by canonical title, carrying release date, status, category
     and cumulative gross.
+
+    `alias_of` is applied to the CHART's keys upstream by `_apply_chart_aliases`,
+    so `grosses` and `chart` are already canonical when they get here. What is
+    left for this function is the picks side: a player's (or an analyst entry's)
+    variant title is relabelled to the canonical one here, which is how it finds
+    the gross recorded under the canonical key.
 
     Candidates are the films that could matter to the wager: everything anyone
     picked, everything with an analyst estimate, everything already in history,
@@ -396,9 +446,13 @@ def _project_all(
     preopening: dict[str, PreopeningEntry],
     *,
     today: date,
+    history: dict[str, list[tuple[date, float]]] | None = None,
 ) -> list[Projection]:
     projections: list[Projection] = []
-    history = _load_history()
+    # `main()` already holds the parsed history; re-reading the file here would
+    # parse it a second time per run. Callers that don't have it pass nothing.
+    if history is None:
+        history = _load_history()
     for title, m in movies.items():
         if m["status"] == MovieStatus.CLOSED:
             # The run is over: the observed cumulative is the final answer, with
@@ -521,7 +575,10 @@ def _resolve_grosses(
     2. After Labor Day the chart keeps accumulating gross the wager doesn't count.
        The chart reports through *yesterday*, so it is still exactly right when run
        on WINDOW_END + 1 and wrong from WINDOW_END + 2 onward; past that we fall
-       back to the last observation recorded on or before WINDOW_END.
+       back to the last observation recorded on or before WINDOW_END + 1 -- that
+       row was itself written from a chart reporting through WINDOW_END, so it
+       holds the final wager number and dropping it would regress the standings
+       to the previous week's.
 
     `carried_titles` is the set of resolved titles absent from `chart` -- true
     regardless of whether the chart's values were usable this run, since `chart`
@@ -530,7 +587,11 @@ def _resolve_grosses(
     the film is plainly still playing means the chart title drifted from ours.
     """
 
-    cutoff = min(today, WINDOW_END)
+    # A history row dated D records the chart as read on D, and the chart reports
+    # through D - 1. So the last row that contains no post-Labor-Day gross is the
+    # one dated WINDOW_END + 1 (through Sep 7 -- exactly the wager cutoff), and the
+    # row dated WINDOW_END + 2 is the first that must be dropped (through Sep 8).
+    cutoff = min(today, WINDOW_END + timedelta(days=1))
     # The chart reflects data through yesterday, so it is usable while that day
     # is still inside the window.
     chart_usable = (today - timedelta(days=1)) <= WINDOW_END
@@ -546,7 +607,53 @@ def _resolve_grosses(
             grosses[title] = max(row.cumulative_gross, grosses.get(title, 0.0))
 
     carried = {title for title in grosses if title not in chart}
+    _reject_impossible_carries(chart, grosses, carried)
     return grosses, carried
+
+
+def _reject_impossible_carries(
+    chart: dict[str, BoxOfficeRow],
+    grosses: dict[str, float],
+    carried: set[str],
+) -> None:
+    """Fail loudly when a carried-forward title is too big to be off the chart.
+
+    Falling off the chart is only possible below its floor -- the chart is the
+    year's top 200 by gross, so a film grossing at or above the 200th row is on
+    it by definition. A carried title at or above the floor therefore is not a
+    film that faded out: either Box Office Mojo renamed it (leaving us with the
+    frozen old key from history AND the live new key from the chart, both of
+    which then compete for a slot in the scoring top 10 and both of which get
+    appended to the append-only history every run), or the chart parsed
+    partially. Neither is safe to run on.
+
+    Self-calibrating: the floor is read off the chart, no tunable threshold.
+    Still correct after Labor Day, when the chart's values are ignored for
+    scoring: a carried title's frozen gross can only be lower than the film's
+    live total, and the live total is what chart membership is decided on, so
+    the freeze can only make this check quieter, never spurious.
+    """
+    if not chart:
+        # No chart, no floor. `_require_nonempty_chart` handles this upstream.
+        return
+    floor = min(row.cumulative_gross for row in chart.values())
+    impossible = sorted(t for t in carried if grosses[t] >= floor)
+    if not impossible:
+        return
+    listed = "\n  - ".join(f"{t} (${grosses[t]:,.0f})" for t in impossible)
+    raise ValueError(
+        f"{len(impossible)} title(s) carried forward from data/box_office_history.jsonl "
+        f"gross at or above the Box Office Mojo chart floor (${floor:,.0f}), which is "
+        "impossible for a film that has genuinely dropped off the chart:\n  - "
+        f"{listed}\n"
+        "Most likely Box Office Mojo renamed the film (e.g. 'Moana' -> 'Moana (2026)'), "
+        "in which case both the old and the new title are now being scored as separate "
+        "films. Fix it by adding the CHART's current title to data/movies_overrides.yaml "
+        "as `alias_of` our recorded title:\n"
+        '  "Chart Title Today":\n    alias_of: "Title In History"\n'
+        "If the titles look fine, check that parse_year_chart() is still reading the "
+        "whole 200-row chart at https://www.boxofficemojo.com/year/<year>/."
+    )
 
 
 def _build_forecast_history_payload(path: Path) -> dict[str, Any]:

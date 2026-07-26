@@ -43,6 +43,9 @@ class BoxOfficeRow(BaseModel):
     title: str
     cumulative_gross: float
     release_date: date
+    # Re-release / anniversary / festival booking of an older film, flagged by a
+    # note element in the release cell. Never a wager film -- see `in_window`.
+    is_rerelease: bool = False
 
 
 def fetch_year_chart(*, year: int = 2026, timeout: float = 30.0) -> dict[str, BoxOfficeRow]:
@@ -72,7 +75,13 @@ def parse_year_chart(html_text: str, *, year: int) -> dict[str, BoxOfficeRow]:
         if title_cell is None or date_cell is None or not money_cells:
             continue
 
-        title = _clean_text(title_cell.text(deep=True))
+        # A re-release row carries a note element after the title link ("2026
+        # Re-release", "25th Anniversary", "Studio Ghibli Fest 2026"), which
+        # `text(deep=True)` would concatenate onto the title with no separator.
+        # Take the title from the link and keep the note as a flag.
+        title_link = title_cell.css_first("a")
+        note = title_cell.css_first("div")
+        title = _clean_text((title_link or title_cell).text(deep=True))
         gross = _parse_dollar_amount(_clean_text(money_cells[0].text(deep=True)))
         release = _parse_release_date(_clean_text(date_cell.text(deep=True)), year=year)
         if not title or gross is None or release is None:
@@ -82,6 +91,7 @@ def parse_year_chart(html_text: str, *, year: int) -> dict[str, BoxOfficeRow]:
             title=title,
             cumulative_gross=gross,
             release_date=release,
+            is_rerelease=note is not None,
         )
     return rows
 
@@ -119,8 +129,18 @@ def _parse_release_date(text: str, *, year: int) -> date | None:
 
 
 def in_window(chart: dict[str, BoxOfficeRow]) -> dict[str, BoxOfficeRow]:
-    """Keep only releases inside the wager window (inclusive on both ends)."""
+    """Keep only wager films: released inside the window (inclusive both ends),
+    original releases only.
+
+    Re-releases are dropped. The wager is about 2026's new movies, and every
+    re-release row on the July 2026 chart is a revival of an older title (Top
+    Gun, Shrek, two Ghibli Fest bookings, End of Evangelion in-window; LOTR,
+    Fight Club and friends out of window) -- none is a 2026 original. Letting
+    them through would also write their gross into the append-only history.
+    """
 
     return {
-        title: row for title, row in chart.items() if WINDOW_START <= row.release_date <= WINDOW_END
+        title: row
+        for title, row in chart.items()
+        if WINDOW_START <= row.release_date <= WINDOW_END and not row.is_rerelease
     }
