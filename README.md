@@ -63,7 +63,7 @@ uv run ruff format --check .  # formatting
 
 `summer_movie_wager/render/build.py` is the entry point and glue. One run does:
 
-1. **Scrape** — `ingest/scraper.py` fetches the play-along page with [httpx](https://www.python-httpx.org/) (a modern requests-style HTTP client) and parses it with [selectolax](https://github.com/rushter/selectolax) (a fast HTML parser; think BeautifulSoup with less API and more speed). Produces a `SiteSnapshot`: every player's picks, the site's own top-13 cumulative-gross table, and the site's own reported points. The site is scraped only for picks and for the correctness cross-check in step 6 below — it is never the source of the grosses used for projections or the displayed leaderboard.
+1. **Scrape** — `ingest/scraper.py` fetches the play-along page with [httpx](https://www.python-httpx.org/) (a modern requests-style HTTP client) and parses it with [selectolax](https://github.com/rushter/selectolax) (a fast HTML parser; think BeautifulSoup with less API and more speed). Produces a `SiteSnapshot`: every player's picks, the site's own top-13 cumulative-gross table, and the site's own reported points. The site is scraped only for picks and for the correctness cross-check in step 7 below — it is never the source of the grosses used for projections or the displayed leaderboard.
 
 2. **Picks-drift guard** — `ingest/picks_guard.py` compares the freshly-scraped picks against the locked snapshot in `data/picks_snapshot_2026.yaml`. Any difference — a changed pick, a missing username, a renamed title — fails the build loudly. This protects against both upstream site changes and silent scraper regressions. (On the first-ever run the snapshot is bootstrapped from the scrape; to legitimately re-lock, delete the file and re-run.)
 
@@ -75,7 +75,7 @@ uv run ruff format --check .  # formatting
 
 6. **Simulate** — `model/simulate.py` runs a 10,000-trial Monte Carlo season using [numpy](https://numpy.org/) (all trials vectorized as arrays; no Python-level loop over trials). Requires at least 25 movies with non-zero projections; below that the site shows current standings only, with a warning.
 
-7. **Validate scoring** — the pipeline recomputes every player's *current* points, scored against the **site's own** top-13 gross list, with its own scoring engine (`score/rules.py`) and compares against the points the official site reports. A mismatch prints a loud warning — a free correctness check on every run, kept deliberately independent of the Box Office Mojo data: comparing our fresher numbers against the site's own would conflate "our scoring engine is broken" with "our data is more complete than theirs." The leaderboard actually displayed to players is scored against the Box Office Mojo top 10 instead (step 8), since it sees films the site's top-13 table doesn't.
+7. **Validate scoring** — the pipeline recomputes every player's *current* points, scored against the **site's own** top-13 gross list, with its own scoring engine (`score/rules.py`) and compares against the points the official site reports. A mismatch prints a loud warning — a free correctness check on every run, kept deliberately independent of the Box Office Mojo data: comparing our fresher numbers against the site's own would conflate "our scoring engine is broken" with "our data is more complete than theirs." The leaderboard actually displayed to players is scored against the Box Office Mojo top 10 instead — an unnumbered step, run between steps 6 and 7 in code order — since it sees films the site's top-13 table doesn't.
 
 8. **Render** — `render/page.py` renders four pages with [Jinja2](https://jinja.palletsprojects.com/) (HTML templating: templates in `render/templates/`, data in, HTML out). The shared nav bar and theme toggle (`_nav.html.j2`, `_theme.html.j2`) and the CSS files in `render/static/` (`style.css`, `nav.css`, `theme.css`, `shared.css`) are inlined into each page. Also writes `docs/data.json`, the full pipeline state as JSON.
 
@@ -152,7 +152,7 @@ Generated pages under `docs/` are committed on purpose — that's how GitHub Pag
 | `data/picks_snapshot_2026.yaml` | Locked season picks, committed on first run. Every subsequent run validates the scrape against this — any drift fails loudly. |
 | `data/preopening_projections.yaml` | Hand-curated analyst estimates for unreleased movies. **The main file to maintain through the season.** |
 | `data/movies_overrides.yaml` | Patch file for title variants, wrong categories, and bad release dates from the scraper. |
-| `data/box_office_history.jsonl` | Append-only log of `{movie, date, cumulative_gross}` per production run. Now records Box Office Mojo figures for every in-window film plus every picked film — not just the site's top 13. Feeds observed-WoW blending in Mode A, and lets a film that falls off the 200-row chart keep re-appearing at a flat final value by design (that's what lets a closed film's final gross carry into scoring). |
+| `data/box_office_history.jsonl` | Append-only log of `{movie, date, cumulative_gross}` per production run. Records one row per film in the *resolved* Box Office Mojo grosses — every in-window film on the 200-row chart, plus any film carried forward from earlier history. That is far more than the site's top 13, but note a picked film with no gross yet is never written (there is nothing to write). Feeds observed-WoW blending in Mode A, and lets a film that falls off the chart keep re-appearing at a flat final value by design (that's what lets a closed film's final gross carry into scoring). |
 | `data/forecast_history.jsonl` | Append-only log of per-player forecasts per production run. Available for a future "win odds over time" chart. |
 
 ### Adding or updating a pre-release movie
@@ -183,12 +183,19 @@ Edit `data/movies_overrides.yaml`:
   category: animated_family        # use the family WoW default (0.65)
 
 "Variant Title From Scraper":
-  alias_of: "Canonical Title"      # merge a scraper variant into one title
+  alias_of: "Canonical Title"      # merge a variant title into one film
 
 "Title With Known Bad Release Date":
   release_date: 2026-07-10
   status: pre_release
 ```
+
+`alias_of` is applied in two places, and the key is always the *variant* you are renaming away from:
+
+- **Box Office Mojo chart titles** are rewritten at ingest (`_apply_chart_aliases`), before grosses are resolved. This is the fix for a film Mojo renames mid-season: key the entry on Mojo's **current** title and alias it to the title already recorded in `data/box_office_history.jsonl`, and the live chart row merges with the recorded history under one key instead of scoring as two films.
+- **Picked / analyst titles** are rewritten in `_normalize_movies`, so a player's variant spelling finds the gross recorded under the canonical title.
+
+The pipeline **fails loudly** when it detects the drift this fixes: if a film carried forward from history is grossing at or above the chart's floor — impossible, since anything that big is still on the 200-row chart — the build raises with the offending titles and the `alias_of` block to add.
 
 ## Deploying / refreshing the live site
 
@@ -197,6 +204,14 @@ The GitHub Action (`.github/workflows/refresh.yml`) is `workflow_dispatch`-only 
 1. On GitHub: **Actions → Refresh site → Run workflow**.
 2. The workflow installs dependencies with `uv sync --frozen`, runs the test suite, runs the production build, and commits any changes under `docs/` and `data/` back to `main`.
 3. GitHub Pages serves `docs/` from `main`; the updated site is live within a couple of minutes.
+
+### The final refresh of the season
+
+**Run the last production refresh on 2026-09-08** — the day after Labor Day. The chart reports through *yesterday*, so a Sep 8 run is the only one that captures the complete window: Sep 7 is too early (it misses Labor Day itself) and Sep 9 onward is frozen back to whatever the Sep 8 run recorded.
+
+Before accepting that run, **check that the chart's top titles actually advanced versus the Sep 7 run** (compare the last two dates in `data/box_office_history.jsonl`, or the cumulative column on the leaderboard). If the numbers are identical, Box Office Mojo has not posted the Labor Day weekend yet — wait and re-run later in the day. A same-day re-run is safe: `_resolve_grosses` takes the highest gross on or before the cutoff, so the better figure wins, and the Odds Over Time chart keeps only the last row per date.
+
+
 
 ## Conventions
 
@@ -215,4 +230,6 @@ May 1 is the first Friday of May and matches what the play-along site scores —
 ## Known limits
 
 - **The Box Office Mojo yearly chart is capped at 200 rows** (floor ≈ $468K as of July 2026). A film that has grossed less than the chart's current floor won't appear on it; it's carried forward from `data/box_office_history.jsonl` at its last observed gross and treated as closed. This only matters for films near the bottom of the pack — nothing that could plausibly reach the top 10.
+- **`data/box_office_history.jsonl` mixes two measurement bases.** Rows dated 2026-07-20 and earlier hold the play-along site's top-13 figures; every row after that holds Box Office Mojo's. The two sources disagree slightly (Obsession: $258,387,140 on the site vs $260,344,235 on Mojo the same week), so **every film has exactly one anomalous week-over-week delta at that boundary** — some inflated, some flat. It affects only the observed-WoW blend in Mode A, is diluted as later snapshots accumulate, and self-heals entirely once six Mojo-era snapshots exist. Nothing to fix; it just looks like a bug if you find it later without this note.
+- **Re-releases are excluded from the chart** (`in_window`). Box Office Mojo lists anniversary/festival bookings of older films (Top Gun 40th, Shrek 25th, Studio Ghibli Fest) as 2026 releases, flagged by a note element in the release cell. They are not wager films and are dropped at ingest. If a genuine 2026 original ever carried such a note, it would be dropped too — none does today.
 - **The 25-projection gate for running the simulation** (`build.py`) is now easily cleared by released films alone, so it no longer implicitly waits on an analyst estimate for *Spider-Man: Brand New Day* before it can simulate. `_warn_missing_projections` remains the signal to watch for picked-but-unprojected films.
