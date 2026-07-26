@@ -2,11 +2,13 @@
 
 from datetime import date
 
+from summer_movie_wager.ingest.boxoffice import BoxOfficeRow
 from summer_movie_wager.render.build import (
     _build_raw_sim_fields,
     _count_non_zero_projections,
     _current_top_10,
     _project_all,
+    _resolve_grosses,
 )
 from summer_movie_wager.types import Category, MovieStatus, PreopeningEntry, Projection
 
@@ -158,3 +160,70 @@ def test_forecast_history_payload_empty_when_file_missing(tmp_path):
     from summer_movie_wager.render.build import _build_forecast_history_payload
 
     assert _build_forecast_history_payload(tmp_path / "nope.jsonl") == {"dates": [], "series": []}
+
+
+def _row(title, gross, release=date(2026, 5, 8)):
+    return BoxOfficeRow(title=title, cumulative_gross=gross, release_date=release)
+
+
+def test_resolve_grosses_prefers_the_live_chart():
+    chart = {"Toy Story 5": _row("Toy Story 5", 441_455_658.0, date(2026, 6, 19))}
+    history = {"Toy Story 5": [(date(2026, 7, 20), 429_878_644.0)]}
+    grosses, carried = _resolve_grosses(chart, history, today=date(2026, 7, 25))
+    assert grosses["Toy Story 5"] == 441_455_658.0
+    assert carried == set()
+
+
+def test_resolve_grosses_carries_forward_a_film_that_left_the_chart():
+    # The Sheep Detectives is the reason this exists: it fell out of the
+    # play-along top 13 and must not collapse to zero.
+    chart = {}
+    history = {
+        "The Sheep Detectives": [
+            (date(2026, 7, 13), 66_042_291.0),
+            (date(2026, 7, 20), 66_078_506.0),
+        ]
+    }
+    grosses, carried = _resolve_grosses(chart, history, today=date(2026, 7, 25))
+    assert grosses["The Sheep Detectives"] == 66_078_506.0
+    assert carried == {"The Sheep Detectives"}
+
+
+def test_resolve_grosses_never_lets_a_gross_go_down():
+    chart = {"Obsession": _row("Obsession", 240_017_600.0, date(2026, 5, 15))}
+    history = {"Obsession": [(date(2026, 7, 20), 258_387_140.0)]}
+    grosses, _ = _resolve_grosses(chart, history, today=date(2026, 7, 25))
+    assert grosses["Obsession"] == 258_387_140.0
+
+
+def test_resolve_grosses_still_uses_the_chart_the_day_after_labor_day():
+    # Run on Sep 8, the chart reports through Sep 7 -- exactly the wager cutoff.
+    chart = {"Toy Story 5": _row("Toy Story 5", 460_000_000.0, date(2026, 6, 19))}
+    history = {"Toy Story 5": [(date(2026, 8, 31), 455_000_000.0)]}
+    grosses, _ = _resolve_grosses(chart, history, today=date(2026, 9, 8))
+    assert grosses["Toy Story 5"] == 460_000_000.0
+
+
+def test_resolve_grosses_freezes_after_labor_day():
+    # Run on Sep 10, the chart includes Sep 8-9 gross, which the wager excludes.
+    chart = {"Toy Story 5": _row("Toy Story 5", 470_000_000.0, date(2026, 6, 19))}
+    history = {
+        "Toy Story 5": [
+            (date(2026, 9, 7), 461_000_000.0),
+            (date(2026, 9, 9), 468_000_000.0),
+        ]
+    }
+    grosses, _ = _resolve_grosses(chart, history, today=date(2026, 9, 10))
+    assert grosses["Toy Story 5"] == 461_000_000.0
+
+
+def test_resolve_grosses_ignores_history_after_the_cutoff():
+    chart = {}
+    history = {
+        "Backrooms": [
+            (date(2026, 9, 7), 200_000_000.0),
+            (date(2026, 9, 14), 201_000_000.0),
+        ]
+    }
+    grosses, _ = _resolve_grosses(chart, history, today=date(2026, 9, 20))
+    assert grosses["Backrooms"] == 200_000_000.0

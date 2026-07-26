@@ -6,12 +6,13 @@ import argparse
 import json
 import math
 import sys
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import yaml
 
+from summer_movie_wager.ingest.boxoffice import BoxOfficeRow
 from summer_movie_wager.ingest.picks_guard import bootstrap_or_validate
 from summer_movie_wager.ingest.scraper import fetch_snapshot
 from summer_movie_wager.model.decay import project_decay
@@ -409,6 +410,50 @@ def _load_history() -> dict[str, list[tuple[date, float]]]:
             (date.fromisoformat(row["date"]), float(row["cumulative_gross"]))
         )
     return history
+
+
+def _resolve_grosses(
+    chart: dict[str, BoxOfficeRow],
+    history: dict[str, list[tuple[date, float]]],
+    *,
+    today: date,
+) -> tuple[dict[str, float], set[str]]:
+    """Merge the live Box Office Mojo chart with recorded history.
+
+    Returns `(grosses, carried_titles)`.
+
+    Two things history gives us that a single chart read cannot:
+
+    1. A film that has fallen off the 200-row chart keeps its last observed gross
+       instead of collapsing to 0. Grosses only go up, so we take the max of the
+       two -- which also absorbs a downward revision on Box Office Mojo's side.
+    2. After Labor Day the chart keeps accumulating gross the wager doesn't count.
+       The chart reports through *yesterday*, so it is still exactly right when run
+       on WINDOW_END + 1 and wrong from WINDOW_END + 2 onward; past that we fall
+       back to the last observation recorded on or before WINDOW_END.
+
+    `carried_titles` is the set of titles that came from history alone. Callers
+    surface it as a warning: a title carried forward while the film is plainly
+    still playing means the chart title drifted from ours.
+    """
+
+    cutoff = min(today, WINDOW_END)
+    # The chart reflects data through yesterday, so it is usable while that day
+    # is still inside the window.
+    chart_usable = (today - timedelta(days=1)) <= WINDOW_END
+
+    grosses: dict[str, float] = {}
+    for title, obs in history.items():
+        in_range = [(d, g) for d, g in obs if d <= cutoff]
+        if in_range:
+            grosses[title] = max(in_range)[1]
+
+    carried = set(grosses)
+    if chart_usable:
+        for title, row in chart.items():
+            grosses[title] = max(row.cumulative_gross, grosses.get(title, 0.0))
+            carried.discard(title)
+    return grosses, carried
 
 
 def _build_forecast_history_payload(path: Path) -> dict[str, Any]:
