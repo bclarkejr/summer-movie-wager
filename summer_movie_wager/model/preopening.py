@@ -1,10 +1,14 @@
-"""Pre-release projection (Mode B) — analyst-estimate driven."""
+"""Pre-release projection (Mode B) — analyst-estimate driven — and the wager window constants."""
 
 from datetime import date
 
 from summer_movie_wager.types import Category, Confidence
 
-WINDOW_END = date(2026, 9, 7)
+# The wager scores domestic gross for films released inside this window, inclusive.
+# WINDOW_START is May 1, not Apr 30: the play-along site's 2026-05-04 gross list
+# contains only May 1 releases, and omits The Story of Everything (Apr 30).
+WINDOW_START = date(2026, 5, 1)
+WINDOW_END = date(2026, 9, 7)  # Labor Day 2026
 
 _DEFAULT_WOW: dict[Category, float] = {
     Category.WIDE: 0.55,
