@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from summer_movie_wager.ingest.boxoffice import in_window, parse_year_chart
+from summer_movie_wager.ingest.boxoffice import BoxOfficeRow, in_window, parse_year_chart
 
 FIXTURE = Path(__file__).parent / "fixtures" / "boxofficemojo_year_2026.html"
 
@@ -78,3 +78,33 @@ def test_window_keeps_the_long_tail(chart):
     windowed = in_window(chart)
     assert "Power Ballad" in windowed
     assert "The Sheep Detectives" in windowed
+
+
+def test_window_end_boundary_with_synthetic_rows():
+    # The fixture contains no Sep 6/7/8 releases, so this test constructs
+    # synthetic BoxOfficeRow objects to cover the WINDOW_END boundary
+    # precisely. This catches the off-by-one error where < WINDOW_END
+    # would silently drop Sep 7 releases (the inclusive end).
+    synthetic_chart = {
+        "Sep 6 Release": BoxOfficeRow(
+            title="Sep 6 Release",
+            cumulative_gross=1_000_000.0,
+            release_date=date(2026, 9, 6),
+        ),
+        "Sep 7 Release": BoxOfficeRow(
+            title="Sep 7 Release",
+            cumulative_gross=2_000_000.0,
+            release_date=date(2026, 9, 7),
+        ),
+        "Sep 8 Release": BoxOfficeRow(
+            title="Sep 8 Release",
+            cumulative_gross=3_000_000.0,
+            release_date=date(2026, 9, 8),
+        ),
+    }
+
+    windowed = in_window(synthetic_chart)
+
+    assert "Sep 6 Release" in windowed
+    assert "Sep 7 Release" in windowed
+    assert "Sep 8 Release" not in windowed
