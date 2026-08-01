@@ -227,6 +227,37 @@ def test_picks_grid_survives_having_no_players(tmp_path: Path):
     assert '<section class="picks card">' in index
 
 
+def test_per_player_table_shows_diff_arrows(tmp_path: Path):
+    # Diff = pick position - projected rank. vivrad's list covers all three cases.
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    detail = html.split('<details data-player="vivrad">')[1].split("</details>")[0]
+    assert 'class="diff-down">▼ 1</td>' in detail  # pick 1 projects #2
+    assert 'class="diff-up">▲ 1</td>' in detail  # pick 2 projects #1
+    assert 'class="diff-flat">–</td>' in detail  # pick 3 projects #3  # noqa: RUF001
+
+
+def test_per_player_stats_line_matches_the_matrix_footer(tmp_path: Path):
+    # The two places a player's projected score appears must agree.
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    detail = html.split('<details data-player="vivrad">')[1].split("</details>")[0]
+    assert "<strong>14 pts</strong> projected" in detail
+    assert "3 pts current" in detail
+    assert "28% win" in detail
+
+
+def test_per_player_dark_horses_have_a_divider_and_no_diff(tmp_path: Path):
+    # A dark horse has no predicted position, so there is nothing to diff against.
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    detail = html.split('<details data-player="bclarke">')[1].split("</details>")[0]
+    assert '<tr class="dh-divider"><td colspan="6">Dark Horses</td></tr>' in detail
+    assert "<td>🐴</td>" in detail
+    # Backrooms is not in the movie catalog: rank and diff both fall back to "—".
+    assert '<td style="text-align:center;">—</td>' in detail
+
+
 def _render_pages(tmp_path, forecast_available):
     from datetime import datetime
 

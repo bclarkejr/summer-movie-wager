@@ -102,24 +102,41 @@
   <h2>🎭 Per-player detail</h2>
   {% for player in player_details %}
   <details data-player="{{ player.username }}">
-    <summary>{{ player.username }} — projected {% if player.median_pts is none %}—{% else %}{{ player.median_pts | int }}{% endif %}, current {{ player.current_pts }}</summary>
-    <ol class="ranked-picks">
-    {% for pick in player.ranked %}
-      <li>
-        <strong>{{ pick.title }}</strong>
-        <span class="muted">→ projected #{{ pick.projected_rank or '—' }} ·
-          ${{ '{:,.0f}'.format(pick.projected_gross) }} ·
-          contributes {{ pick.projected_pts }} pts
-        </span>
-      </li>
-    {% endfor %}
-    </ol>
-    <p class="dark-horse-label">🐴 Dark horses</p>
-    <ul class="dark-horses">
-    {% for dh in player.dark_horses %}
-      <li>{{ dh.title }} <span class="muted">→ projected #{{ dh.projected_rank or '—' }} · {{ dh.projected_pts }} pt</span></li>
-    {% endfor %}
-    </ul>
+    <summary>{{ player.username }}</summary>
+    <p class="player-stats"><strong>{{ projected_totals[player.username] }} pts</strong> projected &nbsp;·&nbsp; {{ player.current_pts }} pts current &nbsp;·&nbsp; {% if player.win_prob is none %}—{% else %}{{ '%.0f'|format(player.win_prob * 100) }}%{% endif %} win</p>
+    <table class="player-table">
+      <thead><tr><th>#</th><th>Movie</th><th>Projected rank</th><th>Diff</th><th>Projected gross</th><th>Pts</th></tr></thead>
+      <tbody>
+      {% for pick in player.ranked %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ pick.title }}</td>
+          <td style="text-align:center;">{% if pick.projected_rank is none %}—{% else %}#{{ pick.projected_rank }}{% endif %}</td>
+          {%- if pick.projected_rank is none %}
+          <td style="text-align:center;" class="muted">—</td>
+          {%- else %}
+          {%- set d = loop.index - pick.projected_rank %}
+          {% if d > 0 %}<td style="text-align:center;" class="diff-up">▲ {{ d }}</td>{% elif d < 0 %}<td style="text-align:center;" class="diff-down">▼ {{ -d }}</td>{% else %}<td style="text-align:center;" class="diff-flat">–</td>{% endif %}
+          {%- endif %}
+          <td>${{ '{:,.0f}'.format(pick.projected_gross) }}</td>
+          <td style="text-align:center;" class="{{ 'ptpos' if pick.projected_pts else 'pt0' }}">{{ pick.projected_pts }}</td>
+        </tr>
+      {% endfor %}
+      {% if player.dark_horses %}
+        <tr class="dh-divider"><td colspan="6">Dark Horses</td></tr>
+        {% for dh in player.dark_horses %}
+        <tr>
+          <td>🐴</td>
+          <td>{{ dh.title }}</td>
+          <td style="text-align:center;">{% if dh.projected_rank is none %}—{% else %}#{{ dh.projected_rank }}{% endif %}</td>
+          <td style="text-align:center;" class="muted">—</td>
+          <td>${{ '{:,.0f}'.format(dh.projected_gross) }}</td>
+          <td style="text-align:center;" class="{{ 'ptpos' if dh.projected_pts else 'pt0' }}">{{ dh.projected_pts }}</td>
+        </tr>
+        {% endfor %}
+      {% endif %}
+      </tbody>
+    </table>
   </details>
   {% endfor %}
 </section>
