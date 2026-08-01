@@ -258,6 +258,40 @@ def test_per_player_dark_horses_have_a_divider_and_no_diff(tmp_path: Path):
     assert '<td style="text-align:center;">—</td>' in detail
 
 
+def test_ranked_pick_with_no_catalog_rank_renders_without_arithmetic(tmp_path: Path):
+    # _normalize_movies unions every picked title into the catalog, so a *ranked*
+    # pick with no projected_rank should be unreachable in production -- but the
+    # guard at index.html.j2 is what keeps a degenerate input from raising
+    # (loop.index - None) and taking the whole build down with it.
+    data = RenderInput(
+        generated_at=datetime(2026, 5, 3, 14, 22, 0),
+        leaderboard=[],
+        movies=[],
+        player_details=[
+            PlayerDetail(
+                username="offcatalog",
+                median_pts=None,
+                current_pts=0,
+                ranked=[
+                    PickDetail(
+                        title="Not In Catalog",
+                        projected_rank=None,
+                        projected_gross=0,
+                        projected_pts=0,
+                    ),
+                ],
+                dark_horses=[],
+            ),
+        ],
+        raw_snapshot={},
+    )
+    render(tmp_path, data)
+    html = (tmp_path / "index.html").read_text()
+    detail = html.split('<details data-player="offcatalog">')[1].split("</details>")[0]
+    assert '<td style="text-align:center;">—</td>' in detail  # rank column fallback
+    assert '<td style="text-align:center;" class="muted">—</td>' in detail  # diff column fallback
+
+
 def _render_pages(tmp_path, forecast_available):
     from datetime import datetime
 
