@@ -205,6 +205,28 @@ def test_matrix_divider_is_omitted_when_nothing_follows_it(tmp_path: Path):
     assert "Outside the top 10" not in html
 
 
+def test_picks_grid_lists_every_player_side_by_side(tmp_path: Path):
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    picks = html.split('<section class="picks card">')[1].split("</section>")[0]
+    # Row count comes from the longest list: vivrad has three ranked picks.
+    assert ">Pick 1</td>" in picks
+    assert ">Pick 3</td>" in picks
+    assert ">Pick 4</td>" not in picks
+    assert "🐴 Dark Horse 1" in picks
+    assert "Coyote vs. Acme" in picks  # vivrad's third pick
+    assert "Backrooms" in picks  # bclarke's dark horse
+    # bclarke has one ranked pick, so their pick-2 and pick-3 cells are blank.
+    assert picks.count("<td></td>") == 2
+
+
+def test_picks_grid_survives_having_no_players(tmp_path: Path):
+    # The row count uses a max filter, which returns Undefined on an empty
+    # sequence. Without the default the build would die here.
+    index, _scenarios, _whatif = _render_pages(tmp_path, True)
+    assert '<section class="picks card">' in index
+
+
 def _render_pages(tmp_path, forecast_available):
     from datetime import datetime
 
