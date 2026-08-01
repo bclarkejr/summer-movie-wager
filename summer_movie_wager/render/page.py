@@ -110,11 +110,30 @@ def render(out_dir: Path, data: RenderInput) -> None:
     shared_css = (_STATIC / "shared.css").read_text()
     sortable_js = (_STATIC / "vendor" / "Sortable.min.js").read_text()
     inline_css = theme_css + "\n" + nav_css + "\n" + (_STATIC / "style.css").read_text()
+    # Two lookups the index matrix needs. pts_by_player is keyed title-by-title
+    # so a missing key means "didn't pick it" (renders "—") and a present zero
+    # means "picked it, projects nothing" (renders a grey 0).
+    pts_by_player = {
+        p.username: {d.title: d.projected_pts for d in p.ranked + p.dark_horses}
+        for p in data.player_details
+    }
+    # The projected total shown on the page is the sum of a player's own picks --
+    # the same cells printed above it in the matrix, so the column adds up. This
+    # is deliberately NOT sim.median_final_pts, which is a distribution median and
+    # can differ by a point. Column ORDER still follows the sim median (that is
+    # what win odds are derived from, and what scenarios.html/whatif.html use), so
+    # a column can occasionally out-total the one to its left.
+    projected_totals = {
+        p.username: sum(d.projected_pts for d in p.ranked + p.dark_horses)
+        for p in data.player_details
+    }
     html = template.render(
         generated_at=data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
         leaderboard=data.leaderboard,
         movies=data.movies,
         player_details=data.player_details,
+        pts_by_player=pts_by_player,
+        projected_totals=projected_totals,
         inline_css=inline_css,
         active="index",
         forecast_available=data.forecast_available,

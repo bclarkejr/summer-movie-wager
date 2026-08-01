@@ -61,18 +61,65 @@ def _fixture_input() -> RenderInput:
                 cumulative_to_date=32_500_000,
                 source="decay model · 1 wk",
             ),
+            MovieRow(
+                title="Coyote vs. Acme",
+                release_date="2026-08-28",
+                status="no_projection",
+                status_label="no projection",
+                median_in_window_gross=0,
+                p10=0,
+                p90=0,
+                cumulative_to_date=None,
+                source="no analyst entry",
+            ),
         ],
         player_details=[
+            # vivrad's three ranked picks cover all three Diff arrows: pick 1
+            # projects #2 (down), pick 2 projects #1 (up), pick 3 projects #3 (flat).
+            PlayerDetail(
+                username="vivrad",
+                median_pts=91.0,
+                current_pts=3,
+                win_prob=0.28,
+                ranked=[
+                    PickDetail(
+                        title="The Devil Wears Prada 2",
+                        projected_rank=2,
+                        projected_gross=170_000_000,
+                        projected_pts=7,
+                    ),
+                    PickDetail(
+                        title="Spider-Man: Brand New Day",
+                        projected_rank=1,
+                        projected_gross=380_000_000,
+                        projected_pts=7,
+                    ),
+                    PickDetail(
+                        title="Coyote vs. Acme",
+                        projected_rank=3,
+                        projected_gross=0,
+                        projected_pts=0,
+                    ),
+                ],
+                dark_horses=[
+                    PickDetail(
+                        title="Toy Story 5", projected_rank=None, projected_gross=0, projected_pts=0
+                    ),
+                ],
+            ),
+            # bclarke picked neither Prada nor Coyote, so those cells are em-dashes,
+            # and their column totals 13 against vivrad's 14.
             PlayerDetail(
                 username="bclarke",
                 median_pts=85.0,
                 current_pts=3,
+                win_prob=0.19,
                 ranked=[
                     PickDetail(
-                        title="Toy Story 5",
-                        projected_rank=2,
-                        projected_gross=290_000_000,
-                        projected_pts=10,
+                        title="Spider-Man: Brand New Day",
+                        projected_rank=1,
+                        projected_gross=380_000_000,
+                        projected_pts=13,
                     ),
                 ],
                 dark_horses=[
@@ -80,7 +127,7 @@ def _fixture_input() -> RenderInput:
                         title="Backrooms", projected_rank=None, projected_gross=0, projected_pts=0
                     ),
                 ],
-            )
+            ),
         ],
         raw_snapshot={"placeholder": True},
     )
@@ -105,6 +152,57 @@ def test_render_matches_expected_snapshot(tmp_path: Path):
 def test_render_writes_data_json(tmp_path: Path):
     render(tmp_path, _fixture_input())
     assert (tmp_path / "data.json").exists()
+
+
+def test_matrix_dashes_movies_a_player_did_not_pick(tmp_path: Path):
+    # bclarke picked neither The Devil Wears Prada 2 nor Coyote vs. Acme. Those
+    # cells must read "—", not "0" — a zero would claim they bet and lost.
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    matrix = html.split('<section class="matrix card">')[1].split("</section>")[0]
+    assert matrix.count('<td class="muted" style="text-align:center;">—</td>') == 2
+    # vivrad picked Coyote, which projects nothing: a grey zero, not a dash.
+    assert '<td style="text-align:center;" class="pt0">0</td>' in matrix
+
+
+def test_matrix_footer_sums_the_column_not_the_sim_median(tmp_path: Path):
+    # With the components sitting directly above it, the total has to add up.
+    # vivrad 7+7+0+0 = 14, bclarke 13+0 = 13 — not the sim medians (91, 85).
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    footer = html.split("<tfoot>")[1].split("</tfoot>")[0]
+    assert ">14</td>" in footer
+    assert ">13</td>" in footer
+    assert ">91</td>" not in footer
+    assert ">85</td>" not in footer
+    assert ">28%</td>" in footer  # vivrad's win odds
+
+
+def test_matrix_shows_at_most_fifteen_movies(tmp_path: Path):
+    # The matrix is the top 15 with a divider after #10; the Movies section
+    # below it is the place to see everything.
+    data = _fixture_input()
+    many = list(data.movies) * 9  # 27 rows
+    data = RenderInput(
+        generated_at=data.generated_at,
+        leaderboard=data.leaderboard,
+        movies=many,
+        player_details=data.player_details,
+        raw_snapshot=data.raw_snapshot,
+    )
+    render(tmp_path, data)
+    html = (tmp_path / "index.html").read_text()
+    matrix = html.split('<section class="matrix card">')[1].split("</section>")[0]
+    assert "Outside the top 10" in matrix
+    assert "<td>15</td>" in matrix
+    assert "<td>16</td>" not in matrix
+
+
+def test_matrix_divider_is_omitted_when_nothing_follows_it(tmp_path: Path):
+    # Three movies: a "top 10" divider with no rows under it would be nonsense.
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    assert "Outside the top 10" not in html
 
 
 def _render_pages(tmp_path, forecast_available):

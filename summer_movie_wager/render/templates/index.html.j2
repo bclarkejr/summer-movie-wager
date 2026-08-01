@@ -17,26 +17,37 @@
   <p class="meta">Window 2026-05-01 → 2026-09-07 · refreshed {{ generated_at }}</p>
 </header>
 
-<section class="leaderboard card">
-  <h2>🏆 Leaderboard</h2>
+{% set n = player_details | length %}
+
+<section class="matrix card">
+  <h2>🏆 Projected Standings</h2>
   {% if not forecast_available %}
   <p class="meta forecast-unavailable">Forecast unavailable — {{ forecast_unavailable_reason }}. Showing current points only.</p>
   {% endif %}
   <table>
     <thead>
-      <tr><th>Player</th><th>Current</th><th>Projected median</th><th>80% range</th><th>Win odds</th></tr>
+      <tr><th>#</th><th>Movie</th><th>Projected median</th>{% for p in player_details %}<th style="text-align:center;">{{ p.username }}</th>{% endfor %}</tr>
     </thead>
     <tbody>
-    {% for row in leaderboard %}
-      <tr data-player="{{ row.username }}" class="player-row">
-        <td>{{ row.username }}</td>
-        <td style="text-align: center;">{{ row.current_pts }}</td>
-        <td style="text-align: center;">{% if row.median_pts is none %}—{% else %}{{ row.median_pts | int }}{% endif %}</td>
-        <td style="text-align: center;">{% if row.p10_pts is none or row.p90_pts is none %}—{% else %}[{{ row.p10_pts | int }} – {{ row.p90_pts | int }}]{% endif %}</td>
-        <td style="text-align: center;"{% if row.tie_prob is not none %} title="tie odds: {{ '%.0f'|format(row.tie_prob*100) }}%"{% endif %}>{% if row.win_prob is none %}—{% else %}{{ '%.0f'|format(row.win_prob*100) }}%{% endif %}</td>
+    {% for movie in movies[:15] %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ movie.title }}</td>
+        <td>${{ '{:,.0f}'.format(movie.median_in_window_gross) }}</td>
+        {%- for p in player_details %}
+        {%- set pts = pts_by_player[p.username].get(movie.title) %}
+        {% if pts is none %}<td class="muted" style="text-align:center;">—</td>{% else %}<td style="text-align:center;" class="{{ 'ptpos' if pts else 'pt0' }}">{{ pts }}</td>{% endif %}
+        {%- endfor %}
       </tr>
+      {% if loop.index == 10 and not loop.last %}
+      <tr class="tier-divider"><td colspan="{{ n + 3 }}">Outside the top 10</td></tr>
+      {% endif %}
     {% endfor %}
     </tbody>
+    <tfoot>
+      <tr class="matrix-footer"><td colspan="3">Projected pts</td>{% for p in player_details %}<td style="text-align:center;">{{ projected_totals[p.username] }}</td>{% endfor %}</tr>
+      <tr class="matrix-footer"><td colspan="3">Win odds</td>{% for p in player_details %}<td style="text-align:center;">{% if p.win_prob is none %}—{% else %}{{ '%.0f'|format(p.win_prob * 100) }}%{% endif %}</td>{% endfor %}</tr>
+    </tfoot>
   </table>
 </section>
 
