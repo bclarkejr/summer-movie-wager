@@ -587,3 +587,61 @@ def test_normalize_zero_gross_film_stays_pre_release():
         snap, overrides, {}, grosses={}, chart={}, carried=set(), today=today
     )
     assert movies["No Gross Yet"]["status"] == MovieStatus.PRE_RELEASE
+
+
+def _catalog_for(titles):
+    """A projected catalog for `titles`, grossing strictly descending in list order.
+
+    Returns (projections, movie_rows) — the same pair main() hands to
+    _build_player_details, so film N in `titles` lands at catalog rank N+1.
+    """
+    from summer_movie_wager.render.build import _build_movie_rows
+
+    movies = {
+        t: {
+            "title": t,
+            "release_date": date(2026, 6, 1),
+            "status": MovieStatus.IN_THEATERS,
+            "category": Category.WIDE,
+            "cumulative": 0.0,
+        }
+        for t in titles
+    }
+    projections = [
+        Projection(movie_title=t, median_in_window_gross=float(1300 - 100 * i), sigma=0.1)
+        for i, t in enumerate(titles)
+    ]
+    return projections, _build_movie_rows(movies, projections)
+
+
+def test_projected_rank_covers_films_outside_the_top_10():
+    # projected_rank is the film's row number in the Movies table, not its
+    # position inside the projected top 10. A pick that misses the top 10 scores
+    # nothing but still carries a rank, so the per-player table can show "#11".
+    from summer_movie_wager.render.build import _build_player_details
+
+    snap = _snapshot(_THIRTEEN)
+    projections, movie_rows = _catalog_for(_THIRTEEN)
+
+    details = _build_player_details(snap, projections, {"bclarke": 0}, None, movie_rows)
+
+    assert [p.projected_rank for p in details[0].ranked] == list(range(1, 11))
+    # Film 10 is the first dark horse and finishes 11th — outside the top 10.
+    dh = details[0].dark_horses[0]
+    assert dh.projected_rank == 11
+    assert dh.projected_pts == 0
+
+
+def test_pick_gross_matches_the_movie_catalog():
+    # The dollar figure in a player's table must be the same number the Movies
+    # table prints for that film — both now come from movie_rows.
+    from summer_movie_wager.render.build import _build_player_details
+
+    snap = _snapshot(_THIRTEEN)
+    projections, movie_rows = _catalog_for(_THIRTEEN)
+
+    details = _build_player_details(snap, projections, {"bclarke": 0}, None, movie_rows)
+
+    by_title = {row.title: row.median_in_window_gross for row in movie_rows}
+    for pick in details[0].ranked + details[0].dark_horses:
+        assert pick.projected_gross == by_title[pick.title]
