@@ -28,6 +28,7 @@
   --win-bg:        #c9f7e8;
   --win-color:     #1a7a54;
   --zero:          #bdbdbd;
+  --pos-color:     #128a5e;
 }
 
 [data-theme="dark"] {
@@ -59,6 +60,7 @@
   --win-bg:        #0d3d28;
   --win-color:     #4ecdc4;
   --zero:          #4a4266;
+  --pos-color:     #4ecdc4;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -91,5 +93,6 @@
     --win-bg:        #0d3d28;
     --win-color:     #4ecdc4;
     --zero:          #4a4266;
+    --pos-color:     #4ecdc4;
   }
 }

@@ -200,9 +200,12 @@ def test_matrix_shows_at_most_fifteen_movies(tmp_path: Path):
 
 def test_matrix_divider_is_omitted_when_nothing_follows_it(tmp_path: Path):
     # Three movies: a "top 10" divider with no rows under it would be nonsense.
+    # Scoped to the matrix section, not the whole page: style.css legitimately
+    # mentions "Outside the top 10" in a comment describing the divider rule.
     render(tmp_path, _fixture_input())
     html = (tmp_path / "index.html").read_text()
-    assert "Outside the top 10" not in html
+    matrix = html.split('<section class="matrix card">')[1].split("</section>")[0]
+    assert "Outside the top 10" not in matrix
 
 
 def test_picks_grid_lists_every_player_side_by_side(tmp_path: Path):
@@ -290,6 +293,20 @@ def test_ranked_pick_with_no_catalog_rank_renders_without_arithmetic(tmp_path: P
     detail = html.split('<details data-player="offcatalog">')[1].split("</details>")[0]
     assert '<td style="text-align:center;">—</td>' in detail  # rank column fallback
     assert '<td style="text-align:center;" class="muted">—</td>' in detail  # diff column fallback
+
+
+def test_index_css_covers_the_new_sections(tmp_path: Path):
+    index, _scenarios, _whatif = _render_pages(tmp_path, True)
+    assert "--pos-color:" in index  # new token, all three theme blocks
+    assert ".ptpos" in index
+    assert "tr.tier-divider" in index
+    assert "table.player-table" in index
+    assert "details.movies-toggle" in index
+    assert ".forecast-unavailable" in index  # notice still styled
+    # Rules for markup that no longer exists must go, not linger.
+    assert ".player-row" not in index  # the medal ::before rules
+    assert ".ranked-picks" not in index
+    assert ".dark-horse-label" not in index
 
 
 def _render_pages(tmp_path, forecast_available):

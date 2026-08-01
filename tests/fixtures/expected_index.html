@@ -37,6 +37,7 @@
   --win-bg:        #c9f7e8;
   --win-color:     #1a7a54;
   --zero:          #bdbdbd;
+  --pos-color:     #128a5e;
 }
 
 [data-theme="dark"] {
@@ -68,6 +69,7 @@
   --win-bg:        #0d3d28;
   --win-color:     #4ecdc4;
   --zero:          #4a4266;
+  --pos-color:     #4ecdc4;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -100,6 +102,7 @@
     --win-bg:        #0d3d28;
     --win-color:     #4ecdc4;
     --zero:          #4a4266;
+    --pos-color:     #4ecdc4;
   }
 }
 
@@ -130,7 +133,7 @@ body {
   font-family: 'Nunito', sans-serif;
   font-size: 15px;
   line-height: 1.5;
-  max-width: 1000px;
+  max-width: 1360px;
   margin: 0 auto;
   padding: 1.5em 1.2em 3em;
   background: var(--bg);
@@ -197,13 +200,14 @@ h2 {
   padding: 1.5em;
   margin-bottom: 1.5em;
   box-shadow: 0 4px 20px var(--shadow);
+  overflow-x: auto;
   transition: background 0.25s, box-shadow 0.25s;
 }
 
-.leaderboard h2 { color: #ff6b6b; }
-.players h2     { color: #a855f7; }
-
-.movies { overflow-x: auto; }
+.matrix h2  { color: #ff6b6b; }
+.picks h2   { color: #a855f7; }
+.players h2 { color: #a855f7; }
+.movies h2  { color: #4ecdc4; }
 
 /* ── Tables ── */
 table {
@@ -212,34 +216,58 @@ table {
   font-variant-numeric: tabular-nums;
 }
 
-.leaderboard thead tr { background: linear-gradient(90deg, #ff6b6b22, #f7c59f22); }
-.movies thead tr      { background: linear-gradient(90deg, #4ecdc422, #ffe66d22); }
+.matrix thead tr,
+.picks thead tr  { background: linear-gradient(90deg, #ff6b6b22, #f7c59f22); }
+.movies thead tr { background: linear-gradient(90deg, #4ecdc422, #ffe66d22); }
 
 th {
   font-weight: 700;
-  font-size: 0.82em;
+  font-size: 0.78em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 0.7em 0.8em;
+  letter-spacing: 0.05em;
+  padding: 0.7em 0.7em;
   color: var(--th-color);
   border-bottom: 2px solid var(--border);
+  white-space: nowrap;
 }
 
 td {
-  padding: 0.55em 0.8em;
+  padding: 0.55em 0.7em;
   border-bottom: 1px solid var(--border-row);
 }
 
 td:first-child { font-weight: 700; }
 
-tbody tr:nth-child(even)  { background: var(--bg-row-alt); }
-tbody tr:hover            { background: var(--bg-hover); }
-tbody tr:last-child td    { border-bottom: none; }
+tbody tr:nth-child(even) { background: var(--bg-row-alt); }
+tbody tr:hover           { background: var(--bg-hover); }
 
-/* Leaderboard rank medals via CSS */
-.player-row:first-child  td:first-child::before { content: "🥇 "; }
-.player-row:nth-child(2) td:first-child::before { content: "🥈 "; }
-.player-row:nth-child(3) td:first-child::before { content: "🥉 "; }
+/* Points cells: a scored value reads positive, a zero recedes. */
+.pt0   { color: var(--zero); }
+.ptpos { color: var(--pos-color); font-weight: 700; }
+
+/* "Outside the top 10" in the matrix, "Dark Horses" in the picks grid. */
+tr.tier-divider td {
+  padding: 0.4em 0.7em;
+  text-align: center;
+  font-size: 0.75em;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  background: var(--bg-row-alt);
+  border-top: 2px dashed var(--border);
+  border-bottom: 2px dashed var(--border);
+}
+
+.matrix-footer td {
+  font-weight: 800;
+  border-top: 2px solid var(--border);
+  border-bottom: none;
+  background: var(--bg-row-alt);
+}
+
+.picks td:first-child,
+.picks th:first-child { white-space: nowrap; }
 
 /* ── Badges ── */
 .badge {
@@ -286,22 +314,56 @@ summary::before { content: "▶"; font-size: 0.7em; color: #a855f7; transition: 
 details[open] summary::before { transform: rotate(90deg); }
 summary::-webkit-details-marker { display: none; }
 
-.ranked-picks,
-.dark-horses {
-  margin: 0.5em 0 0.5em 1em;
-  padding: 0 1em;
+.player-stats {
+  margin: 0 0 0.8em;
+  padding-left: 1.75em;
+  color: var(--text-muted);
+  font-size: 0.88em;
 }
-.ranked-picks li,
-.dark-horses li { padding: 0.3em 0; }
 
-.dark-horse-label {
+table.player-table { font-size: 0.92em; }
+table.player-table th,
+table.player-table td { padding: 0.45em 0.7em; }
+
+tr.dh-divider td {
   font-weight: 800;
-  margin: 0.8em 1em 0.2em;
-  font-size: 0.9em;
-  color: #ff6b6b;
+  font-size: 0.78em;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  color: #ff6b6b;
+  background: var(--bg-row-alt);
+  padding: 0.5em 0.7em 0.3em;
 }
+
+.diff-up   { color: var(--pos-color); font-weight: 700; }
+.diff-down { color: #e0575b; font-weight: 700; }
+.diff-flat { color: var(--zero); }
+
+/* ── Movies: a card that is also a collapsible ── */
+details.movies-toggle { border: none; }
+details.movies-toggle > summary {
+  padding: 0;
+  margin: 0 0 0.8em;
+  background: none;
+  cursor: pointer;
+}
+details.movies-toggle > summary::before { display: none; }
+details.movies-toggle > summary h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  width: 100%;
+}
+details.movies-toggle > summary h2::after {
+  content: "▶ show";
+  font-size: 0.6em;
+  color: var(--accent);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 700;
+}
+details.movies-toggle[open] > summary h2::after { content: "▼ hide"; }
 
 /* ── Footer ── */
 footer {
@@ -324,9 +386,9 @@ footer a { color: #4ecdc4; }
 }
 
 /* ── Responsive ── */
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   body { font-size: 13px; padding: 1em 0.8em 3em; }
-  th, td { padding: 0.3em 0.5em; }
+  th, td { padding: 0.35em 0.5em; }
   .theme-toggle { top: 0.6em; right: 0.6em; padding: 0.25em 0.6em; font-size: 0.78em; }
   h1 { font-size: 1.8em; }
 }
