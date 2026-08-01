@@ -939,6 +939,7 @@ def _build_player_details(
                 current_pts=current_pts.get(username, 0),
                 ranked=ranked_details,
                 dark_horses=dh_details,
+                win_prob=sim.win_prob[username] if sim is not None else None,
             )
         )
     if sim is None:

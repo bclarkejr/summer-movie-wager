@@ -645,3 +645,34 @@ def test_pick_gross_matches_the_movie_catalog():
     by_title = {row.title: row.median_in_window_gross for row in movie_rows}
     for pick in details[0].ranked + details[0].dark_horses:
         assert pick.projected_gross == by_title[pick.title]
+
+
+def test_player_detail_carries_win_prob_from_the_sim():
+    # The index reads win odds off PlayerDetail so every player-facing section
+    # can iterate one list instead of joining against the leaderboard.
+    from types import SimpleNamespace
+
+    from summer_movie_wager.render.build import _build_player_details
+
+    snap = _snapshot(_THIRTEEN)
+    projections, movie_rows = _catalog_for(_THIRTEEN)
+    sim = SimpleNamespace(
+        median_final_pts={"bclarke": 42.0},
+        win_prob={"bclarke": 0.25},
+    )
+
+    details = _build_player_details(snap, projections, {"bclarke": 7}, sim, movie_rows)
+
+    assert details[0].win_prob == 0.25
+    assert details[0].median_pts == 42.0
+
+
+def test_player_detail_win_prob_is_none_without_a_sim():
+    from summer_movie_wager.render.build import _build_player_details
+
+    snap = _snapshot(_THIRTEEN)
+    projections, movie_rows = _catalog_for(_THIRTEEN)
+
+    details = _build_player_details(snap, projections, {"bclarke": 7}, None, movie_rows)
+
+    assert details[0].win_prob is None

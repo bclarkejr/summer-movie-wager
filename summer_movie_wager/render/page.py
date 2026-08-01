@@ -59,6 +59,7 @@ class PlayerDetail:
     current_pts: int
     ranked: list[PickDetail]
     dark_horses: list[PickDetail]
+    win_prob: float | None = None
 
 
 @dataclass(frozen=True)
