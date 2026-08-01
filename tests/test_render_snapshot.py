@@ -614,3 +614,13 @@ def test_history_payload_embedded(tmp_path):
     payload = _json.loads(re.search(r"const DATA = (.*?);\n", history).group(1))
     assert payload["dates"] == ["2026-05-11"]
     assert payload["series"][0]["player"] == "bclarke"
+
+
+def test_movies_section_is_collapsible_and_numbered(tmp_path: Path):
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    assert '<details class="movies card movies-toggle">' in html
+    assert "<summary><h2>🎥 Movies (projected window gross)</h2></summary>" in html
+    movies = html.split('<details class="movies card movies-toggle">')[1]
+    assert "<th>#</th>" in movies
+    assert "<td>3</td>" in movies  # all three movies, not just the matrix's 15

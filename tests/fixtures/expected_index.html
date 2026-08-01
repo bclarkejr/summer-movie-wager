@@ -452,48 +452,6 @@ footer a { color: #4ecdc4; }
   </table>
 </section>
 
-<section class="movies card">
-  <h2>🎥 Movies (projected window gross)</h2>
-  <table>
-    <thead>
-      <tr><th>Movie</th><th>Released</th><th>Status</th><th>Projected median</th><th>80% range</th><th>Cumulative</th><th>Source</th></tr>
-    </thead>
-    <tbody>
-    
-      <tr>
-        <td>Spider-Man: Brand New Day</td>
-        <td>2026-07-31</td>
-        <td><span class="badge badge-pre_release">pre-release</span></td>
-        <td>$380,000,000</td>
-        <td>[$290,000,000 – $470,000,000]</td>
-        <td>—</td>
-        <td class="source">Box Office Pro · high</td>
-      </tr>
-    
-      <tr>
-        <td>The Devil Wears Prada 2</td>
-        <td>2026-05-01</td>
-        <td><span class="badge badge-in_theaters">in theaters</span></td>
-        <td>$170,000,000</td>
-        <td>[$140,000,000 – $210,000,000]</td>
-        <td>$32,500,000</td>
-        <td class="source">decay model · 1 wk</td>
-      </tr>
-    
-      <tr>
-        <td>Coyote vs. Acme</td>
-        <td>2026-08-28</td>
-        <td><span class="badge badge-no_projection">no projection</span></td>
-        <td>$0</td>
-        <td>[$0 – $0]</td>
-        <td>—</td>
-        <td class="source">no analyst entry</td>
-      </tr>
-    
-    </tbody>
-  </table>
-</section>
-
 <section class="players card">
   <h2>🎭 Per-player detail</h2>
   
@@ -582,6 +540,51 @@ footer a { color: #4ecdc4; }
   </details>
   
 </section>
+
+<details class="movies card movies-toggle">
+  <summary><h2>🎥 Movies (projected window gross)</h2></summary>
+  <table>
+    <thead>
+      <tr><th>#</th><th>Movie</th><th>Released</th><th>Status</th><th>Projected median</th><th>80% range</th><th>Cumulative</th><th>Source</th></tr>
+    </thead>
+    <tbody>
+    
+      <tr>
+        <td>1</td>
+        <td>Spider-Man: Brand New Day</td>
+        <td>2026-07-31</td>
+        <td><span class="badge badge-pre_release">pre-release</span></td>
+        <td>$380,000,000</td>
+        <td>[$290,000,000 – $470,000,000]</td>
+        <td>—</td>
+        <td class="source">Box Office Pro · high</td>
+      </tr>
+    
+      <tr>
+        <td>2</td>
+        <td>The Devil Wears Prada 2</td>
+        <td>2026-05-01</td>
+        <td><span class="badge badge-in_theaters">in theaters</span></td>
+        <td>$170,000,000</td>
+        <td>[$140,000,000 – $210,000,000]</td>
+        <td>$32,500,000</td>
+        <td class="source">decay model · 1 wk</td>
+      </tr>
+    
+      <tr>
+        <td>3</td>
+        <td>Coyote vs. Acme</td>
+        <td>2026-08-28</td>
+        <td><span class="badge badge-no_projection">no projection</span></td>
+        <td>$0</td>
+        <td>[$0 – $0]</td>
+        <td>—</td>
+        <td class="source">no analyst entry</td>
+      </tr>
+    
+    </tbody>
+  </table>
+</details>
 
 <footer>
   <p>Source data: <a href="https://thesummermoviewager.com/help.php">Summer Movie Wager rules</a>. Raw snapshot: <a href="data.json">data.json</a>.</p>

@@ -76,28 +76,6 @@
   </table>
 </section>
 
-<section class="movies card">
-  <h2>🎥 Movies (projected window gross)</h2>
-  <table>
-    <thead>
-      <tr><th>Movie</th><th>Released</th><th>Status</th><th>Projected median</th><th>80% range</th><th>Cumulative</th><th>Source</th></tr>
-    </thead>
-    <tbody>
-    {% for movie in movies %}
-      <tr>
-        <td>{{ movie.title }}</td>
-        <td>{{ movie.release_date }}</td>
-        <td><span class="badge badge-{{ movie.status }}">{{ movie.status_label }}</span></td>
-        <td>${{ '{:,.0f}'.format(movie.median_in_window_gross) }}</td>
-        <td>[${{ '{:,.0f}'.format(movie.p10) }} – ${{ '{:,.0f}'.format(movie.p90) }}]</td>
-        <td>{% if movie.cumulative_to_date %}${{ '{:,.0f}'.format(movie.cumulative_to_date) }}{% else %}—{% endif %}</td>
-        <td class="source">{{ movie.source }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</section>
-
 <section class="players card">
   <h2>🎭 Per-player detail</h2>
   {% for player in player_details %}
@@ -140,6 +118,29 @@
   </details>
   {% endfor %}
 </section>
+
+<details class="movies card movies-toggle">
+  <summary><h2>🎥 Movies (projected window gross)</h2></summary>
+  <table>
+    <thead>
+      <tr><th>#</th><th>Movie</th><th>Released</th><th>Status</th><th>Projected median</th><th>80% range</th><th>Cumulative</th><th>Source</th></tr>
+    </thead>
+    <tbody>
+    {% for movie in movies %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ movie.title }}</td>
+        <td>{{ movie.release_date }}</td>
+        <td><span class="badge badge-{{ movie.status }}">{{ movie.status_label }}</span></td>
+        <td>${{ '{:,.0f}'.format(movie.median_in_window_gross) }}</td>
+        <td>[${{ '{:,.0f}'.format(movie.p10) }} – ${{ '{:,.0f}'.format(movie.p90) }}]</td>
+        <td>{% if movie.cumulative_to_date %}${{ '{:,.0f}'.format(movie.cumulative_to_date) }}{% else %}—{% endif %}</td>
+        <td class="source">{{ movie.source }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</details>
 
 <footer>
   <p>Source data: <a href="https://thesummermoviewager.com/help.php">Summer Movie Wager rules</a>. Raw snapshot: <a href="data.json">data.json</a>.</p>
