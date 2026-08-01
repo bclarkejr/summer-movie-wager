@@ -619,6 +619,13 @@ def test_history_payload_embedded(tmp_path):
 def test_movies_section_is_collapsible_and_numbered(tmp_path: Path):
     render(tmp_path, _fixture_input())
     html = (tmp_path / "index.html").read_text()
+    # The section MOVED as well as changed: it must appear exactly once, and it
+    # must sit after the players section. Substring checks alone would pass a
+    # duplicated or wrongly-placed block, which is the failure this task risked.
+    assert html.count('<details class="movies card movies-toggle">') == 1
+    assert html.index('<details class="movies card movies-toggle">') > html.index(
+        '<section class="players card">'
+    )
     assert '<details class="movies card movies-toggle">' in html
     assert "<summary><h2>🎥 Movies (projected window gross)</h2></summary>" in html
     movies = html.split('<details class="movies card movies-toggle">')[1]
