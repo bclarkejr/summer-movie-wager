@@ -3,7 +3,7 @@
                               ("whatif.html", "🎬 What If?", "whatif"),
                               ("scenarios.html", "🔮 Winning Scenarios", "scenarios"),
                               ("history.html", "📈 Odds Over Time", "history")] %}
-    {% if key in ("index", "history") or forecast_available %}
+    {% if key == "index" or forecast_available %}
       <a class="nav-pill{{ ' is-active' if active == key }}" href="{{ href }}"
          {% if active == key %}aria-current="page"{% endif %}>{{ label }}</a>
     {% else %}

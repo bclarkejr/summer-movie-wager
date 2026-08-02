@@ -637,7 +637,7 @@ def test_whatif_rows_have_keyboard_move_buttons(tmp_path):
     assert 'filter: ".move-btn"' in whatif  # buttons never start a drag
 
 
-def test_history_page_rendered_and_always_linked(tmp_path):
+def test_history_page_rendered_and_gated_like_scenarios(tmp_path):
     index_on, _s, _w = _render_pages(tmp_path, True)
     history = (tmp_path / "history.html").read_text()
     assert "const DATA =" in history
@@ -646,8 +646,9 @@ def test_history_page_rendered_and_always_linked(tmp_path):
     assert 'href="history.html"' in index_on
 
     index_off, _s2, _w2 = _render_pages(tmp_path, False)
-    # unlike scenarios/whatif, history stays linked when the forecast is off
-    assert 'href="history.html"' in index_off
+    # the forecast only ever turns on once, so history is gated the same as
+    # scenarios/whatif rather than staying linked when the forecast is off
+    assert 'href="history.html"' not in index_off
     assert 'href="scenarios.html"' not in index_off
 
 
