@@ -94,8 +94,8 @@ def main(argv: list[str] | None = None) -> int:
     6. simulate_season:  If there are at least 25 movies with non-zero projections, simulate the
     season 10,000 times to estimate each player's win probability and final points distribution.
     (Unnumbered, between 6 and 7 in code order: score every player's *current*
-    points against the Box Office Mojo top 10 -- these are the standings the
-    leaderboard actually displays.)
+    points against the Box Office Mojo top 10 -- these appear only in each
+    player's stats line in the per-player detail section of index.html.)
     7. _validate_against_site:  Compare the site's own gross list, scored, against the site's own
     reported points to ensure our scoring engine is correct.
     8. render:  Render the HTML page using the leaderboard, movie rows, and player details.
@@ -759,9 +759,10 @@ def _build_leaderboard(
     current_pts: dict[str, int],
 ) -> list[LeaderboardRow]:
     """
-    Build the leaderboard rows for rendering the HTML page.  If a simulation is available, use the
-    median points from the simulation to rank and sort players.
-    If no simulation is available, fall back to the current points.
+    Order players by projected median points, falling back to current points when no
+    simulation is available.  index.html no longer reads this ordering directly -- it's
+    consumed by the scenarios.html and whatif.html payloads instead.  `player_details` is
+    sorted by the same key, which is what keeps those pages consistent with the index.
     """
 
     rows: list[LeaderboardRow] = []

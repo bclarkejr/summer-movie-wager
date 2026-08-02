@@ -85,7 +85,7 @@ uv run ruff format --check .  # formatting
 
 | Page | What it shows | Client-side JS |
 |---|---|---|
-| `docs/index.html` (Leaderboard) | Current standings, projected final points with 80% intervals, win odds, per-movie projections, every player's picks | Theme toggle only |
+| `docs/index.html` (Leaderboard) | A movie-by-player matrix of projected points and win odds, every player's picks side by side, per-player detail tables with current points, and the full movie projection table | Theme toggle only |
 | `docs/scenarios.html` (Winning Scenarios) | For each player, the *most representative* season finish order in which they win — the medoid of their winning Monte Carlo trials under Spearman-footrule distance (i.e., the winning trial most similar to all their other winning trials) | Theme toggle only |
 | `docs/whatif.html` (What If? sandbox) | A drag-to-reorder list of the top 15 projected movies; scores for all 8 players recompute live as you rearrange the hypothetical finish order | The scoring rules reimplemented in ~140 lines of vanilla JS, with the movie list and all picks embedded as JSON at build time |
 | docs/history.html (Odds Over Time) | Each player's win probability at every production refresh, as an SVG line chart with a table fallback | Inline vanilla JS renders the chart from an embedded JSON payload |

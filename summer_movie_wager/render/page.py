@@ -78,14 +78,18 @@ def render(out_dir: Path, data: RenderInput) -> None:
     """
     Render index.html, scenarios.html, whatif.html, and data.json into out_dir.
 
-    index.html has three sections:
+    index.html has four sections:
 
-    1. Leaderboard: A table of all players and their current points, projected points,
-       and win/tie probabilities.
-    2. Movie projections: A table of all movies and their projected gross/points, plus
-       some metadata like release date and status.
-    3. Per-player details: For each player, an expandable section showing their picks
-       and the projected points for each pick.
+    1. Projected Standings: A movie-by-player matrix -- films as rows, players as columns,
+       each cell showing what that film contributes to that player's score. The footer sums
+       each column into a projected point total and shows win odds.
+    2. All Players' Lists: A picks grid with every player's ranked picks and dark horses
+       side by side, for scanning who picked what at a glance.
+    3. Per-player detail: An accordion, one entry per player, with a stats line (projected
+       points, current points, win odds) and a table of their picks -- projected rank, diff
+       from their draft position, projected gross, and points.
+    4. Movies: The full projected-gross table for every movie, numbered and collapsed
+       behind a toggle.
 
     scenarios.html shows each player's most-likely winning finish order. whatif.html lets a
     visitor drag the top-15 projected movies into a hypothetical top-10 finish and see every

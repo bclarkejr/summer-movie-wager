@@ -295,6 +295,47 @@ def test_ranked_pick_with_no_catalog_rank_renders_without_arithmetic(tmp_path: P
     assert '<td style="text-align:center;" class="muted">—</td>' in detail  # diff column fallback
 
 
+def test_player_with_no_forecast_shows_em_dash_not_none(tmp_path: Path):
+    # This is the season-opening state, not a hypothetical: while fewer than 25 movies
+    # have non-zero projections, sim is None, so every real player's win_prob and
+    # median_pts come back None even though they have picks and still render. Both
+    # places a player's win odds appear must fall back to an em-dash: the matrix
+    # footer's Win odds row and the per-player stats line.
+    data = RenderInput(
+        generated_at=datetime(2026, 5, 3, 14, 22, 0),
+        leaderboard=[],
+        movies=[],
+        player_details=[
+            PlayerDetail(
+                username="earlyseason",
+                median_pts=None,
+                current_pts=0,
+                win_prob=None,
+                ranked=[
+                    PickDetail(
+                        title="Some Movie",
+                        projected_rank=None,
+                        projected_gross=0,
+                        projected_pts=0,
+                    ),
+                ],
+                dark_horses=[],
+            ),
+        ],
+        raw_snapshot={},
+    )
+    render(tmp_path, data)
+    html = (tmp_path / "index.html").read_text()
+    footer = html.split("<tfoot>")[1].split("</tfoot>")[0]
+    assert "None" not in footer
+    # The footer's win-odds cell has no "muted" class (unlike the matrix body's
+    # did-not-pick dashes), so this exact string pins it down to that one cell.
+    assert '<td style="text-align:center;">—</td>' in footer
+    detail = html.split('<details data-player="earlyseason">')[1].split("</details>")[0]
+    assert "None" not in detail
+    assert "&nbsp;·&nbsp; — win</p>" in detail
+
+
 def test_index_css_covers_the_new_sections(tmp_path: Path):
     index, _scenarios, _whatif = _render_pages(tmp_path, True)
     assert "--pos-color:" in index  # new token, all three theme blocks
