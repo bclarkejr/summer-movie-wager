@@ -52,7 +52,7 @@ The pages are plain static files, so opening `docs/index.html` straight from the
 ### Tests and linting
 
 ```bash
-uv run pytest                 # 141 tests: scoring, decay math, scraper (offline
+uv run pytest                 # 157 tests: scoring, decay math, scraper (offline
                               # fixture), Box Office Mojo chart parsing, simulator,
                               # HTML snapshot test
 uv run ruff check .           # lint
