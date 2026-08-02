@@ -59,6 +59,7 @@ class PlayerDetail:
     current_pts: int
     ranked: list[PickDetail]
     dark_horses: list[PickDetail]
+    win_prob: float | None = None
 
 
 @dataclass(frozen=True)
@@ -77,14 +78,18 @@ def render(out_dir: Path, data: RenderInput) -> None:
     """
     Render index.html, scenarios.html, whatif.html, and data.json into out_dir.
 
-    index.html has three sections:
+    index.html has four sections:
 
-    1. Leaderboard: A table of all players and their current points, projected points,
-       and win/tie probabilities.
-    2. Movie projections: A table of all movies and their projected gross/points, plus
-       some metadata like release date and status.
-    3. Per-player details: For each player, an expandable section showing their picks
-       and the projected points for each pick.
+    1. Projected Standings: A movie-by-player matrix -- films as rows, players as columns,
+       each cell showing what that film contributes to that player's score. The footer sums
+       each column into a projected point total and shows win odds.
+    2. All Players' Lists: A picks grid with every player's ranked picks and dark horses
+       side by side, for scanning who picked what at a glance.
+    3. Per-player detail: An accordion, one entry per player, with a stats line (projected
+       points, current points, win odds) and a table of their picks -- projected rank, diff
+       from their draft position, projected gross, and points.
+    4. Movies: The full projected-gross table for every movie, numbered and collapsed
+       behind a toggle.
 
     scenarios.html shows each player's most-likely winning finish order. whatif.html lets a
     visitor drag the top-15 projected movies into a hypothetical top-10 finish and see every
@@ -109,11 +114,30 @@ def render(out_dir: Path, data: RenderInput) -> None:
     shared_css = (_STATIC / "shared.css").read_text()
     sortable_js = (_STATIC / "vendor" / "Sortable.min.js").read_text()
     inline_css = theme_css + "\n" + nav_css + "\n" + (_STATIC / "style.css").read_text()
+    # Two lookups the index matrix needs. pts_by_player is keyed title-by-title
+    # so a missing key means "didn't pick it" (renders "—") and a present zero
+    # means "picked it, projects nothing" (renders a grey 0).
+    pts_by_player = {
+        p.username: {d.title: d.projected_pts for d in p.ranked + p.dark_horses}
+        for p in data.player_details
+    }
+    # The projected total shown on the page is the sum of a player's own picks --
+    # the same cells printed above it in the matrix, so the column adds up. This
+    # is deliberately NOT sim.median_final_pts, which is a distribution median and
+    # can differ by a point. Column ORDER still follows the sim median (that is
+    # what win odds are derived from, and what scenarios.html/whatif.html use), so
+    # a column can occasionally out-total the one to its left.
+    projected_totals = {
+        p.username: sum(d.projected_pts for d in p.ranked + p.dark_horses)
+        for p in data.player_details
+    }
     html = template.render(
         generated_at=data.generated_at.strftime("%Y-%m-%d %H:%M UTC"),
         leaderboard=data.leaderboard,
         movies=data.movies,
         player_details=data.player_details,
+        pts_by_player=pts_by_player,
+        projected_totals=projected_totals,
         inline_css=inline_css,
         active="index",
         forecast_available=data.forecast_available,

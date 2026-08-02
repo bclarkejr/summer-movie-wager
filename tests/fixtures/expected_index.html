@@ -37,6 +37,7 @@
   --win-bg:        #c9f7e8;
   --win-color:     #1a7a54;
   --zero:          #bdbdbd;
+  --pos-color:     #128a5e;
 }
 
 [data-theme="dark"] {
@@ -68,6 +69,7 @@
   --win-bg:        #0d3d28;
   --win-color:     #4ecdc4;
   --zero:          #4a4266;
+  --pos-color:     #4ecdc4;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -100,6 +102,7 @@
     --win-bg:        #0d3d28;
     --win-color:     #4ecdc4;
     --zero:          #4a4266;
+    --pos-color:     #4ecdc4;
   }
 }
 
@@ -130,7 +133,7 @@ body {
   font-family: 'Nunito', sans-serif;
   font-size: 15px;
   line-height: 1.5;
-  max-width: 1000px;
+  max-width: 1360px;
   margin: 0 auto;
   padding: 1.5em 1.2em 3em;
   background: var(--bg);
@@ -197,13 +200,14 @@ h2 {
   padding: 1.5em;
   margin-bottom: 1.5em;
   box-shadow: 0 4px 20px var(--shadow);
+  overflow-x: auto;
   transition: background 0.25s, box-shadow 0.25s;
 }
 
-.leaderboard h2 { color: #ff6b6b; }
-.players h2     { color: #a855f7; }
-
-.movies { overflow-x: auto; }
+.matrix h2  { color: #ff6b6b; }
+.picks h2   { color: #a855f7; }
+.players h2 { color: #a855f7; }
+.movies h2  { color: #4ecdc4; }
 
 /* ── Tables ── */
 table {
@@ -212,34 +216,58 @@ table {
   font-variant-numeric: tabular-nums;
 }
 
-.leaderboard thead tr { background: linear-gradient(90deg, #ff6b6b22, #f7c59f22); }
-.movies thead tr      { background: linear-gradient(90deg, #4ecdc422, #ffe66d22); }
+.matrix thead tr,
+.picks thead tr  { background: linear-gradient(90deg, #ff6b6b22, #f7c59f22); }
+.movies thead tr { background: linear-gradient(90deg, #4ecdc422, #ffe66d22); }
 
 th {
   font-weight: 700;
-  font-size: 0.82em;
+  font-size: 0.78em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 0.7em 0.8em;
+  letter-spacing: 0.05em;
+  padding: 0.7em 0.7em;
   color: var(--th-color);
   border-bottom: 2px solid var(--border);
+  white-space: nowrap;
 }
 
 td {
-  padding: 0.55em 0.8em;
+  padding: 0.55em 0.7em;
   border-bottom: 1px solid var(--border-row);
 }
 
 td:first-child { font-weight: 700; }
 
-tbody tr:nth-child(even)  { background: var(--bg-row-alt); }
-tbody tr:hover            { background: var(--bg-hover); }
-tbody tr:last-child td    { border-bottom: none; }
+tbody tr:nth-child(even) { background: var(--bg-row-alt); }
+tbody tr:hover           { background: var(--bg-hover); }
 
-/* Leaderboard rank medals via CSS */
-.player-row:first-child  td:first-child::before { content: "🥇 "; }
-.player-row:nth-child(2) td:first-child::before { content: "🥈 "; }
-.player-row:nth-child(3) td:first-child::before { content: "🥉 "; }
+/* Points cells: a scored value reads positive, a zero recedes. */
+.pt0   { color: var(--zero); }
+.ptpos { color: var(--pos-color); font-weight: 700; }
+
+/* "Outside the top 10" in the matrix, "Dark Horses" in the picks grid. */
+tr.tier-divider td {
+  padding: 0.4em 0.7em;
+  text-align: center;
+  font-size: 0.75em;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  background: var(--bg-row-alt);
+  border-top: 2px dashed var(--border);
+  border-bottom: 2px dashed var(--border);
+}
+
+.matrix-footer td {
+  font-weight: 800;
+  border-top: 2px solid var(--border);
+  border-bottom: none;
+  background: var(--bg-row-alt);
+}
+
+.picks td:first-child,
+.picks th:first-child { white-space: nowrap; }
 
 /* ── Badges ── */
 .badge {
@@ -286,22 +314,56 @@ summary::before { content: "▶"; font-size: 0.7em; color: #a855f7; transition: 
 details[open] summary::before { transform: rotate(90deg); }
 summary::-webkit-details-marker { display: none; }
 
-.ranked-picks,
-.dark-horses {
-  margin: 0.5em 0 0.5em 1em;
-  padding: 0 1em;
+.player-stats {
+  margin: 0 0 0.8em;
+  padding-left: 1.75em;
+  color: var(--text-muted);
+  font-size: 0.88em;
 }
-.ranked-picks li,
-.dark-horses li { padding: 0.3em 0; }
 
-.dark-horse-label {
+table.player-table { font-size: 0.92em; }
+table.player-table th,
+table.player-table td { padding: 0.45em 0.7em; }
+
+tr.dh-divider td {
   font-weight: 800;
-  margin: 0.8em 1em 0.2em;
-  font-size: 0.9em;
-  color: #ff6b6b;
+  font-size: 0.78em;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  color: #ff6b6b;
+  background: var(--bg-row-alt);
+  padding: 0.5em 0.7em 0.3em;
 }
+
+.diff-up   { color: var(--pos-color); font-weight: 700; }
+.diff-down { color: #e0575b; font-weight: 700; }
+.diff-flat { color: var(--zero); }
+
+/* ── Movies: a card that is also a collapsible ── */
+details.movies-toggle { border: none; }
+details.movies-toggle > summary {
+  padding: 0;
+  margin: 0 0 0.8em;
+  background: none;
+  cursor: pointer;
+}
+details.movies-toggle > summary::before { display: none; }
+details.movies-toggle > summary h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  width: 100%;
+}
+details.movies-toggle > summary h2::after {
+  content: "▶ show";
+  font-size: 0.6em;
+  color: var(--accent);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 700;
+}
+details.movies-toggle[open] > summary h2::after { content: "▼ hide"; }
 
 /* ── Footer ── */
 footer {
@@ -324,9 +386,9 @@ footer a { color: #4ecdc4; }
 }
 
 /* ── Responsive ── */
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   body { font-size: 13px; padding: 1em 0.8em 3em; }
-  th, td { padding: 0.3em 0.5em; }
+  th, td { padding: 0.35em 0.5em; }
   .theme-toggle { top: 0.6em; right: 0.6em; padding: 0.25em 0.6em; font-size: 0.78em; }
   h1 { font-size: 1.8em; }
 }
@@ -359,13 +421,13 @@ footer a { color: #4ecdc4; }
     
   
     
-      <a class="nav-pill" href="scenarios.html"
-         >🔮 Winning Scenarios</a>
+      <a class="nav-pill" href="whatif.html"
+         >🎬 What If?</a>
     
   
     
-      <a class="nav-pill" href="whatif.html"
-         >🎬 What If?</a>
+      <a class="nav-pill" href="scenarios.html"
+         >🔮 Winning Scenarios</a>
     
   
     
@@ -375,47 +437,182 @@ footer a { color: #4ecdc4; }
   
 </nav>
   <h1>Summer Movie Wager 2026</h1>
-  <p class="meta">Window 2026-04-30 → 2026-09-07 · refreshed 2026-05-03 14:22 UTC</p>
+  <p class="meta">Window 2026-05-01 → 2026-09-07 · refreshed 2026-05-03 14:22 UTC</p>
 </header>
 
-<section class="leaderboard card">
-  <h2>🏆 Leaderboard</h2>
+
+
+<section class="matrix card">
+  <h2>🏆 Projected Standings</h2>
   
   <table>
     <thead>
-      <tr><th>Player</th><th>Current</th><th>Projected median</th><th>80% range</th><th>Win odds</th></tr>
+      <tr><th>#</th><th>Movie</th><th>Projected median</th><th style="text-align:center;">vivrad</th><th style="text-align:center;">bclarke</th></tr>
     </thead>
     <tbody>
     
-      <tr data-player="vivrad" class="player-row">
-        <td>vivrad</td>
-        <td style="text-align: center;">3</td>
-        <td style="text-align: center;">91</td>
-        <td style="text-align: center;">[62 – 134]</td>
-        <td style="text-align: center;" title="tie odds: 4%">28%</td>
+      <tr>
+        <td>1</td>
+        <td>Spider-Man: Brand New Day</td>
+        <td>$380,000,000</td>
+        <td style="text-align:center;" class="ptpos">7</td>
+        <td style="text-align:center;" class="ptpos">13</td>
       </tr>
+      
     
-      <tr data-player="bclarke" class="player-row">
-        <td>bclarke</td>
-        <td style="text-align: center;">3</td>
-        <td style="text-align: center;">85</td>
-        <td style="text-align: center;">[58 – 128]</td>
-        <td style="text-align: center;" title="tie odds: 5%">19%</td>
+      <tr>
+        <td>2</td>
+        <td>The Devil Wears Prada 2</td>
+        <td>$170,000,000</td>
+        <td style="text-align:center;" class="ptpos">7</td>
+        <td class="muted" style="text-align:center;">—</td>
       </tr>
+      
+    
+      <tr>
+        <td>3</td>
+        <td>Coyote vs. Acme</td>
+        <td>$0</td>
+        <td style="text-align:center;" class="pt0">0</td>
+        <td class="muted" style="text-align:center;">—</td>
+      </tr>
+      
+    
+    </tbody>
+    <tfoot>
+      <tr class="matrix-footer"><td colspan="3">Projected pts</td><td style="text-align:center;">14</td><td style="text-align:center;">13</td></tr>
+      <tr class="matrix-footer"><td colspan="3">Win odds</td><td style="text-align:center;">28%</td><td style="text-align:center;">19%</td></tr>
+    </tfoot>
+  </table>
+</section>
+
+
+
+
+
+<section class="picks card">
+  <h2>📋 All Players' Lists</h2>
+  <table>
+    <thead>
+      <tr><th></th><th style="text-align:center;">vivrad</th><th style="text-align:center;">bclarke</th></tr>
+    </thead>
+    <tbody>
+    
+      <tr><td class="muted">Pick 1</td><td>The Devil Wears Prada 2</td><td>Spider-Man: Brand New Day</td></tr>
+    
+      <tr><td class="muted">Pick 2</td><td>Spider-Man: Brand New Day</td><td></td></tr>
+    
+      <tr><td class="muted">Pick 3</td><td>Coyote vs. Acme</td><td></td></tr>
+    
+    
+      <tr class="tier-divider"><td colspan="3">Dark Horses</td></tr>
+      
+      <tr><td class="muted">🐴 Dark Horse 1</td><td>Toy Story 5</td><td>Backrooms</td></tr>
+      
     
     </tbody>
   </table>
 </section>
 
-<section class="movies card">
-  <h2>🎥 Movies (projected window gross)</h2>
+<section class="players card">
+  <h2>🎭 Per-player detail</h2>
+  
+  <details data-player="vivrad">
+    <summary>vivrad</summary>
+    <p class="player-stats"><strong>14 pts</strong> projected &nbsp;·&nbsp; 3 pts current &nbsp;·&nbsp; 28% win</p>
+    <table class="player-table">
+      <thead><tr><th>#</th><th>Movie</th><th>Projected rank</th><th>Diff</th><th>Projected gross</th><th>Pts</th></tr></thead>
+      <tbody>
+      
+        <tr>
+          <td>1</td>
+          <td>The Devil Wears Prada 2</td>
+          <td style="text-align:center;">#2</td>
+          <td style="text-align:center;" class="diff-down">▼ 1</td>
+          <td>$170,000,000</td>
+          <td style="text-align:center;" class="ptpos">7</td>
+        </tr>
+      
+        <tr>
+          <td>2</td>
+          <td>Spider-Man: Brand New Day</td>
+          <td style="text-align:center;">#1</td>
+          <td style="text-align:center;" class="diff-up">▲ 1</td>
+          <td>$380,000,000</td>
+          <td style="text-align:center;" class="ptpos">7</td>
+        </tr>
+      
+        <tr>
+          <td>3</td>
+          <td>Coyote vs. Acme</td>
+          <td style="text-align:center;">#3</td>
+          <td style="text-align:center;" class="diff-flat">–</td>
+          <td>$0</td>
+          <td style="text-align:center;" class="pt0">0</td>
+        </tr>
+      
+      
+        <tr class="dh-divider"><td colspan="6">Dark Horses</td></tr>
+        
+        <tr>
+          <td>🐴</td>
+          <td>Toy Story 5</td>
+          <td style="text-align:center;">—</td>
+          <td style="text-align:center;" class="muted">—</td>
+          <td>$0</td>
+          <td style="text-align:center;" class="pt0">0</td>
+        </tr>
+        
+      
+      </tbody>
+    </table>
+  </details>
+  
+  <details data-player="bclarke">
+    <summary>bclarke</summary>
+    <p class="player-stats"><strong>13 pts</strong> projected &nbsp;·&nbsp; 3 pts current &nbsp;·&nbsp; 19% win</p>
+    <table class="player-table">
+      <thead><tr><th>#</th><th>Movie</th><th>Projected rank</th><th>Diff</th><th>Projected gross</th><th>Pts</th></tr></thead>
+      <tbody>
+      
+        <tr>
+          <td>1</td>
+          <td>Spider-Man: Brand New Day</td>
+          <td style="text-align:center;">#1</td>
+          <td style="text-align:center;" class="diff-flat">–</td>
+          <td>$380,000,000</td>
+          <td style="text-align:center;" class="ptpos">13</td>
+        </tr>
+      
+      
+        <tr class="dh-divider"><td colspan="6">Dark Horses</td></tr>
+        
+        <tr>
+          <td>🐴</td>
+          <td>Backrooms</td>
+          <td style="text-align:center;">—</td>
+          <td style="text-align:center;" class="muted">—</td>
+          <td>$0</td>
+          <td style="text-align:center;" class="pt0">0</td>
+        </tr>
+        
+      
+      </tbody>
+    </table>
+  </details>
+  
+</section>
+
+<details class="movies card movies-toggle">
+  <summary><h2>🎥 Movies (projected window gross)</h2></summary>
   <table>
     <thead>
-      <tr><th>Movie</th><th>Released</th><th>Status</th><th>Projected median</th><th>80% range</th><th>Cumulative</th><th>Source</th></tr>
+      <tr><th>#</th><th>Movie</th><th>Released</th><th>Status</th><th>Projected median</th><th>80% range</th><th>Cumulative</th><th>Source</th></tr>
     </thead>
     <tbody>
     
       <tr>
+        <td>1</td>
         <td>Spider-Man: Brand New Day</td>
         <td>2026-07-31</td>
         <td><span class="badge badge-pre_release">pre-release</span></td>
@@ -426,6 +623,7 @@ footer a { color: #4ecdc4; }
       </tr>
     
       <tr>
+        <td>2</td>
         <td>The Devil Wears Prada 2</td>
         <td>2026-05-01</td>
         <td><span class="badge badge-in_theaters">in theaters</span></td>
@@ -435,35 +633,20 @@ footer a { color: #4ecdc4; }
         <td class="source">decay model · 1 wk</td>
       </tr>
     
+      <tr>
+        <td>3</td>
+        <td>Coyote vs. Acme</td>
+        <td>2026-08-28</td>
+        <td><span class="badge badge-no_projection">no projection</span></td>
+        <td>$0</td>
+        <td>[$0 – $0]</td>
+        <td>—</td>
+        <td class="source">no analyst entry</td>
+      </tr>
+    
     </tbody>
   </table>
-</section>
-
-<section class="players card">
-  <h2>🎭 Per-player detail</h2>
-  
-  <details data-player="bclarke">
-    <summary>bclarke — projected 85, current 3</summary>
-    <ol class="ranked-picks">
-    
-      <li>
-        <strong>Toy Story 5</strong>
-        <span class="muted">→ projected #2 ·
-          $290,000,000 ·
-          contributes 10 pts
-        </span>
-      </li>
-    
-    </ol>
-    <p class="dark-horse-label">🐴 Dark horses</p>
-    <ul class="dark-horses">
-    
-      <li>Backrooms <span class="muted">→ projected #— · 0 pt</span></li>
-    
-    </ul>
-  </details>
-  
-</section>
+</details>
 
 <footer>
   <p>Source data: <a href="https://thesummermoviewager.com/help.php">Summer Movie Wager rules</a>. Raw snapshot: <a href="data.json">data.json</a>.</p>

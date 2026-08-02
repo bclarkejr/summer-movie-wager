@@ -17,38 +17,118 @@
   <p class="meta">Window 2026-05-01 → 2026-09-07 · refreshed {{ generated_at }}</p>
 </header>
 
-<section class="leaderboard card">
-  <h2>🏆 Leaderboard</h2>
+{% set n = player_details | length %}
+
+<section class="matrix card">
+  <h2>🏆 Projected Standings</h2>
   {% if not forecast_available %}
   <p class="meta forecast-unavailable">Forecast unavailable — {{ forecast_unavailable_reason }}. Showing current points only.</p>
   {% endif %}
   <table>
     <thead>
-      <tr><th>Player</th><th>Current</th><th>Projected median</th><th>80% range</th><th>Win odds</th></tr>
+      <tr><th>#</th><th>Movie</th><th>Projected median</th>{% for p in player_details %}<th style="text-align:center;">{{ p.username }}</th>{% endfor %}</tr>
     </thead>
     <tbody>
-    {% for row in leaderboard %}
-      <tr data-player="{{ row.username }}" class="player-row">
-        <td>{{ row.username }}</td>
-        <td style="text-align: center;">{{ row.current_pts }}</td>
-        <td style="text-align: center;">{% if row.median_pts is none %}—{% else %}{{ row.median_pts | int }}{% endif %}</td>
-        <td style="text-align: center;">{% if row.p10_pts is none or row.p90_pts is none %}—{% else %}[{{ row.p10_pts | int }} – {{ row.p90_pts | int }}]{% endif %}</td>
-        <td style="text-align: center;"{% if row.tie_prob is not none %} title="tie odds: {{ '%.0f'|format(row.tie_prob*100) }}%"{% endif %}>{% if row.win_prob is none %}—{% else %}{{ '%.0f'|format(row.win_prob*100) }}%{% endif %}</td>
+    {% for movie in movies[:15] %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ movie.title }}</td>
+        <td>${{ '{:,.0f}'.format(movie.median_in_window_gross) }}</td>
+        {%- for p in player_details %}
+        {%- set pts = pts_by_player[p.username].get(movie.title) %}
+        {% if pts is none %}<td class="muted" style="text-align:center;">—</td>{% else %}<td style="text-align:center;" class="{{ 'ptpos' if pts else 'pt0' }}">{{ pts }}</td>{% endif %}
+        {%- endfor %}
       </tr>
+      {% if loop.index == 10 and not loop.last %}
+      <tr class="tier-divider"><td colspan="{{ n + 3 }}">Outside the top 10</td></tr>
+      {% endif %}
     {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr class="matrix-footer"><td colspan="3">Projected pts</td>{% for p in player_details %}<td style="text-align:center;">{{ projected_totals[p.username] }}</td>{% endfor %}</tr>
+      <tr class="matrix-footer"><td colspan="3">Win odds</td>{% for p in player_details %}<td style="text-align:center;">{% if p.win_prob is none %}—{% else %}{{ '%.0f'|format(p.win_prob * 100) }}%{% endif %}</td>{% endfor %}</tr>
+    </tfoot>
+  </table>
+</section>
+
+{# `| max` returns Undefined on an empty sequence, so `| default(0)` is what
+   keeps a player-less render (see the nav/theme tests) from dying here. #}
+{% set n_ranked = player_details | map(attribute='ranked') | map('length') | max | default(0) %}
+{% set n_dh = player_details | map(attribute='dark_horses') | map('length') | max | default(0) %}
+
+<section class="picks card">
+  <h2>📋 All Players' Lists</h2>
+  <table>
+    <thead>
+      <tr><th></th>{% for p in player_details %}<th style="text-align:center;">{{ p.username }}</th>{% endfor %}</tr>
+    </thead>
+    <tbody>
+    {% for i in range(n_ranked) %}
+      <tr><td class="muted">Pick {{ i + 1 }}</td>{% for p in player_details %}<td>{% if i < p.ranked | length %}{{ p.ranked[i].title }}{% endif %}</td>{% endfor %}</tr>
+    {% endfor %}
+    {% if n_dh %}
+      <tr class="tier-divider"><td colspan="{{ n + 1 }}">Dark Horses</td></tr>
+      {% for i in range(n_dh) %}
+      <tr><td class="muted">🐴 Dark Horse {{ i + 1 }}</td>{% for p in player_details %}<td>{% if i < p.dark_horses | length %}{{ p.dark_horses[i].title }}{% endif %}</td>{% endfor %}</tr>
+      {% endfor %}
+    {% endif %}
     </tbody>
   </table>
 </section>
 
-<section class="movies card">
-  <h2>🎥 Movies (projected window gross)</h2>
+<section class="players card">
+  <h2>🎭 Per-player detail</h2>
+  {% for player in player_details %}
+  <details data-player="{{ player.username }}">
+    <summary>{{ player.username }}</summary>
+    <p class="player-stats"><strong>{{ projected_totals[player.username] }} pts</strong> projected &nbsp;·&nbsp; {{ player.current_pts }} pts current &nbsp;·&nbsp; {% if player.win_prob is none %}—{% else %}{{ '%.0f'|format(player.win_prob * 100) }}%{% endif %} win</p>
+    <table class="player-table">
+      <thead><tr><th>#</th><th>Movie</th><th>Projected rank</th><th>Diff</th><th>Projected gross</th><th>Pts</th></tr></thead>
+      <tbody>
+      {% for pick in player.ranked %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ pick.title }}</td>
+          <td style="text-align:center;">{% if pick.projected_rank is none %}—{% else %}#{{ pick.projected_rank }}{% endif %}</td>
+          {%- if pick.projected_rank is none %}
+          <td style="text-align:center;" class="muted">—</td>
+          {%- else %}
+          {%- set d = loop.index - pick.projected_rank %}
+          {% if d > 0 %}<td style="text-align:center;" class="diff-up">▲ {{ d }}</td>{% elif d < 0 %}<td style="text-align:center;" class="diff-down">▼ {{ -d }}</td>{% else %}<td style="text-align:center;" class="diff-flat">–</td>{% endif %}
+          {%- endif %}
+          <td>${{ '{:,.0f}'.format(pick.projected_gross) }}</td>
+          <td style="text-align:center;" class="{{ 'ptpos' if pick.projected_pts else 'pt0' }}">{{ pick.projected_pts }}</td>
+        </tr>
+      {% endfor %}
+      {% if player.dark_horses %}
+        <tr class="dh-divider"><td colspan="6">Dark Horses</td></tr>
+        {% for dh in player.dark_horses %}
+        <tr>
+          <td>🐴</td>
+          <td>{{ dh.title }}</td>
+          <td style="text-align:center;">{% if dh.projected_rank is none %}—{% else %}#{{ dh.projected_rank }}{% endif %}</td>
+          <td style="text-align:center;" class="muted">—</td>
+          <td>${{ '{:,.0f}'.format(dh.projected_gross) }}</td>
+          <td style="text-align:center;" class="{{ 'ptpos' if dh.projected_pts else 'pt0' }}">{{ dh.projected_pts }}</td>
+        </tr>
+        {% endfor %}
+      {% endif %}
+      </tbody>
+    </table>
+  </details>
+  {% endfor %}
+</section>
+
+<details class="movies card movies-toggle">
+  <summary><h2>🎥 Movies (projected window gross)</h2></summary>
   <table>
     <thead>
-      <tr><th>Movie</th><th>Released</th><th>Status</th><th>Projected median</th><th>80% range</th><th>Cumulative</th><th>Source</th></tr>
+      <tr><th>#</th><th>Movie</th><th>Released</th><th>Status</th><th>Projected median</th><th>80% range</th><th>Cumulative</th><th>Source</th></tr>
     </thead>
     <tbody>
     {% for movie in movies %}
       <tr>
+        <td>{{ loop.index }}</td>
         <td>{{ movie.title }}</td>
         <td>{{ movie.release_date }}</td>
         <td><span class="badge badge-{{ movie.status }}">{{ movie.status_label }}</span></td>
@@ -60,33 +140,7 @@
     {% endfor %}
     </tbody>
   </table>
-</section>
-
-<section class="players card">
-  <h2>🎭 Per-player detail</h2>
-  {% for player in player_details %}
-  <details data-player="{{ player.username }}">
-    <summary>{{ player.username }} — projected {% if player.median_pts is none %}—{% else %}{{ player.median_pts | int }}{% endif %}, current {{ player.current_pts }}</summary>
-    <ol class="ranked-picks">
-    {% for pick in player.ranked %}
-      <li>
-        <strong>{{ pick.title }}</strong>
-        <span class="muted">→ projected #{{ pick.projected_rank or '—' }} ·
-          ${{ '{:,.0f}'.format(pick.projected_gross) }} ·
-          contributes {{ pick.projected_pts }} pts
-        </span>
-      </li>
-    {% endfor %}
-    </ol>
-    <p class="dark-horse-label">🐴 Dark horses</p>
-    <ul class="dark-horses">
-    {% for dh in player.dark_horses %}
-      <li>{{ dh.title }} <span class="muted">→ projected #{{ dh.projected_rank or '—' }} · {{ dh.projected_pts }} pt</span></li>
-    {% endfor %}
-    </ul>
-  </details>
-  {% endfor %}
-</section>
+</details>
 
 <footer>
   <p>Source data: <a href="https://thesummermoviewager.com/help.php">Summer Movie Wager rules</a>. Raw snapshot: <a href="data.json">data.json</a>.</p>

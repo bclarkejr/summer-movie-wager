@@ -94,8 +94,8 @@ def main(argv: list[str] | None = None) -> int:
     6. simulate_season:  If there are at least 25 movies with non-zero projections, simulate the
     season 10,000 times to estimate each player's win probability and final points distribution.
     (Unnumbered, between 6 and 7 in code order: score every player's *current*
-    points against the Box Office Mojo top 10 -- these are the standings the
-    leaderboard actually displays.)
+    points against the Box Office Mojo top 10 -- these appear only in each
+    player's stats line in the per-player detail section of index.html.)
     7. _validate_against_site:  Compare the site's own gross list, scored, against the site's own
     reported points to ensure our scoring engine is correct.
     8. render:  Render the HTML page using the leaderboard, movie rows, and player details.
@@ -209,7 +209,7 @@ def main(argv: list[str] | None = None) -> int:
     # Build the leaderboard, movie rows, and player details for rendering the HTML page.
     leaderboard = _build_leaderboard(snapshot, sim, current_pts)
     movie_rows = _build_movie_rows(movies, projections)
-    player_details = _build_player_details(snapshot, projections, current_pts, sim)
+    player_details = _build_player_details(snapshot, projections, current_pts, sim, movie_rows)
 
     raw: dict[str, Any] = {
         "captured_at": str(snapshot.captured_at),
@@ -759,9 +759,10 @@ def _build_leaderboard(
     current_pts: dict[str, int],
 ) -> list[LeaderboardRow]:
     """
-    Build the leaderboard rows for rendering the HTML page.  If a simulation is available, use the
-    median points from the simulation to rank and sort players.
-    If no simulation is available, fall back to the current points.
+    Order players by projected median points, falling back to current points when no
+    simulation is available.  index.html no longer reads this ordering directly -- it's
+    consumed by the scenarios.html and whatif.html payloads instead.  `player_details` is
+    sorted by the same key, which is what keeps those pages consistent with the index.
     """
 
     rows: list[LeaderboardRow] = []
@@ -889,6 +890,7 @@ def _build_player_details(
     projections: list[Projection],
     current_pts: dict[str, int],
     sim: Any | None,
+    movie_rows: list[MovieRow],
 ) -> list[PlayerDetail]:
     """
     Each player detail contains the player's username, their ranked picks with projection details,
@@ -901,6 +903,13 @@ def _build_player_details(
     current points.
     """
 
+    # Rank and gross both come from movie_rows, which is what the Movies table
+    # renders — so a pick's "#12 · $92,883,017" is always the same row the
+    # catalog shows. median_position below stays keyed off `projections`
+    # because it decides POINTS, and re-deriving it here would change scoring
+    # behaviour for exactly-tied grosses. The two orderings agree everywhere
+    # else.
+    catalog = {row.title: (i + 1, row.median_in_window_gross) for i, row in enumerate(movie_rows)}
     proj_by_title = {p.movie_title: p for p in projections}
     median_top_10 = [
         p
@@ -917,11 +926,11 @@ def _build_player_details(
     out: list[PlayerDetail] = []
     for username, picks in snapshot.players.items():
         ranked_details = [
-            _pick_detail(title, idx + 1, proj_by_title, median_position, kind="ranked")
+            _pick_detail(title, idx + 1, catalog, median_position, kind="ranked")
             for idx, title in enumerate(picks.ranked)
         ]
         dh_details = [
-            _pick_detail(title, None, proj_by_title, median_position, kind="dark_horse")
+            _pick_detail(title, None, catalog, median_position, kind="dark_horse")
             for title in picks.dark_horses
         ]
         out.append(
@@ -931,6 +940,7 @@ def _build_player_details(
                 current_pts=current_pts.get(username, 0),
                 ranked=ranked_details,
                 dark_horses=dh_details,
+                win_prob=sim.win_prob[username] if sim is not None else None,
             )
         )
     if sim is None:
@@ -943,22 +953,24 @@ def _build_player_details(
 def _pick_detail(
     title: str,
     predicted_rank: int | None,
-    proj_by_title: dict[str, Projection],
+    catalog: dict[str, tuple[int, float]],
     median_position: dict[str, int],
     *,
     kind: str,
 ) -> PickDetail:
     """
     For a given pick, determine the pick's projected rank, projected gross, and projected points.
+
+    `catalog` maps every projected film to (catalog rank, median gross) — its row in the
+    Movies table. `median_position` holds only the projected top 10, which is what scores.
     """
 
-    proj = proj_by_title.get(title)
+    catalog_rank, median_gross = catalog.get(title, (None, 0.0))
 
     # This is the key.  Based on the picks projected gross (and all other movies' projected
     # grosses), we can determine the pick's projected rank and projected points.
     # This allows us to project the points for each pick and by extension, the player's total
     # projected points at the end of the wager.
-    median_gross = proj.median_in_window_gross if proj else 0.0
     actual_rank = median_position.get(title, 0)
 
     if kind == "ranked" and actual_rank > 0 and predicted_rank is not None:
@@ -969,7 +981,7 @@ def _pick_detail(
         pts = 0
     return PickDetail(
         title=title,
-        projected_rank=actual_rank or None,
+        projected_rank=catalog_rank,
         projected_gross=median_gross,
         projected_pts=pts,
     )

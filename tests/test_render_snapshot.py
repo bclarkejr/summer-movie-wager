@@ -61,18 +61,65 @@ def _fixture_input() -> RenderInput:
                 cumulative_to_date=32_500_000,
                 source="decay model · 1 wk",
             ),
+            MovieRow(
+                title="Coyote vs. Acme",
+                release_date="2026-08-28",
+                status="no_projection",
+                status_label="no projection",
+                median_in_window_gross=0,
+                p10=0,
+                p90=0,
+                cumulative_to_date=None,
+                source="no analyst entry",
+            ),
         ],
         player_details=[
+            # vivrad's three ranked picks cover all three Diff arrows: pick 1
+            # projects #2 (down), pick 2 projects #1 (up), pick 3 projects #3 (flat).
+            PlayerDetail(
+                username="vivrad",
+                median_pts=91.0,
+                current_pts=3,
+                win_prob=0.28,
+                ranked=[
+                    PickDetail(
+                        title="The Devil Wears Prada 2",
+                        projected_rank=2,
+                        projected_gross=170_000_000,
+                        projected_pts=7,
+                    ),
+                    PickDetail(
+                        title="Spider-Man: Brand New Day",
+                        projected_rank=1,
+                        projected_gross=380_000_000,
+                        projected_pts=7,
+                    ),
+                    PickDetail(
+                        title="Coyote vs. Acme",
+                        projected_rank=3,
+                        projected_gross=0,
+                        projected_pts=0,
+                    ),
+                ],
+                dark_horses=[
+                    PickDetail(
+                        title="Toy Story 5", projected_rank=None, projected_gross=0, projected_pts=0
+                    ),
+                ],
+            ),
+            # bclarke picked neither Prada nor Coyote, so those cells are em-dashes,
+            # and their column totals 13 against vivrad's 14.
             PlayerDetail(
                 username="bclarke",
                 median_pts=85.0,
                 current_pts=3,
+                win_prob=0.19,
                 ranked=[
                     PickDetail(
-                        title="Toy Story 5",
-                        projected_rank=2,
-                        projected_gross=290_000_000,
-                        projected_pts=10,
+                        title="Spider-Man: Brand New Day",
+                        projected_rank=1,
+                        projected_gross=380_000_000,
+                        projected_pts=13,
                     ),
                 ],
                 dark_horses=[
@@ -80,7 +127,7 @@ def _fixture_input() -> RenderInput:
                         title="Backrooms", projected_rank=None, projected_gross=0, projected_pts=0
                     ),
                 ],
-            )
+            ),
         ],
         raw_snapshot={"placeholder": True},
     )
@@ -105,6 +152,202 @@ def test_render_matches_expected_snapshot(tmp_path: Path):
 def test_render_writes_data_json(tmp_path: Path):
     render(tmp_path, _fixture_input())
     assert (tmp_path / "data.json").exists()
+
+
+def test_matrix_dashes_movies_a_player_did_not_pick(tmp_path: Path):
+    # bclarke picked neither The Devil Wears Prada 2 nor Coyote vs. Acme. Those
+    # cells must read "—", not "0" — a zero would claim they bet and lost.
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    matrix = html.split('<section class="matrix card">')[1].split("</section>")[0]
+    assert matrix.count('<td class="muted" style="text-align:center;">—</td>') == 2
+    # vivrad picked Coyote, which projects nothing: a grey zero, not a dash.
+    assert '<td style="text-align:center;" class="pt0">0</td>' in matrix
+
+
+def test_matrix_footer_sums_the_column_not_the_sim_median(tmp_path: Path):
+    # With the components sitting directly above it, the total has to add up.
+    # vivrad 7+7+0+0 = 14, bclarke 13+0 = 13 — not the sim medians (91, 85).
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    footer = html.split("<tfoot>")[1].split("</tfoot>")[0]
+    assert ">14</td>" in footer
+    assert ">13</td>" in footer
+    assert ">91</td>" not in footer
+    assert ">85</td>" not in footer
+    assert ">28%</td>" in footer  # vivrad's win odds
+
+
+def test_matrix_shows_at_most_fifteen_movies(tmp_path: Path):
+    # The matrix is the top 15 with a divider after #10; the Movies section
+    # below it is the place to see everything.
+    data = _fixture_input()
+    many = list(data.movies) * 9  # 27 rows
+    data = RenderInput(
+        generated_at=data.generated_at,
+        leaderboard=data.leaderboard,
+        movies=many,
+        player_details=data.player_details,
+        raw_snapshot=data.raw_snapshot,
+    )
+    render(tmp_path, data)
+    html = (tmp_path / "index.html").read_text()
+    matrix = html.split('<section class="matrix card">')[1].split("</section>")[0]
+    assert "Outside the top 10" in matrix
+    assert "<td>15</td>" in matrix
+    assert "<td>16</td>" not in matrix
+
+
+def test_matrix_divider_is_omitted_when_nothing_follows_it(tmp_path: Path):
+    # Three movies: a "top 10" divider with no rows under it would be nonsense.
+    # Scoped to the matrix section, not the whole page: style.css legitimately
+    # mentions "Outside the top 10" in a comment describing the divider rule.
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    matrix = html.split('<section class="matrix card">')[1].split("</section>")[0]
+    assert "Outside the top 10" not in matrix
+
+
+def test_picks_grid_lists_every_player_side_by_side(tmp_path: Path):
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    picks = html.split('<section class="picks card">')[1].split("</section>")[0]
+    # Row count comes from the longest list: vivrad has three ranked picks.
+    assert ">Pick 1</td>" in picks
+    assert ">Pick 3</td>" in picks
+    assert ">Pick 4</td>" not in picks
+    assert "🐴 Dark Horse 1" in picks
+    assert "Coyote vs. Acme" in picks  # vivrad's third pick
+    assert "Backrooms" in picks  # bclarke's dark horse
+    # bclarke has one ranked pick, so their pick-2 and pick-3 cells are blank.
+    assert picks.count("<td></td>") == 2
+
+
+def test_picks_grid_survives_having_no_players(tmp_path: Path):
+    # The row count uses a max filter, which returns Undefined on an empty
+    # sequence. Without the default the build would die here.
+    index, _scenarios, _whatif = _render_pages(tmp_path, True)
+    assert '<section class="picks card">' in index
+
+
+def test_per_player_table_shows_diff_arrows(tmp_path: Path):
+    # Diff = pick position - projected rank. vivrad's list covers all three cases.
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    detail = html.split('<details data-player="vivrad">')[1].split("</details>")[0]
+    assert 'class="diff-down">▼ 1</td>' in detail  # pick 1 projects #2
+    assert 'class="diff-up">▲ 1</td>' in detail  # pick 2 projects #1
+    assert 'class="diff-flat">–</td>' in detail  # pick 3 projects #3  # noqa: RUF001
+
+
+def test_per_player_stats_line_matches_the_matrix_footer(tmp_path: Path):
+    # The two places a player's projected score appears must agree.
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    detail = html.split('<details data-player="vivrad">')[1].split("</details>")[0]
+    assert "<strong>14 pts</strong> projected" in detail
+    assert "3 pts current" in detail
+    assert "28% win" in detail
+
+
+def test_per_player_dark_horses_have_a_divider_and_no_diff(tmp_path: Path):
+    # A dark horse has no predicted position, so there is nothing to diff against.
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    detail = html.split('<details data-player="bclarke">')[1].split("</details>")[0]
+    assert '<tr class="dh-divider"><td colspan="6">Dark Horses</td></tr>' in detail
+    assert "<td>🐴</td>" in detail
+    # Backrooms is not in the movie catalog: rank and diff both fall back to "—".
+    assert '<td style="text-align:center;">—</td>' in detail
+
+
+def test_ranked_pick_with_no_catalog_rank_renders_without_arithmetic(tmp_path: Path):
+    # _normalize_movies unions every picked title into the catalog, so a *ranked*
+    # pick with no projected_rank should be unreachable in production -- but the
+    # guard at index.html.j2 is what keeps a degenerate input from raising
+    # (loop.index - None) and taking the whole build down with it.
+    data = RenderInput(
+        generated_at=datetime(2026, 5, 3, 14, 22, 0),
+        leaderboard=[],
+        movies=[],
+        player_details=[
+            PlayerDetail(
+                username="offcatalog",
+                median_pts=None,
+                current_pts=0,
+                ranked=[
+                    PickDetail(
+                        title="Not In Catalog",
+                        projected_rank=None,
+                        projected_gross=0,
+                        projected_pts=0,
+                    ),
+                ],
+                dark_horses=[],
+            ),
+        ],
+        raw_snapshot={},
+    )
+    render(tmp_path, data)
+    html = (tmp_path / "index.html").read_text()
+    detail = html.split('<details data-player="offcatalog">')[1].split("</details>")[0]
+    assert '<td style="text-align:center;">—</td>' in detail  # rank column fallback
+    assert '<td style="text-align:center;" class="muted">—</td>' in detail  # diff column fallback
+
+
+def test_player_with_no_forecast_shows_em_dash_not_none(tmp_path: Path):
+    # This is the season-opening state, not a hypothetical: while fewer than 25 movies
+    # have non-zero projections, sim is None, so every real player's win_prob and
+    # median_pts come back None even though they have picks and still render. Both
+    # places a player's win odds appear must fall back to an em-dash: the matrix
+    # footer's Win odds row and the per-player stats line.
+    data = RenderInput(
+        generated_at=datetime(2026, 5, 3, 14, 22, 0),
+        leaderboard=[],
+        movies=[],
+        player_details=[
+            PlayerDetail(
+                username="earlyseason",
+                median_pts=None,
+                current_pts=0,
+                win_prob=None,
+                ranked=[
+                    PickDetail(
+                        title="Some Movie",
+                        projected_rank=None,
+                        projected_gross=0,
+                        projected_pts=0,
+                    ),
+                ],
+                dark_horses=[],
+            ),
+        ],
+        raw_snapshot={},
+    )
+    render(tmp_path, data)
+    html = (tmp_path / "index.html").read_text()
+    footer = html.split("<tfoot>")[1].split("</tfoot>")[0]
+    assert "None" not in footer
+    # The footer's win-odds cell has no "muted" class (unlike the matrix body's
+    # did-not-pick dashes), so this exact string pins it down to that one cell.
+    assert '<td style="text-align:center;">—</td>' in footer
+    detail = html.split('<details data-player="earlyseason">')[1].split("</details>")[0]
+    assert "None" not in detail
+    assert "&nbsp;·&nbsp; — win</p>" in detail
+
+
+def test_index_css_covers_the_new_sections(tmp_path: Path):
+    index, _scenarios, _whatif = _render_pages(tmp_path, True)
+    assert "--pos-color:" in index  # new token, all three theme blocks
+    assert ".ptpos" in index
+    assert "tr.tier-divider" in index
+    assert "table.player-table" in index
+    assert "details.movies-toggle" in index
+    assert ".forecast-unavailable" in index  # notice still styled
+    # Rules for markup that no longer exists must go, not linger.
+    assert ".player-row" not in index  # the medal ::before rules
+    assert ".ranked-picks" not in index
+    assert ".dark-horse-label" not in index
 
 
 def _render_pages(tmp_path, forecast_available):
@@ -394,7 +637,7 @@ def test_whatif_rows_have_keyboard_move_buttons(tmp_path):
     assert 'filter: ".move-btn"' in whatif  # buttons never start a drag
 
 
-def test_history_page_rendered_and_always_linked(tmp_path):
+def test_history_page_rendered_and_gated_like_scenarios(tmp_path):
     index_on, _s, _w = _render_pages(tmp_path, True)
     history = (tmp_path / "history.html").read_text()
     assert "const DATA =" in history
@@ -403,8 +646,9 @@ def test_history_page_rendered_and_always_linked(tmp_path):
     assert 'href="history.html"' in index_on
 
     index_off, _s2, _w2 = _render_pages(tmp_path, False)
-    # unlike scenarios/whatif, history stays linked when the forecast is off
-    assert 'href="history.html"' in index_off
+    # the forecast only ever turns on once, so history is gated the same as
+    # scenarios/whatif rather than staying linked when the forecast is off
+    assert 'href="history.html"' not in index_off
     assert 'href="scenarios.html"' not in index_off
 
 
@@ -429,3 +673,20 @@ def test_history_payload_embedded(tmp_path):
     payload = _json.loads(re.search(r"const DATA = (.*?);\n", history).group(1))
     assert payload["dates"] == ["2026-05-11"]
     assert payload["series"][0]["player"] == "bclarke"
+
+
+def test_movies_section_is_collapsible_and_numbered(tmp_path: Path):
+    render(tmp_path, _fixture_input())
+    html = (tmp_path / "index.html").read_text()
+    # The section MOVED as well as changed: it must appear exactly once, and it
+    # must sit after the players section. Substring checks alone would pass a
+    # duplicated or wrongly-placed block, which is the failure this task risked.
+    assert html.count('<details class="movies card movies-toggle">') == 1
+    assert html.index('<details class="movies card movies-toggle">') > html.index(
+        '<section class="players card">'
+    )
+    assert '<details class="movies card movies-toggle">' in html
+    assert "<summary><h2>🎥 Movies (projected window gross)</h2></summary>" in html
+    movies = html.split('<details class="movies card movies-toggle">')[1]
+    assert "<th>#</th>" in movies
+    assert "<td>3</td>" in movies  # all three movies, not just the matrix's 15
