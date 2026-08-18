@@ -1,6 +1,6 @@
 /* ── Site nav pills ── */
 .site-nav {
-  display:flex; flex-wrap:wrap; gap:.5em; margin:0 0 1em;
+  display:flex; flex-wrap:wrap; justify-content:center; gap:.5em; margin:0 0 1em;
 }
 .nav-pill {
   font-family:'Nunito',sans-serif; font-size:.95em; font-weight:700;
